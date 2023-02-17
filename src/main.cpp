@@ -5,8 +5,6 @@ std::string NodeTypeToString(int type) {
     switch(type) {
         case PROGRAM:
             return "PROGRAM";
-        case LINE:
-            return "LINE";
         case FUNCTION:
             return "FUNCTION";
         case EQUAL:

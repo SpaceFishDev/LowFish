@@ -1,4 +1,5 @@
   a = 3
-  main fn (argc, argv){
+  main fn (argc, argv){ # this a comment
     a = 2
+    print(a)
   }

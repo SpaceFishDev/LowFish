@@ -2,7 +2,6 @@
 #include<vector>
 enum NodeTypes{
 	PROGRAM,
-	LINE,
 	FUNCTION,
 	EQUAL,
 	FUNCTION_CALL,
@@ -138,6 +137,29 @@ public:
 				}
 				if(ExpectValue("(")){
 					int Type = FUNCTION_CALL;
+					Node* F = new Node(&Tokens[Position], Type, Parent);
+					++Position;
+					++Position;
+					while(true){
+						if(Tokens[Position].Text == "{" || Tokens[Position].Text == ")"){
+							break;
+						}
+						if(!(Expect(IDENTIFIER) || ExpectValue(",")) && (!Expect(SYMBOL) && !ExpectValue(")")) && !ExpectValue("{")){
+							break;
+						}
+						if(Tokens[Position].Text == "," ){
+							++Position;
+							continue;
+						}
+						if(Tokens[Position].Text != ")"){
+							Node* N = new Node(&Tokens[Position], REFERENCE, F);
+							F->Children.push_back(N);
+						}
+						++Position;
+					}
+					Parent->Children.push_back(F);
+					++Position;
+					return Parse(Parent, Root);
 				}
 			} break;
 		}

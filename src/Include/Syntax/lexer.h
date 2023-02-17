@@ -67,24 +67,13 @@ public:
 
 	}
 	Token Tokenize(){
-		if(IsLetter(Source[Position])){
-			std::string out = "";
-			while(IsLetter(Source[Position]) || Source[Position] == '_' || IsDigit(Source[Position])){
-				out += Source[Position];
+
+		if(Source[Position] == '#'){
+			while(Source[Position] != '\n' && Source[Position] != '\0'){
 				++Position;
-				++Column;
 			}
-			return Token(IDENTIFIER, out, Line, Column);
-		}
-		if(IsDigit(Source[Position])){
-			std::string out = "";
-			while(IsDigit(Source[Position])){
-				out += Source[Position];
-				++Position;
-				++Column;
-			}
-			++Position; ++Column;
-			return Token(CONSTANT, out, Line, Column);
+			++Position;
+			return Tokenize();
 		}
 		switch(Source[Position]){
 			case '(':
@@ -97,17 +86,11 @@ public:
 				++Position;
 				return Token(SYMBOL, o, Line, Column);
 			}
-			case '#':{
-				while(Position < Source.length() && Source[Position] != '\n' && Source[Position] != '#'){
-					++Position;
-				}
-				++Position;
-				return Tokenize();
-			}
 			case '"':{
 				std::string out = "";
 				++Position;
 				++Column;
+
 				while(Position < Source.length() && Source[Position] != '"'){
 					if(Source[Position] == '\n'){
 						ErrorHandler::PutError(NEVER_ENDING_STRING,0, Line, Column);
@@ -146,6 +129,25 @@ public:
 				++Position;
 				return Token(END, "", Line, Column);
 			}
+		}
+		if(IsLetter(Source[Position])){
+			std::string out = "";
+			while(IsLetter(Source[Position]) || Source[Position] == '_' || IsDigit(Source[Position])){
+				out += Source[Position];
+				++Position;
+				++Column;
+			}
+			return Token(IDENTIFIER, out, Line, Column);
+		}
+		if(IsDigit(Source[Position])){
+			std::string out = "";
+			while(IsDigit(Source[Position])){
+				out += Source[Position];
+				++Position;
+				++Column;
+			}
+			++Position; ++Column;
+			return Token(CONSTANT, out, Line, Column);
 		}
 		ErrorHandler::PutError(UNEXPECTED_CHARACTER, Source[Position], Line, Column);
 		return Token(END, "", Line, Column);
