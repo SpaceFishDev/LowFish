@@ -111,56 +111,37 @@ public:
 				if(ExpectValue("fn")){
 					++Position;
 					int Type = FUNCTION;
-					Node* F = new Node(&Tokens[Position - 1], Type, Parent);
-					++Position;
-					++Position;
-					while(true){
-						if(Tokens[Position].Text == "{" || Tokens[Position].Text == ")"){
-							break;
-						}
-						if(!(Expect(IDENTIFIER) || ExpectValue(",")) && (!Expect(SYMBOL) && !ExpectValue(")")) && !ExpectValue("{")){
-							break;
-						}
-						if(Tokens[Position].Text == "," ){
-							++Position;
-							continue;
-						}
-						if(Tokens[Position].Text != ")"){
-							Node* N = new Node(&Tokens[Position], REFERENCE, F);
-							F->Children.push_back(N);
-						}
-						++Position;
-					}
-					Parent->Children.push_back(F);
-					++Position;
-					return Parse(F, Root);
+
 				}
 				if(ExpectValue("(")){
 					int Type = FUNCTION_CALL;
-					Node* F = new Node(&Tokens[Position], Type, Parent);
-					++Position;
-					++Position;
-					while(true){
-						if(Tokens[Position].Text == "{" || Tokens[Position].Text == ")"){
-							break;
-						}
-						if(!(Expect(IDENTIFIER) || ExpectValue(",")) && (!Expect(SYMBOL) && !ExpectValue(")")) && !ExpectValue("{")){
-							break;
-						}
-						if(Tokens[Position].Text == "," ){
-							++Position;
-							continue;
-						}
-						if(Tokens[Position].Text != ")"){
-							Node* N = new Node(&Tokens[Position], REFERENCE, F);
-							F->Children.push_back(N);
-						}
-						++Position;
+				}
+				Node* F = new Node(&Tokens[Position - 1], Type, Parent);
+				++Position;
+				++Position;
+				while(true){
+					if(Tokens[Position].Text == "{" || Tokens[Position].Text == ")"){
+						break;
 					}
-					Parent->Children.push_back(F);
+					if(!(Expect(IDENTIFIER) || ExpectValue(",")) && (!Expect(SYMBOL) && !ExpectValue(")")) && !ExpectValue("{")){
+						break;
+					}
+					if(Tokens[Position].Text == "," ){
+						++Position;
+						continue;
+					}
+					if(Tokens[Position].Text != ")"){
+						Node* N = new Node(&Tokens[Position], REFERENCE, F);
+						F->Children.push_back(N);
+					}
 					++Position;
+				}
+				Parent->Children.push_back(F);
+				++Position;
+				if(Type == FUNCTION_CALL){
 					return Parse(Parent, Root);
 				}
+				return Parse(F, Root);
 			} break;
 		}
 		return Root;
