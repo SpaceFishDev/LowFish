@@ -107,14 +107,14 @@ public:
 					Parent->Children.push_back(V);
 					return Parse(Parent, Root);
 				}
-
+				int Type = 0;
 				if(ExpectValue("fn")){
 					++Position;
-					int Type = FUNCTION;
+					 Type = FUNCTION;
 
 				}
 				if(ExpectValue("(")){
-					int Type = FUNCTION_CALL;
+					 Type = FUNCTION_CALL;
 				}
 				Node* F = new Node(&Tokens[Position - 1], Type, Parent);
 				++Position;
