@@ -1,0 +1,9 @@
+program: (line | function)*
+function: IDENTIFIER 'fn' '(' (IDENTIFIER ',')*  ')'  block
+block : '{' line* '}'
+line: (equal | function_call)
+function_call: IDENTIFIER '(' (CONSTANT | STRING | IDENTIFIER ',')* ')'
+equal: IDENTIFIER '=' (CONSTANT | STRING | IDENTIFIER)
+
+......
+NOT A REAL GRAMMAR JUST USED TO OUTLINE PARSER CREATION.
