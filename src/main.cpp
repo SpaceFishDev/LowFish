@@ -17,26 +17,29 @@ std::string NodeTypeToString(int type) {
             return "REFERENCE";
         case BLOCK:
             return "BLOCK";
+        case VAR:
+            return "VAR";
         default:
             return "UNKNOWN";
     }
 }
 
-void printTree(Node* root, std::string prefix = "", bool isLastChild = true) {
-    std::cout << prefix;
-    if (isLastChild) {
-        std::cout << "\\-";
-        prefix += "  ";
-    } else {
-        std::cout << "|-";
-        prefix += "| ";
-    }
-    std::cout << "Type: " << NodeTypeToString(root->Type) << ", Token: " << root->NodeToken->Text << std::endl;
+// void printTree(Node* root, std::string prefix = "", bool isLastChild = true) {
+//     std::cout << prefix;
+//     if (isLastChild) {
+//         std::cout << "\\---- ";
+//         prefix += "  ";
+//     } else {
+//         std::cout << "|---- ";
+//         prefix += "| ";
+//     }
+//     std::cout << "Type: " << NodeTypeToString(root->Type) << ", Token: " << root->NodeToken->Text << std::endl;
 
-    for (int i = 0; i < root->Children.size(); i++) {
-        printTree(root->Children[i], prefix, i == root->Children.size() - 1);
-    }
-}
+//     for (int i = 0; i < root->Children.size(); i++) {
+//         printTree(root->Children[i], prefix, i == root->Children.size() - 1);
+//     }
+// }
+void printTree(Node* Tree, int level);
 std::string ReadFile(std::string Path){
 	std::ifstream t(Path);
 	t.seekg(0, std::ios::end);
@@ -52,18 +55,18 @@ int main(){
 	Token t = Token(0,"",0,0);
 	Node root = Node(&t, PROGRAM, nullptr);
 	Node* N = parser.Parse(&root, &root);
-	printTree(N);
+	printTree(N, 0  );
 }
-// void PrintTree(Node* n, int level){
-// 	for(int i = 0; i != level; ++i){
-// 		std::cout << "\t";
-// 	}
-// 	std::cout << "Node:( " <<  n->Type << " , " << n->NodeToken->Text << ")\n";
-// 	if(n->Children.size() == 0){
-// 		return;
-// 	}
-// 	++level;
-// 	for(Node* N : n->Children){
-// 		PrintTree(N, level);
-// 	}
-// }
+void printTree(Node* n, int level){
+	for(int i = 0; i != level; ++i){
+		std::cout << "\t";
+	}
+	std::cout << "Node:( " <<  n->Type << " , " << n->NodeToken->Text << ")\n";
+	if(n->Children.size() == 0){
+		return;
+	}
+	++level;
+	for(Node* N : n->Children){
+		printTree(N, level);
+	}
+}

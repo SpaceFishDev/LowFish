@@ -1,5 +1,9 @@
-  a = 3
-  main fn (argc, argv){ # this a comment
-    a = 2
-    print(a)
-  }
+int x = 0
+short a = 43
+string b = "ABCD"
+string c = 'a'
+
+main fn (argc, argv){
+  long a = 32
+  print(a)
+}

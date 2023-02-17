@@ -48,6 +48,7 @@ enum LexerTypes{
 	SEMI,
 	EQ,
 	SYMBOL,
+	ASM,
 };
 
 
@@ -67,7 +68,15 @@ public:
 
 	}
 	Token Tokenize(){
-
+		if(Source[Position] == '$'){
+			++Position;
+			std::string A = "";
+			while(Source[Position] != '$' && Source[Position] != 0){
+				A += Source[Position];
+				++Position;
+			}
+			return Token(ASM, A, Line, Column);
+		}
 		if(Source[Position] == '#'){
 			while(Source[Position] != '\n' && Source[Position] != '\0'){
 				++Position;
@@ -86,12 +95,12 @@ public:
 				++Position;
 				return Token(SYMBOL, o, Line, Column);
 			}
+			case '\'':
 			case '"':{
 				std::string out = "";
 				++Position;
 				++Column;
-
-				while(Position < Source.length() && Source[Position] != '"'){
+				while(Position < Source.length() && Source[Position] != '\'' && Source[Position] != '"'){
 					if(Source[Position] == '\n'){
 						ErrorHandler::PutError(NEVER_ENDING_STRING,0, Line, Column);
 					}

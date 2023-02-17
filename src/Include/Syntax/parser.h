@@ -7,6 +7,7 @@ enum NodeTypes{
 	FUNCTION_CALL,
 	CONSTANT_NODE,
 	REFERENCE,
+	VAR,
 	BLOCK,
 };
 class Node{
@@ -36,13 +37,11 @@ public:
 		{
 			Token t = lexer.Tokenize();
 			if(t.Type == END){
-				Tokens.push_back(t	);
-				std::cout << "EOF\n";
+				Tokens.push_back(t);
 				return;
 			}
 			else{
 				Tokens.push_back(t);
-				std::cout << "Token:( " << t.Type << ", '" << t.Text << "'" << ")\n";
 			}
 		}
 	}
@@ -82,30 +81,51 @@ public:
 				}
 			} break;
 			case IDENTIFIER:{
-				if(!Expect(SYMBOL) && !ExpectValue("(") && !ExpectValue("=") && !ExpectValue("fn")){
+				if(
+					!Expect(SYMBOL) 
+					&& !ExpectValue("(") 
+					&& !ExpectValue("=") 
+					&& !ExpectValue("fn") 
+					&& !Expect(IDENTIFIER)
+				)
+				{
 					return nullptr;
 				}
-				if(ExpectValue("=")){
-					int Type = EQUAL;
-					Node* V = new Node(&Tokens[Position], Type, Parent);
+				if
+				(
+					Current.Text == "int" 
+					|| Current.Text == "char" 
+					|| Current.Text == "string" 
+					|| Current.Text == "long" 
+					|| Current.Text == "short"
+				)
+				{
+					Node* E = new Node(&Tokens[Position], VAR, Parent);
 					++Position;
-					if(Expect(CONSTANT) || Expect(STRING)){
+
+					if(ExpectValue("=")){
+						int Type = EQUAL;
+						Node* V = new Node(&Tokens[Position], Type, V);
+						E->Children.push_back(V);
 						++Position;
-						Node* N = new Node(&Tokens[Position], CONSTANT_NODE, V);
-						V->Children.push_back(N);
-						++Position;
+						if(Expect(CONSTANT) || Expect(STRING)){
+							++Position;
+							Node* N = new Node(&Tokens[Position], CONSTANT_NODE, V);
+							V->Children.push_back(N);
+							++Position;
+						}
+						else if(Expect(IDENTIFIER)){
+							++Position;
+							Node* N = new Node(&Tokens[Position], REFERENCE, V);
+							V->Children.push_back(N);
+							++Position;
+						}
+						else{
+							return Root;
+						}
+						Parent->Children.push_back(E);
+						return Parse(Parent, Root);
 					}
-					else if(Expect(IDENTIFIER)){
-						++Position;
-						Node* N = new Node(&Tokens[Position], REFERENCE, V);
-						V->Children.push_back(N);
-						++Position;
-					}
-					else{
-						return Root;
-					}
-					Parent->Children.push_back(V);
-					return Parse(Parent, Root);
 				}
 				int Type = 0;
 				if(ExpectValue("fn")){
@@ -116,7 +136,7 @@ public:
 				if(ExpectValue("(")){
 					 Type = FUNCTION_CALL;
 				}
-				Node* F = new Node(&Tokens[Position - 1], Type, Parent);
+				Node* F = new Node(&Tokens[Position], Type, Parent);
 				++Position;
 				++Position;
 				while(true){
@@ -125,7 +145,7 @@ public:
 					}
 					if(!(Expect(IDENTIFIER) || ExpectValue(",")) && (!Expect(SYMBOL) && !ExpectValue(")")) && !ExpectValue("{")){
 						break;
-					}
+				}
 					if(Tokens[Position].Text == "," ){
 						++Position;
 						continue;
