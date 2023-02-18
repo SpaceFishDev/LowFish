@@ -21,6 +21,8 @@ std::string NodeTypeToString(int type) {
             return "VAR";
         case BOOLEXPR:
             return "BOOLEXPR";
+        case IFNODE:
+            return "IFNODE";
         default:
             return "UNKNOWN";
     }

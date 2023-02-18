@@ -51,7 +51,6 @@ enum LexerTypes{
 	IDENTIFIER,
 	SEMI,
 	EQ,
-	BOOLEQ,
 	SYMBOL,
 	ASM,
 };
@@ -140,7 +139,7 @@ public:
 				if(Source[Position] == '='){
 					Position++;
 					Column++;
-					return Token(BOOLEQ, "==", Line, Column);
+					return Token(SYMBOL, "==", Line, Column);
 				}
 				return Token(EQ, "=", Line,Column);
 			}

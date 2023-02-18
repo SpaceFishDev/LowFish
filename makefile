@@ -1,5 +1,5 @@
 SRC = $(wildcard src/*.cpp)
-CFLAGS = -O3 -Ofast -Wall -Wextra -Isrc/include
+CFLAGS = -O3 -Ofast -Isrc/include
 
 CPP = g++
 

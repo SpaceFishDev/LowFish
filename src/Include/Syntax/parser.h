@@ -10,6 +10,7 @@ enum NodeTypes{
 	VAR,
 	BLOCK,
 	BOOLEXPR,
+	IFNODE,
 };
 class Node{
 public:
@@ -80,18 +81,21 @@ public:
 				}
 				if(Current.Text == "}"){
 					++Position;
-					if(Parent->Parent->Type == FUNCTION){
-						return Parse(Parent->Parent->Parent, Root);
+					Node* N = Parent;
+
+					while(N->Type != PROGRAM){
+						N = N->Parent;
 					}
-					else{
-						return Parse(Parent->Parent, Root);
-					}
+					return Parse(N, Root);
 				}
 				if(Current.Text == ";" || Current.Text == ")"){
 					++Position;
 					Node* N = Parent;
-					if(Parent->Type == VAR || Parent->Type == FUNCTION_CALL || Parent->Type == EQUAL){
-						while(N->Type != FUNCTION && N->Type != PROGRAM && N->Type != BLOCK){
+					if(N->Type == IFNODE){
+						return Parse(N, Root);
+					}
+					if(Parent->Type != BLOCK && Parent->Type != FUNCTION && Parent->Type != IFNODE){
+						while(N->Type != FUNCTION && N->Type != PROGRAM && N->Type != BLOCK && N->Type != IFNODE){
 							N = N->Parent;
 						}
 					}
@@ -100,6 +104,16 @@ public:
 			} break;
 			case IDENTIFIER:{
 				
+				if(Current.Text == "if"){
+					if(!ExpectValue("(")){
+						ErrorHandler::PutError(-1, "If statements require '(' expression ')' block. " , Current.Line, Current.Column);
+					}
+					Node* N = new Node(&Tokens[Position], IFNODE, Parent);
+					++Position;
+					++Position;
+					Parent->Children.push_back(N);
+					return Parse(N, Root);
+				}
 				if(ExpectValue(";") || ExpectValue(")")){
 					Node* N = new Node(&Tokens[Position], REFERENCE, Parent);
 					++Position;
@@ -111,20 +125,12 @@ public:
 					Node* N = new Node(&Tokens[Position + 1], BOOLEXPR, Parent);
 					N->Children.push_back(new Node(&Tokens[Position], REFERENCE, N));
 					++Position;
-					if(Expect(IDENTIFIER)){
-						N->Children.push_back(new Node(&Tokens[Position + 1], REFERENCE, N));
-					}
-					++Position;
 					++Position;
 					Parent->Children.push_back(N);
-					return Parse(Parent, Root);
+					return Parse(N, Root);
 				}
 
-				if(Current.Text == "if"){
-					if(!ExpectValue("(")){
-						ErrorHandler::PutError(-1, "If statements require '(' expression ')' block. " , Current.Line, Current.Column);
-					}
-				}
+		
 				if
 				(
 					Current.Text == "int" 
@@ -148,9 +154,31 @@ public:
 				}
 				int Type = 0;
 				if(ExpectValue("fn")){
+					Type = FUNCTION;
+					Node* F = new Node(&Tokens[Position], Type, Parent);
 					++Position;
-					 Type = FUNCTION;
-
+					++Position;
+					++Position;
+					while(true){
+						if(Tokens[Position].Text == "{" || Tokens[Position].Text == ")"){
+							break;
+						}
+						if(!(Expect(IDENTIFIER) || ExpectValue(",")) && (!Expect(SYMBOL) && !ExpectValue(")")) && !ExpectValue("{")){
+							break;
+						}
+						if(Tokens[Position].Text == "," ){
+							++Position;
+							continue;
+						}
+						if(Tokens[Position].Text != ")"){
+							Node* N = new Node(&Tokens[Position], REFERENCE, F);
+							F->Children.push_back(N);
+						}
+						++Position;
+					}
+					Parent->Children.push_back(F);
+					++Position;
+					return Parse(F, Root);
 				}
 				if(ExpectValue("(")){
 					 Type = FUNCTION_CALL;
@@ -160,32 +188,7 @@ public:
 					Parent->Children.push_back(F);
 					return Parse(F, Root);
 				}
-				Node* F = new Node(&Tokens[Position], Type, Parent);
-				++Position;
-				++Position;
-				while(true){
-					if(Tokens[Position].Text == "{" || Tokens[Position].Text == ")"){
-						break;
-					}
-					if(!(Expect(IDENTIFIER) || ExpectValue(",")) && (!Expect(SYMBOL) && !ExpectValue(")")) && !ExpectValue("{")){
-						break;
-				}
-					if(Tokens[Position].Text == "," ){
-						++Position;
-						continue;
-					}
-					if(Tokens[Position].Text != ")"){
-						Node* N = new Node(&Tokens[Position], REFERENCE, F);
-						F->Children.push_back(N);
-					}
-					++Position;
-				}
-				Parent->Children.push_back(F);
-				++Position;
-				if(Type == FUNCTION_CALL){
-					return Parse(Parent, Root);
-				}
-				return Parse(F, Root);
+				
 			} break;
 		}
 		return Root;
