@@ -105,7 +105,7 @@ public:
 				if(Current.Text == ";" || Current.Text == ")"){
 					++Position;
 					Node* N = Parent;
-					if(N->Type == IFNODE){
+					if(N->Type == IFNODE || N->Type == REFERENCE){
 						return Parse(N, Root);
 					}
 					if(Parent->Type != BLOCK && Parent->Type != FUNCTION && Parent->Type != IFNODE){
@@ -173,6 +173,22 @@ public:
 				for(std::string t : Types){
 					if(Current.Text == t)
 					{
+						if(Expect(IDENTIFIER) && Tokens[Position + 2].Text == "("){
+							++Position;
+							int Type = FUNCTION;
+							Node* F = new Node(&Tokens[Position - 1], Type, Parent);
+							F->Children.push_back(new Node(&Tokens[Position], REFERENCE, F));
+							for(std::string func : Functions){
+								if(func == Tokens[Position].Text){
+									ErrorHandler::PutError(REDEFINITION_OF_FUNCTION, func, Tokens[Position].Line, Tokens[Position].Column);
+								}
+							}
+							Functions.push_back(Tokens[Position].Text);
+							++Position;
+							++Position;
+							Parent->Children.push_back(F);
+							return Parse(F->Children[0], Root);
+						}
 						Node* E = new Node(&Tokens[Position], VAR, Parent);
 						++Position;
 						Parent->Children.push_back(E);
@@ -187,39 +203,7 @@ public:
 					return Parse(N, Root);
 				}
 				int Type = 0;
-				if(ExpectValue("fn")){
-					Type = FUNCTION;
-					Node* F = new Node(&Tokens[Position], Type, Parent);
-					for(std::string func : Functions){
-						if(func == Tokens[Position].Text){
-							ErrorHandler::PutError(REDEFINITION_OF_FUNCTION, func, Tokens[Position].Line, Tokens[Position].Column);
-						}
-					}
-					Functions.push_back(Tokens[Position].Text);
-					++Position;
-					++Position;
-					++Position;
-					while(true){
-						if(Tokens[Position].Text == "{" || Tokens[Position].Text == ")"){
-							break;
-						}
-						if(!(Expect(IDENTIFIER) || ExpectValue(",")) && (!Expect(SYMBOL) && !ExpectValue(")")) && !ExpectValue("{")){
-							break;
-						}
-						if(Tokens[Position].Text == "," ){
-							++Position;
-							continue;
-						}
-						if(Tokens[Position].Text != ")"){
-							Node* N = new Node(&Tokens[Position], REFERENCE, F);
-							F->Children.push_back(N);
-						}
-						++Position;
-					}
-					Parent->Children.push_back(F);
-					++Position;
-					return Parse(F, Root);
-				}
+				
 				if(ExpectValue("(")){
 					 Type = FUNCTION_CALL;
 					 Node* F = new Node(&Tokens[Position], Type, Parent);

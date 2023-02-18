@@ -1,7 +1,9 @@
-main fn (){
+struct f{
+    int a;
+    int b;
+}
+int main(){
     int a = 3;
-    int b = 4;
-    if(a != b){
-        printf("Hah.");
+    while(a == 3){
     }
 }
