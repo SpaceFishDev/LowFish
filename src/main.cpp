@@ -23,8 +23,12 @@ std::string NodeTypeToString(int type) {
             return "BOOLEXPR";
         case IFNODE:
             return "IFNODE";
+        case WHILENODE:
+            return "WHILENODE";
+        case STRUCT:
+            return "STRUCT";
         default:
-            return "UNKNOWN";
+                return "UNKNOWN";
     }
 }
 

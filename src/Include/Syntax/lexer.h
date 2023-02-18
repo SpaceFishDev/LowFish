@@ -20,7 +20,10 @@ struct Token{
 
 enum ErrorTypes{
 	NEVER_ENDING_STRING,
-	UNEXPECTED_CHARACTER
+	UNEXPECTED_CHARACTER,
+	REDEFINITION_OF_FUNCTION,
+	REDEFINITION_OF_STRUCT,
+	EXPECT_IDENTIFIER,
 };
 
 class ErrorHandler{
@@ -33,6 +36,18 @@ public:
 			}
 			case UNEXPECTED_CHARACTER:{
 				std::cout << "Unexpected character '" << c <<"' in input. LN: " << line << " COL: " << column << "\n";
+				exit(-1);
+			}
+			case REDEFINITION_OF_FUNCTION:{
+				std::cout << "Function '" << c << "' already defined. LN:" << line << " COL:" << column << "\n";
+				exit(-1);
+			} 
+			case REDEFINITION_OF_STRUCT:{
+				std::cout << "Type '" << c << "' already defined. LN:" << line << " COL:" << column << "\n";
+				exit(-1);
+			} 
+			case EXPECT_IDENTIFIER:{
+				std::cout << "Identifier expected for struct definition. LN:" << line << " COL:" << column << "\n";
 				exit(-1);
 			}
 			defualt:{
@@ -65,7 +80,7 @@ public:
 	Lexer(std::string src){
 		Source = src;
 		Position = 0;
-		Line = 0;
+		Line = 1;
 		Column = 0;
 	}
 	Lexer(){
@@ -133,6 +148,16 @@ public:
 				++Column;
 				return Token(SYMBOL, ";", Line, Column);
 			}
+			case '!':{
+				++Position; 
+				++Column;
+				if(Source[Position] == '='){
+					Position++;
+					Column++;
+					return Token(SYMBOL, "!=", Line, Column);
+				}
+				ErrorHandler::PutError(-1, "'!' has to be followed by a '=' for bolean expressions.", Line, Column);
+			} break;
 			case '=':{
 				++Position;
 				++Column;
