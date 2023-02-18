@@ -9,6 +9,7 @@ enum NodeTypes{
 	REFERENCE,
 	VAR,
 	BLOCK,
+	BOOLEXPR,
 };
 class Node{
 public:
@@ -47,13 +48,13 @@ public:
 	}
 	bool Expect(int Type){
 		if(Position + 1 > Tokens.size()){
-			ErrorHandler::PutError(UNEXPECTED_CHARACTER, 'a', -1, -11);
+			ErrorHandler::PutError(-1, "Not enough tokens in input." , 0, 0);
 		}
 		return Tokens[Position + 1].Type == Type;
 	}
 	bool ExpectValue(std::string Value){
 		if(Position + 1 > Tokens.size()){
-			ErrorHandler::PutError(UNEXPECTED_CHARACTER, 'a', -1, -11);
+			ErrorHandler::PutError(-1, "Not enough tokens in input." , 0, 0);
 		}
 		return Tokens[Position + 1].Text == Value;
 	}
@@ -79,17 +80,32 @@ public:
 						return Parse(Parent->Parent, Root);
 					}
 				}
+				if(Current.Text == ";"){
+					++Position;
+					if(Parent->Type == VAR || Parent->Type == FUNCTION_CALL)
+						return Parse(Parent->Parent, Root);
+					return Parse(Parent, Root);
+				}
 			} break;
 			case IDENTIFIER:{
-				if(
-					!Expect(SYMBOL) 
-					&& !ExpectValue("(") 
-					&& !ExpectValue("=") 
-					&& !ExpectValue("fn") 
-					&& !Expect(IDENTIFIER)
-				)
-				{
-					return nullptr;
+				
+				if(ExpectValue("==")){
+					Node* N = new Node(&Tokens[Position + 1], BOOLEXPR, Parent);
+					N->Children.push_back(new Node(&Tokens[Position], REFERENCE, N));
+					++Position;
+					if(Expect(IDENTIFIER)){
+						N->Children.push_back(new Node(&Tokens[Position + 1], REFERENCE, N));
+					}
+					++Position;
+					++Position;
+					Parent->Children.push_back(N);
+					return Parse(Parent, Root);
+				}
+
+				if(Current.Text == "if"){
+					if(!ExpectValue("(")){
+						ErrorHandler::PutError(-1, "If statements require '(' expression ')' block. " , Current.Line, Current.Column);
+					}
 				}
 				if
 				(

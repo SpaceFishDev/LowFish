@@ -25,7 +25,7 @@ enum ErrorTypes{
 
 class ErrorHandler{
 public:
-	static void PutError(int type, char c,int line, int column){
+	static void PutError(int type, std::string c,int line, int column){
 		switch(type){
 			case NEVER_ENDING_STRING:{
 				std::cout << "String never ends. LN: " << line << " COL: " << column << "\n";
@@ -33,6 +33,10 @@ public:
 			}
 			case UNEXPECTED_CHARACTER:{
 				std::cout << "Unexpected character '" << c <<"' in input. LN: " << line << " COL: " << column << "\n";
+				exit(-1);
+			}
+			defualt:{
+				std::cout << c <<"' in input. LN: " << line << " COL: " << column << "\n";
 				exit(-1);
 			}
 		}
@@ -47,6 +51,7 @@ enum LexerTypes{
 	IDENTIFIER,
 	SEMI,
 	EQ,
+	BOOLEQ,
 	SYMBOL,
 	ASM,
 };
@@ -102,7 +107,7 @@ public:
 				++Column;
 				while(Position < Source.length() && Source[Position] != '\'' && Source[Position] != '"'){
 					if(Source[Position] == '\n'){
-						ErrorHandler::PutError(NEVER_ENDING_STRING,0, Line, Column);
+						ErrorHandler::PutError(NEVER_ENDING_STRING,"", Line, Column);
 					}
 					else{
 						out += Source[Position];
@@ -132,6 +137,11 @@ public:
 			case '=':{
 				++Position;
 				++Column;
+				if(Source[Position] == '='){
+					Position++;
+					Column++;
+					return Token(BOOLEQ, "==", Line, Column);
+				}
 				return Token(EQ, "=", Line,Column);
 			}
 			case '\0':{
@@ -158,7 +168,7 @@ public:
 			++Position; ++Column;
 			return Token(CONSTANT, out, Line, Column);
 		}
-		ErrorHandler::PutError(UNEXPECTED_CHARACTER, Source[Position], Line, Column);
+		ErrorHandler::PutError(UNEXPECTED_CHARACTER, std::string("") + Source[Position], Line, Column);
 		return Token(END, "", Line, Column);
 	}
 private:
