@@ -132,7 +132,7 @@ public:
 			case ';':{
 				++Position;
 				++Column;
-				return Token(SEMI, ";", Line, Column);
+				return Token(SYMBOL, ";", Line, Column);
 			}
 			case '=':{
 				++Position;
@@ -165,7 +165,6 @@ public:
 				++Position;
 				++Column;
 			}
-			++Position; ++Column;
 			return Token(CONSTANT, out, Line, Column);
 		}
 		ErrorHandler::PutError(UNEXPECTED_CHARACTER, std::string("") + Source[Position], Line, Column);

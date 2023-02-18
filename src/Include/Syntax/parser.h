@@ -64,6 +64,13 @@ public:
 		}
 		Token Current = Tokens[Position];
 		switch(Current.Type){
+			case STRING:
+			case CONSTANT:{
+				Node* N = new Node(&Tokens[Position], CONSTANT_NODE, Parent);
+				++Position;
+				Parent->Children.push_back(N);
+				return Parse(Parent, Root);
+			}
 			case SYMBOL:{
 				if(Current.Text == "{"){
 					Node* N = new Node(&Tokens[Position], BLOCK, Parent);
@@ -80,15 +87,26 @@ public:
 						return Parse(Parent->Parent, Root);
 					}
 				}
-				if(Current.Text == ";"){
+				if(Current.Text == ";" || Current.Text == ")"){
 					++Position;
-					if(Parent->Type == VAR || Parent->Type == FUNCTION_CALL)
-						return Parse(Parent->Parent, Root);
-					return Parse(Parent, Root);
+					Node* N = Parent;
+					if(Parent->Type == VAR || Parent->Type == FUNCTION_CALL || Parent->Type == EQUAL){
+						while(N->Type != FUNCTION && N->Type != PROGRAM && N->Type != BLOCK){
+							N = N->Parent;
+						}
+					}
+					return Parse(N, Root);
 				}
 			} break;
 			case IDENTIFIER:{
 				
+				if(ExpectValue(";") || ExpectValue(")")){
+					Node* N = new Node(&Tokens[Position], REFERENCE, Parent);
+					++Position;
+					Parent->Children.push_back(N);
+					return Parse(Parent, Root);
+				}
+
 				if(ExpectValue("==")){
 					Node* N = new Node(&Tokens[Position + 1], BOOLEXPR, Parent);
 					N->Children.push_back(new Node(&Tokens[Position], REFERENCE, N));
@@ -118,30 +136,15 @@ public:
 				{
 					Node* E = new Node(&Tokens[Position], VAR, Parent);
 					++Position;
-
-					if(ExpectValue("=")){
-						int Type = EQUAL;
-						Node* V = new Node(&Tokens[Position], Type, V);
-						E->Children.push_back(V);
-						++Position;
-						if(Expect(CONSTANT) || Expect(STRING)){
-							++Position;
-							Node* N = new Node(&Tokens[Position], CONSTANT_NODE, V);
-							V->Children.push_back(N);
-							++Position;
-						}
-						else if(Expect(IDENTIFIER)){
-							++Position;
-							Node* N = new Node(&Tokens[Position], REFERENCE, V);
-							V->Children.push_back(N);
-							++Position;
-						}
-						else{
-							return Root;
-						}
-						Parent->Children.push_back(E);
-						return Parse(Parent, Root);
-					}
+					Parent->Children.push_back(E);
+					return Parse(E, Root);
+				}
+				if(ExpectValue("=")){
+					Node* N = new Node(&Tokens[Position], EQUAL, Parent);
+					++Position;
+					++Position;
+					Parent->Children.push_back(N);
+					return Parse(N, Root);
 				}
 				int Type = 0;
 				if(ExpectValue("fn")){
@@ -151,6 +154,11 @@ public:
 				}
 				if(ExpectValue("(")){
 					 Type = FUNCTION_CALL;
+					 Node* F = new Node(&Tokens[Position], Type, Parent);
+					++Position;
+					++Position;
+					Parent->Children.push_back(F);
+					return Parse(F, Root);
 				}
 				Node* F = new Node(&Tokens[Position], Type, Parent);
 				++Position;

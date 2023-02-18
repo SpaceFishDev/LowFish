@@ -1,5 +1,6 @@
-
 main fn (argc, argv){
-  a == b; 
   long a = 3;
+  long a = 3;
+  print(a);
+  long x = 3;
 }
