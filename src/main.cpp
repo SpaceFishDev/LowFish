@@ -27,6 +27,8 @@ std::string NodeTypeToString(int type) {
             return "WHILENODE";
         case STRUCT:
             return "STRUCT";
+        case MATH:
+            return "MATH";
         default:
                 return "UNKNOWN";
     }
@@ -47,18 +49,20 @@ void printTree(Node* root, std::string prefix = "", bool isLastChild = true) {
         printTree(root->Children[i], prefix, i == root->Children.size() - 1);
     }
 }
-std::string ReadFile(std::string Path){
-	std::ifstream t(Path);
+char* ReadFile(std::string Path){
+    std::ifstream t(Path);
 	t.seekg(0, std::ios::end);
 	size_t size = t.tellg();
-	std::string buffer(size, ' ');
+	char* buffer = (char*)malloc(size);
 	t.seekg(0);
-	t.read(&buffer[0], size);
-	return buffer;
+	t.read(buffer, size);
+    buffer[size] = 0;   
+    return buffer;
 }
 
 int main(){
-	Parser parser = Parser(ReadFile("Test.LF"));
+    std::string str = ReadFile("Test.LF");
+	Parser parser = Parser(str);
 	Token t = Token(0,"",0,0);
 	Node root = Node(&t, PROGRAM, nullptr);
 	Node* N = parser.Parse(&root, &root);

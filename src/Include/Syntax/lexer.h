@@ -104,6 +104,10 @@ public:
 			return Tokenize();
 		}
 		switch(Source[Position]){
+			case '+':
+			case '-':
+			case '/':
+			case '*':
 			case '(':
 			case ')':
 			case '{':
@@ -116,16 +120,15 @@ public:
 			}
 			case '\'':
 			case '"':{
+				char c = Source[Position];
 				std::string out = "";
 				++Position;
 				++Column;
-				while(Position < Source.length() && Source[Position] != '\'' && Source[Position] != '"'){
+				while(Position < Source.length() && Source[Position] != c){
 					if(Source[Position] == '\n'){
 						ErrorHandler::PutError(NEVER_ENDING_STRING,"", Line, Column);
 					}
-					else{
-						out += Source[Position];
-					}
+					out += Source[Position];
 					++Position;
 					++Column;
 				}
@@ -141,12 +144,25 @@ public:
 			case '\t':
 			case ' ':{
 				++Position;
+				++Column;
 				return Tokenize();
 			}
 			case ';':{
 				++Position;
 				++Column;
 				return Token(SYMBOL, ";", Line, Column);
+			}
+			case '<':
+			case '>':{
+				char c = Source[Position];
+				++Position; 
+				++Column;
+				if(Source[Position] == '='){
+					Position++;
+					Column++;
+					return Token(SYMBOL, std::string(std::string("") + c) + "=", Line, Column);
+				}
+				return Token(SYMBOL, std::string("") + c, Line, Column);
 			}
 			case '!':{
 				++Position; 
@@ -158,6 +174,15 @@ public:
 				}
 				ErrorHandler::PutError(-1, "'!' has to be followed by a '=' for bolean expressions.", Line, Column);
 			} break;
+			case '&':{
+				++Position;
+				++Column;
+				if(Source[Position] == '&'){
+					Position++;
+					Column++;
+					return Token(SYMBOL, "&&", Line, Column);
+				}
+			}
 			case '=':{
 				++Position;
 				++Column;
@@ -169,7 +194,6 @@ public:
 				return Token(EQ, "=", Line,Column);
 			}
 			case '\0':{
-				++Position;
 				return Token(END, "", Line, Column);
 			}
 		}
@@ -190,6 +214,9 @@ public:
 				++Column;
 			}
 			return Token(CONSTANT, out, Line, Column);
+		}
+		if(Position > Source.length()){
+			return Token(END, "", Line, Column);
 		}
 		ErrorHandler::PutError(UNEXPECTED_CHARACTER, std::string("") + Source[Position], Line, Column);
 		return Token(END, "", Line, Column);

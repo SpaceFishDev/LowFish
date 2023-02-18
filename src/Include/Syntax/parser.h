@@ -1,5 +1,7 @@
-#include"Lexer.h"
-#include<vector>
+#include<Syntax/Lexer.h>
+#include<iostream>    
+#include<vector> 
+#include<algorithm>
 enum NodeTypes{
 	PROGRAM,
 	FUNCTION,
@@ -13,6 +15,7 @@ enum NodeTypes{
 	IFNODE,
 	WHILENODE,
 	STRUCT,
+	MATH,
 };
 class Node{
 public:
@@ -28,6 +31,44 @@ public:
 private:
 };
 
+/*
+*/
+
+struct MathToken{
+	std::string left;
+	std::string right;
+	int linel;
+	int liner;
+	int coll;
+	int colr;
+	int colo;
+	int lineo;
+	int op;
+	MathToken(std::string l, std::string o, int l1, int l2, int cl1, int cl2){
+		left = l;
+		switch(o[0]){
+			case '/':
+			op = 0;
+			break;
+			case '*':
+			op = 1;
+			break;
+			case '+':
+			op = 2;
+			break;
+			case '-':
+			op = 3;
+			break;
+			default:
+			op = 100;
+		}
+		linel = l1;
+		lineo = l2;
+		coll = cl1;
+		colo = cl2;
+	}
+};
+
 class Parser{
 public:
 	std::string Source;
@@ -36,6 +77,85 @@ public:
 	std::vector<Token> Tokens;
 	std::vector<std::string> Functions;
 	std::vector<std::string> Types;
+
+	std::vector<Token> ReorderTokens(std::vector<Token> tokens){
+		std::string math = "/*+-";
+		std::vector<Token> Tokens;
+		for(int i = 0; i != tokens.size(); ++i){
+			if(tokens[i].Type != CONSTANT && tokens[i].Type != SYMBOL){
+				Tokens.push_back(tokens[i]);
+				continue;
+			}
+			std::vector<Token> MathExpr;
+			while(true){
+				if(tokens[i].Text != "+" 
+				&& tokens[i].Text != "-"
+				&& tokens[i].Text != "/"
+				&& tokens[i].Text != "*"
+				&& tokens[i].Type != CONSTANT
+				)
+				{
+					break;	
+				}
+				MathExpr.push_back(tokens[i]);
+				++i;
+			}
+			std::vector<MathToken> MathTokens;
+			for(int x = 0; x < MathExpr.size();){
+				if(MathExpr[x].Type == CONSTANT && x + 3 < MathExpr.size()){
+					MathToken t = MathToken(
+						MathExpr[x].Text, 
+						MathExpr[x + 1].Text, 
+						MathExpr[x].Line, 
+						MathExpr[x + 1].Line, 
+						MathExpr[x].Column, 
+						MathExpr[x + 1].Column
+					);
+					MathTokens.push_back(t);
+					x+=2;
+				}
+				if(x + 3 == MathExpr.size()){
+					break;
+				}
+			}
+			MathToken end = MathToken(
+				MathExpr[MathExpr.size() - 3].Text, 
+				MathExpr[MathExpr.size() - 2].Text, 
+				MathExpr[MathExpr.size() - 3].Line, 
+				MathExpr[MathExpr.size() - 2].Line, 
+				MathExpr[MathExpr.size() - 3].Column, 
+				MathExpr[MathExpr.size() - 2].Column
+			);
+			end.right = MathExpr[MathExpr.size() - 1].Text;
+			MathTokens.push_back(MathToken(end));
+
+			for (size_t i = 0; i < MathTokens.size() - 1; ++i) {
+				for (size_t j = 0; j < MathTokens.size() - i - 1; ++j) {
+					if (MathTokens.at(j).op > MathTokens.at(j + 1).op)
+						std::swap(MathTokens.at(j), MathTokens.at(j + 1));
+				}
+			}
+			int f = 0;
+			std::vector<MathToken> copy;
+			for(MathToken t : MathTokens) {
+				copy.push_back(t);
+			}
+			
+			for(MathToken t : MathTokens){
+				std::string arr = "/*+-";
+				if(t.right != ""){
+					Tokens.push_back(Token(CONSTANT ,t.right, t.liner, t.colr));
+					Tokens.push_back(Token(SYMBOL, std::string("") + arr[t.op], t.lineo, t.colo));
+					Tokens.push_back(Token(CONSTANT ,t.left, t.linel, t.coll));
+					break;
+				}
+				Tokens.push_back(Token(CONSTANT ,t.left, t.linel, t.coll));
+				Tokens.push_back(Token(SYMBOL, std::string("") + arr[t.op], t.lineo, t.colo));
+			}
+		}
+		return Tokens;
+	}
+
 	Parser(std::string source){
 		Types.push_back("string");
 		Types.push_back("int");
@@ -43,18 +163,19 @@ public:
 		Types.push_back("char");
 		Types.push_back("short");
 		lexer = Lexer(source);
+
 		while(true)
 		{
 			Token t = lexer.Tokenize();
+			Tokens.push_back(t);
 			if(t.Type == END){
-				Tokens.push_back(t);
-				return;
-			}
-			else{
-				Tokens.push_back(t);
+				Tokens = ReorderTokens(Tokens);
+				break;				
 			}
 		}
+
 	}
+
 	bool Expect(int Type){
 		if(Position + 1 > Tokens.size()){
 			ErrorHandler::PutError(-1, "Not enough tokens in input." , 0, 0);
@@ -75,6 +196,17 @@ public:
 		switch(Current.Type){
 			case STRING:
 			case CONSTANT:{
+				std::string math = "/*+-";
+				for(char c : math){
+					if(ExpectValue(std::string("") + c)){
+						Node* N = new Node(&Tokens[Position + 1], MATH, Parent);
+
+						N->Children.push_back(new Node(&Tokens[Position], CONSTANT_NODE, N));
+						Position += 2;	
+						Parent->Children.push_back(N);
+						return Parse(N, Root);
+					}
+				}
 				Node* N = new Node(&Tokens[Position], CONSTANT_NODE, Parent);
 				++Position;
 				Parent->Children.push_back(N);
@@ -113,6 +245,19 @@ public:
 							N = N->Parent;
 						}
 					}
+					return Parse(N, Root);
+				}
+				if(Current.Text == "==" 
+				|| Current.Text == "!="
+				|| Current.Text == "<"
+				|| Current.Text == ">"
+				|| Current.Text == ">="
+				|| Current.Text == "<="
+				|| Current.Text == "&&"
+				){
+					Node* N = new Node(&Tokens[Position], BOOLEXPR, Parent);
+					++Position;
+					Parent->Children.push_back(N);
 					return Parse(N, Root);
 				}
 			} break;
@@ -155,14 +300,26 @@ public:
 					Parent->Children.push_back(N);
 					return Parse(N, Root);
 				}
-				if(ExpectValue(";") || ExpectValue(")")){
+				if(ExpectValue(";") 
+				|| ExpectValue(")")
+				|| ExpectValue("+")
+				|| ExpectValue("-")
+				|| ExpectValue("/")
+				|| ExpectValue("*")){
 					Node* N = new Node(&Tokens[Position], REFERENCE, Parent);
 					++Position;
 					Parent->Children.push_back(N);
 					return Parse(Parent, Root);
 				}
 
-				if(ExpectValue("==") || ExpectValue("!=")){
+				if(ExpectValue("==") 
+				|| ExpectValue("!=")
+				|| ExpectValue("<")
+				|| ExpectValue(">")
+				|| ExpectValue(">=")
+				|| ExpectValue("<=")
+				|| ExpectValue("&&")
+				){
 					Node* N = new Node(&Tokens[Position + 1], BOOLEXPR, Parent);
 					N->Children.push_back(new Node(&Tokens[Position], REFERENCE, N));
 					++Position;
