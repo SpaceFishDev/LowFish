@@ -26,7 +26,9 @@ enum ErrorTypes{
 	EXPECT_IDENTIFIER,
 	TYPE_HAS_NO_MEMBER,
 	TYPENAME_DOESNT_EXIST,
-	CONTAINER
+	CONTAINER,
+	FUNCTION_NOT_EXIST,
+	TYPE_DOESNT_MATCH,
 };
 
 class ErrorHandler{
@@ -65,6 +67,17 @@ public:
 			case CONTAINER:
 			{
 				std::cout << "Container '" << c << "' does not exist LN:" << line << " COL:" << column << "\n";  
+				exit(-1);
+			}
+			case FUNCTION_NOT_EXIST:
+			{	
+				std::cout << "Function '" << c << "' does not exist LN:" << line << " COL:" << column << "\n"; 
+				exit(-1);
+			}
+			case TYPE_DOESNT_MATCH:
+			{
+				std::cout << "Assigning variable '" << c << "' to variable '" << d << "' but their types do not match. LN:" << line << " COL:" << column << "\n";
+				exit(-1);
 			}
 			defualt:{
 				std::cout << c <<"' in input. LN: " << line << " COL: " << column << "\n";
@@ -199,7 +212,7 @@ public:
 					Column++;
 					return Token(SYMBOL, "&&", Line, Column);
 				}
-    return Token(SYMBOL, "&", Line, Column);
+  return Token(SYMBOL, "&", Line, Column);
 			}
 			case '=':{
 				++Position;
