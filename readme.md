@@ -5,4 +5,5 @@
 - Goal is to compile to Windows Linux and [MaslOS](https://github.com/marceldobehere/MaslOS).   
 # COMPILER
 - Not fully optimized but as fast as I know how to make.
-- Fast. Written in C++
+- Fast. 
+- Statically typed.

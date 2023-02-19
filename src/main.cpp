@@ -1,67 +1,4 @@
 #include <fstream>
-#include<syntax/parser.h>
-
-std::string NodeTypeToString(int type) {
-  switch(type) {
-    case PROGRAM:
-      return "PROGRAM";
-    case FUNCTION:
-      return "FUNCTION";
-    case EQUAL:
-      return "EQUAL";
-    case FUNCTION_CALL:
-      return "FUNCTION_CALL";
-    case CONSTANT_NODE:
-      return "CONSTANT_NODE";
-    case REFERENCE:
-      return "REFERENCE";
-    case BLOCK:
-      return "BLOCK";
-    case VAR:
-      return "VAR";
-    case BOOLEXPR:
-      return "BOOLEXPR";
-    case IFNODE:
-      return "IFNODE";
-    case WHILENODE:
-      return "WHILENODE";
-    case STRUCT:
-      return "STRUCT";
-    case MATH:
-      return "MATH";
-    case MEMBER:
-      return "MEMBER";
-    case UNLESSNODE:
-      return "UNLESSNODE";
-    case ELSENODE:
-      return "ELSENODE";
-    case NAME:
-      return "NAME";
-    case POINTERVAR:
-      return "POINTER";
-    case POINTERREFERENCE:
-      return "PTRREFERENCE";
-    default:
-        return "UNKNOWN";
-  }
-}
-
-void printTree(Node* root, std::string prefix = "", bool isLastChild = true) {
-  std::cout << prefix;
-  if (isLastChild && root->Type != PROGRAM) {
-    std::cout << "\\---->";
-    prefix += "  ";
-  }
-  else if(!isLastChild){
-    std::cout << "|---->";
-    prefix += "| ";
-  }
-  std::cout << "Type: " << NodeTypeToString(root->Type) << ", Token: " << root->NodeToken->Text << std::endl;
-
-  for (int i = 0; i < root->Children.size(); i++) {
-    printTree(root->Children[i], prefix, i == root->Children.size() - 1);
-  }
-}
 char* ReadFile(std::string Path){
   std::ifstream t(Path);
 	t.seekg(0, std::ios::end);
@@ -69,9 +6,77 @@ char* ReadFile(std::string Path){
 	char* buffer = (char*)malloc(size);
 	t.seekg(0);
 	t.read(buffer, size);
-  buffer[size] = 0;   
+  buffer[size - 1] = 0;   
   return buffer;
 }
+#include<syntax/parser.h>
+
+std::string NodeTypeToString(int type) {
+  switch(type) {
+  case PROGRAM:
+    return "PROGRAM";
+  case FUNCTION:
+    return "FUNCTION";
+  case EQUAL:
+    return "EQUAL";
+  case FUNCTION_CALL:
+    return "FUNCTION_CALL";
+  case CONSTANT_NODE:
+    return "CONSTANT_NODE";
+  case REFERENCE:
+    return "REFERENCE";
+  case BLOCK:
+    return "BLOCK";
+  case VAR:
+    return "VAR";
+  case BOOLEXPR:
+    return "BOOLEXPR";
+  case IFNODE:
+    return "IFNODE";
+  case WHILENODE:
+    return "WHILENODE";
+  case STRUCT:
+    return "STRUCT";
+  case MATH:
+    return "MATH";
+  case MEMBER:
+    return "MEMBER";
+  case UNLESSNODE:
+    return "UNLESSNODE";
+  case ELSENODE:
+    return "ELSENODE";
+  case NAME:
+    return "NAME";
+  case POINTERVAR:
+    return "POINTER";
+  case POINTERREFERENCE:
+    return "PTRREFERENCE";
+  case ASSEMBLY:
+    return "ASSEMBLY";
+  case CONTAINERNODE:
+    return "CONTAINER";
+  default:
+    return "UNKNOWN";
+  }
+}
+
+void printTree(Node* root, std::string prefix = "", bool isLastChild = true) {
+  std::cout << prefix;
+  if (isLastChild && root->Type != PROGRAM) {
+  std::cout << "\\---->";
+  prefix += "  ";
+  }
+  else if(!isLastChild){
+  std::cout << "|---->";
+  prefix += "| ";
+  }
+  std::cout << "Type: " << NodeTypeToString(root->Type) << ", Token: " << root->NodeToken->Text << std::endl;
+
+  for (int i = 0; i < root->Children.size(); i++) {
+  printTree(root->Children[i], prefix, i == root->Children.size() - 1);
+  }
+}
+
 int main(){
   std::string str = ReadFile("Test.LF");
 	Parser parser = Parser(str);

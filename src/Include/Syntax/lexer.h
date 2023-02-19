@@ -24,7 +24,9 @@ enum ErrorTypes{
 	REDEFINITION_OF_FUNCTION,
 	REDEFINITION_OF_STRUCT,
 	EXPECT_IDENTIFIER,
-	TYPE_HAS_NO_MEMBER
+	TYPE_HAS_NO_MEMBER,
+	TYPENAME_DOESNT_EXIST,
+	CONTAINER
 };
 
 class ErrorHandler{
@@ -55,6 +57,15 @@ public:
 				std::cout << "Type '" << c << "' does not include the member '" << d << "'. LN:" << line << " COL:" << column << "\n";
 				exit(-1);
 			} 
+			case TYPENAME_DOESNT_EXIST:
+			{
+				std::cout << "Type '" << c << "' does not exist. LN:" << line << " COL:" << column << "\n"; 
+				exit(-1);
+			}
+			case CONTAINER:
+			{
+				std::cout << "Container '" << c << "' does not exist LN:" << line << " COL:" << column << "\n";  
+			}
 			defualt:{
 				std::cout << c <<"' in input. LN: " << line << " COL: " << column << "\n";
 				exit(-1);
@@ -71,7 +82,6 @@ enum LexerTypes{
 	IDENTIFIER,
 	EQ,
 	SYMBOL,
-	ASM,
 };
 
 
@@ -91,15 +101,6 @@ public:
 
 	}
 	Token Tokenize(){
-		if(Source[Position] == '~'){
-			++Position;
-			std::string A = "";
-			while(Source[Position] != '~' && Source[Position] != 0){
-				A += Source[Position];
-				++Position;
-			}
-			return Token(ASM, std::move(A), Line, Column);
-		}
 		if(Source[Position] == '#'){
 			while(Source[Position] != '\n' && Source[Position] != '\0'){
 				++Position;
@@ -198,7 +199,7 @@ public:
 					Column++;
 					return Token(SYMBOL, "&&", Line, Column);
 				}
-        return Token(SYMBOL, "&", Line, Column);
+    return Token(SYMBOL, "&", Line, Column);
 			}
 			case '=':{
 				++Position;
