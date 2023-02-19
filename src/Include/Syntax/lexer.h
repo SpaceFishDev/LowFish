@@ -53,6 +53,7 @@ public:
 			}
 			case TYPE_HAS_NO_MEMBER:{
 				std::cout << "Type '" << c << "' does not include the member '" << d << "'. LN:" << line << " COL:" << column << "\n";
+				exit(-1);
 			} 
 			defualt:{
 				std::cout << c <<"' in input. LN: " << line << " COL: " << column << "\n";
@@ -90,14 +91,14 @@ public:
 
 	}
 	Token Tokenize(){
-		if(Source[Position] == '$'){
+		if(Source[Position] == '~'){
 			++Position;
 			std::string A = "";
-			while(Source[Position] != '$' && Source[Position] != 0){
+			while(Source[Position] != '~' && Source[Position] != 0){
 				A += Source[Position];
 				++Position;
 			}
-			return Token(ASM, A, Line, Column);
+			return Token(ASM, std::move(A), Line, Column);
 		}
 		if(Source[Position] == '#'){
 			while(Source[Position] != '\n' && Source[Position] != '\0'){
@@ -120,7 +121,7 @@ public:
 				std::string o = " ";
 				o[0] = Source[Position];
 				++Position;
-				return Token(SYMBOL, o, Line, Column);
+				return Token(SYMBOL, std::move(o), Line, Column);
 			}
 			case '\'':
 			case '"':{
@@ -137,7 +138,7 @@ public:
 					++Column;
 				}
 				++Position;
-				return Token(STRING, out, Line, Column);
+				return Token(STRING, std::move(out), Line, Column);
 			}
 			case '\n':{
 				++Line;
@@ -180,6 +181,15 @@ public:
 				}
 				ErrorHandler::PutError(-1, "'!' has to be followed by a '=' for bolean expressions.", Line, Column);
 			} break;
+			case '|':{
+				++Position;
+				++Column;
+				if(Source[Position] == '|'){
+					Position++;
+					Column++;
+					return Token(SYMBOL, "||", Line, Column);
+				}
+			}
 			case '&':{
 				++Position;
 				++Column;
@@ -188,6 +198,7 @@ public:
 					Column++;
 					return Token(SYMBOL, "&&", Line, Column);
 				}
+        return Token(SYMBOL, "&", Line, Column);
 			}
 			case '=':{
 				++Position;
@@ -210,7 +221,7 @@ public:
 				++Position;
 				++Column;
 			}
-			return Token(IDENTIFIER, out, Line, Column);
+			return Token(IDENTIFIER, std::move(out), Line, Column);
 		}
 		if(IsDigit(Source[Position])){
 			std::string out = "";
@@ -219,7 +230,7 @@ public:
 				++Position;
 				++Column;
 			}
-			return Token(CONSTANT, out, Line, Column);
+			return Token(CONSTANT, std::move(out)	, Line, Column);
 		}
 		if(Position >= Source.length()){
 			return Token(END, "", Line, Column);
