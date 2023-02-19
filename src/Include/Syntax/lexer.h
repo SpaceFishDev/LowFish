@@ -24,11 +24,12 @@ enum ErrorTypes{
 	REDEFINITION_OF_FUNCTION,
 	REDEFINITION_OF_STRUCT,
 	EXPECT_IDENTIFIER,
+	TYPE_HAS_NO_MEMBER
 };
 
 class ErrorHandler{
 public:
-	static void PutError(int type, std::string c,int line, int column){
+	static void PutError(int type, std::string c,int line, int column, std::string d = ""){
 		switch(type){
 			case NEVER_ENDING_STRING:{
 				std::cout << "String never ends. LN: " << line << " COL: " << column << "\n";
@@ -50,6 +51,9 @@ public:
 				std::cout << "Identifier expected for struct definition. LN:" << line << " COL:" << column << "\n";
 				exit(-1);
 			}
+			case TYPE_HAS_NO_MEMBER:{
+				std::cout << "Type '" << c << "' does not include the member '" << d << "'. LN:" << line << " COL:" << column << "\n";
+			} 
 			defualt:{
 				std::cout << c <<"' in input. LN: " << line << " COL: " << column << "\n";
 				exit(-1);
@@ -64,7 +68,6 @@ enum LexerTypes{
 	CONSTANT,
 	STRING,
 	IDENTIFIER,
-	SEMI,
 	EQ,
 	SYMBOL,
 	ASM,
@@ -112,6 +115,7 @@ public:
 			case ')':
 			case '{':
 			case ',':
+			case '.':
 			case '}':{
 				std::string o = " ";
 				o[0] = Source[Position];
@@ -141,6 +145,8 @@ public:
 				Column = 0;
 				return Tokenize();
 			}
+			case ':':
+			case '\\':
 			case '\t':
 			case ' ':{
 				++Position;
@@ -215,7 +221,7 @@ public:
 			}
 			return Token(CONSTANT, out, Line, Column);
 		}
-		if(Position > Source.length()){
+		if(Position >= Source.length()){
 			return Token(END, "", Line, Column);
 		}
 		ErrorHandler::PutError(UNEXPECTED_CHARACTER, std::string("") + Source[Position], Line, Column);

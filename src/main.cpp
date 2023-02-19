@@ -29,6 +29,8 @@ std::string NodeTypeToString(int type) {
             return "STRUCT";
         case MATH:
             return "MATH";
+        case MEMBER:
+            return "MEMBER";
         default:
                 return "UNKNOWN";
     }
