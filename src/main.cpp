@@ -1,22 +1,28 @@
-#include <fstream>
-#include<cstring>
 #include<iostream>  
+#include<cstring>
+#include <fstream>
 #include<vector> 
-#include<algorithm>
-char* ReadFile(std::string Path){
-  std::ifstream t(Path);
-	t.seekg(0, std::ios::end);
-	size_t size = t.tellg();
-	char* buffer = (char*)malloc(size);
-	t.seekg(0);
-	t.read(buffer, size);
-  buffer[size - 1] = 0;   
-  return buffer;
+// #include<algorithm>
+#include<sstream>
+const char* ReadFile(std::string Path){
+  std::vector<char> v;
+  if (FILE *fp = fopen(Path.c_str(), "r"))
+  {
+    char buf[1024];
+    while (size_t len = fread(buf, 1, sizeof(buf), fp))
+      v.insert(v.end(), buf, buf + len);
+    fclose(fp);
+  }
+  std::string r = "";
+  for(char c : v){
+    r += c;
+  }
+  return r.c_str();
 }
 std::string NodeTypeToString(int type);
 class Node;
 void printTree(Node* root, std::string prefix, bool isLastChild);
-
+bool drawTree = false;
 
 #include<compiler.h>
 
@@ -39,6 +45,8 @@ void printTree(Node* root, std::string prefix = "", bool isLastChild = true) {
 
 std::string NodeTypeToString(int type) {
   switch(type) {
+  case RETURNNODE:
+  return "RETURN";
   case PROGRAM:
   return "PROGRAM";
   case FUNCTION:
@@ -81,6 +89,8 @@ std::string NodeTypeToString(int type) {
   return "ASSEMBLY";
   case CONTAINERNODE:
   return "CONTAINER";
+  case EXTERN:
+  return "EXTERN";
   default:
   return "UNKNOWN";
   }
@@ -116,7 +126,6 @@ std::string strip_extention(std::string str){
   }
   return s;
 }
-
 int main(int argc, char** argv){
   int i = 1;
   --argc;
@@ -128,6 +137,9 @@ int main(int argc, char** argv){
       ++i;
       --argc;
     }
+    else if(strcmp("-t", argv[i]) == 0){
+      drawTree = !drawTree;
+    }
     else{
       in = argv[i];
     }
@@ -135,8 +147,8 @@ int main(int argc, char** argv){
   }
   std::string str = ReadFile(in);
   Compiler compiler(str, "w");
-  std::cout << strip_extention(out);
   Compiler::WriteFile(compiler.TextAsm, strip_extention(out) + ".asm");
+  std::cout << "LOWFISH: Output to executable file '" << strip_extention(out) << ".exe" << "' into working directory.\n"; 
   system(
     (
       std::string("nasm ") + 
@@ -147,7 +159,7 @@ int main(int argc, char** argv){
   );
   system(
     (
-      std::string("golink /entry:main /console ") + 
+      std::string("golink /entry:main /console msvcrt.dll ") + 
       std::string(strip_extention(out) + ".obj")
     ).c_str()
   );

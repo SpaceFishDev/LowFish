@@ -1,6 +1,5 @@
-int print(string s){
-}
+include io from "std/std.lf"
 int main(){
-  string a = "abc";
-  print(a);
+  print("Hello, World!");
 }
+

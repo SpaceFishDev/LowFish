@@ -135,7 +135,7 @@ public:
 				std::string o = " ";
 				o[0] = Source[Position];
 				++Position;
-				return Token(SYMBOL, std::move(o), Line, Column);
+				return Token(SYMBOL, o, Line, Column);
 			}
 			case '\'':
 			case '"':{
@@ -151,7 +151,8 @@ public:
 					++Position;
 					++Column;
 				}
-				++Position;
+				Position++;
+				Column++;
 				return Token(STRING, std::move(out), Line, Column);
 			}
 			case '\n':{
@@ -235,7 +236,7 @@ public:
 				++Position;
 				++Column;
 			}
-			return Token(IDENTIFIER, std::move(out), Line, Column);
+			return Token(IDENTIFIER, out, Line, Column);
 		}
 		if(IsDigit(Source[Position])){
 			std::string out = "";
@@ -244,7 +245,7 @@ public:
 				++Position;
 				++Column;
 			}
-			return Token(CONSTANT, std::move(out)	, Line, Column);
+			return Token(CONSTANT, out	, Line, Column);
 		}
 		if(Position >= Source.length()){
 			return Token(END, "", Line, Column);
