@@ -25,13 +25,15 @@ enum NodeTypes{
   EXTERN,
   RETURNNODE,
 };
-class Node{
+class Node
+{
 public:
   Token* NodeToken;
   std::vector<Node*> Children;
   int Type;
   Node* Parent; 
-  Node(Token* t, int T, Node* Parent){
+  Node(Token* t, int T, Node* Parent)
+  {
     NodeToken = t;
     Type = T;
     this->Parent = Parent;
@@ -39,26 +41,32 @@ public:
 private:
 };
 
-struct Type{
+struct Type
+{
   std::string name;
   std::vector<std::string> members;
-  Type(std::string name){
-  this->name = name;
+  Type(std::string name)
+  {
+    this->name = name;
   }
 };
-struct Var{
+struct Var
+{
   std::string name;
   std::string TypeName;
   bool Pointer = false;
-  Var(std::string n, std::string t, bool Pointer){
-  name = n;
-  TypeName = t;
+  Var(std::string n, std::string t, bool Pointer)
+  {
+    name = n;
+    TypeName = t;
   }
 };
-struct Function{
+struct Function
+{
   int num_args;
   std::string Name;
-  Function(std::string nm){
+  Function(std::string nm)
+  {
 	  num_args  =0;
 	  Name = nm;
   }
@@ -66,7 +74,8 @@ struct Function{
 
 
 
-class Parser{
+class Parser
+{
 public:
   std::string Source;
   Lexer lexer;
@@ -81,48 +90,59 @@ public:
     Type("short")
   };
   std::vector<Var> Variables;
-  std::vector<Token> ReorderTokens(std::vector<Token> tokens){
+  std::vector<Token> ReorderTokens(std::vector<Token> tokens)
+  {
     return tokens;
   }
   Parser(){}
-  Parser(std::string source){
+  Parser(std::string source)
+  {
       lexer = Lexer(source);
-
       while(true)
       {
-      Token t = lexer.Tokenize();
-      Tokens.push_back(t);
-      if(t.Type == END || lexer.Position > lexer.Source.length()){
-      Tokens = ReorderTokens(Tokens);
-      return;				
+        Token t = lexer.Tokenize();
+        Tokens.push_back(t);
+        if(t.Type == END || lexer.Position > lexer.Source.length())
+        {
+          Tokens = ReorderTokens(Tokens);
+          return;				
+        }
       }
-      }
-
     }
 
-    bool Expect(int Type){
+    bool Expect(int Type)
+    {
       if(Position + 1 > Tokens.size())
         ErrorHandler::PutError(-1, "Not enough tokens in input." , 0, 0);
       return Tokens[Position + 1].Type == Type;
     }
-    bool ExpectValue(std::string Value){
+    bool ExpectValue(std::string Value)
+    {
       if(Position + 1 > Tokens.size())
         ErrorHandler::PutError(-1, "Not enough tokens in input." , 0, 0);
       return Tokens[Position + 1].Text == Value;
     }
-    bool CheckForMember(std::string member, std::string var){
+    bool CheckForMember(std::string member, std::string var)
+    {
       bool correct = false;
-      for(Var v : Variables){
+      for(Var v : Variables)
+      {
         if(v.name == var){
-          for(Type t : Types){
-          if(t.name == v.TypeName){
-              for(std::string m : t.members){
-                if(m == member){
+          for(Type t : Types)
+          {
+            if(t.name == v.TypeName)
+            {
+              for(std::string m : t.members)
+              {
+                if(m == member)
+                {
                   correct = true;
                 }
               }
-              if(!correct){
-                ErrorHandler::PutError(
+              if(!correct)
+              {
+                ErrorHandler::PutError
+                (
                   TYPE_HAS_NO_MEMBER, 
                   t.name, Tokens[Position].Line, 
                   Tokens[Position].Column, 
@@ -135,18 +155,23 @@ public:
       }
       return correct;
     }
-    struct Container{
+    struct Container
+    {
       std::string name;
       Node** begin;
-      Container(const std::string& name, Node** begin){
+      Container(const std::string& name, Node** begin)
+      {
         this->name = name;
         this->begin = begin;
       }
     };
     std::vector<Container> cn;
-    void GetContainers(Node* n){
-      for(Node* c : n->Children){
-        if(c->Type == CONTAINERNODE){
+    void GetContainers(Node* n)
+    {
+      for(Node* c : n->Children)
+      {
+        if(c->Type == CONTAINERNODE)
+        {
           cn.push_back(Container(c->Children[0]->NodeToken->Text, &c));
         }
         GetContainers(c);
@@ -154,22 +179,28 @@ public:
     }
     std::vector<Function> cntF;
     std::vector<std::string> Assembly;
-    void GetFunctions(Node* container){
-      if(container->Type == FUNCTION){
+    void GetFunctions(Node* container)
+    {
+      if(container->Type == FUNCTION)
+      {
         Function n = Function(container->Children[0]->NodeToken->Text);
         cntF.push_back(n);
       }
-      if(container->Type == ASSEMBLY && container->NodeToken->Type == STRING){
+      if(container->Type == ASSEMBLY && container->NodeToken->Type == STRING)
+      {
         Assembly.push_back(container->NodeToken->Text);
       }
-      for(Node* child : container->Children){
+      for(Node* child : container->Children)
+      {
         GetFunctions(child);
       }
     }
-    Node* GetContainerContent(Node* N){
+    Node* GetContainerContent(Node* N)
+    {
       return N->Children[1];
     }
-    Node* ParseConstant(Node* Parent, Node* Root){
+    Node* ParseConstant(Node* Parent, Node* Root)
+    {
       std::string math = "/*+-";
           for(char c : math)
           {
@@ -187,7 +218,8 @@ public:
           Parent->Children.push_back(N);
           return Parse(Parent, Root);
     }
-    Node* ParseSymbol(Node* Parent, Node* Root){
+    Node* ParseSymbol(Node* Parent, Node* Root)
+    {
       Token Current = Tokens[Position];
       if(Current.Text == "&")
       {
@@ -282,17 +314,22 @@ public:
       }
       return Root;
     }
-    Node* ParseIdentifier(Node* Parent, Node* Root, Token Current){
-      if(Current.Text == "extern"){
-        if(Expect(STRING)){
+    Node* ParseIdentifier(Node* Parent, Node* Root, Token Current)
+    {
+      if(Current.Text == "extern")
+      {
+        if(Expect(STRING))
+        {
           Node* N = new Node(&Tokens[Position], EXTERN, Parent);
           ++Position;
           Parent->Children.push_back(N);
           return Parse(N, Root);
         }
       }
-      if(Current.Text == "asm"){
-        if(Expect(STRING)){
+      if(Current.Text == "asm")
+      {
+        if(Expect(STRING))
+        {
           Node* N = new Node(&Tokens[Position + 1], ASSEMBLY, Parent);
           ++Position;
           ++Position;
@@ -301,8 +338,10 @@ public:
           return Parse(N, Root);
         }
       }
-      if(Current.Text == "container"){
-        if(!Expect(IDENTIFIER)){
+      if(Current.Text == "container")
+      {
+        if(!Expect(IDENTIFIER))
+        {
           ErrorHandler::PutError(EXPECT_IDENTIFIER, " ", Current.Line, Current.Column);
         }
         Node* N = new Node(&Tokens[Position], CONTAINERNODE, Parent);
@@ -313,8 +352,10 @@ public:
         Parent->Children.push_back(N);
         return Parse(n, Root);
       }
-      if(Current.Text == "return"){
-        if(!Expect(IDENTIFIER) && !Expect(CONSTANT) && !Expect(STRING)){
+      if(Current.Text == "return")
+      {
+        if(!Expect(IDENTIFIER) && !Expect(CONSTANT) && !Expect(STRING))
+        {
           ErrorHandler::PutError(EXPECT_IDENTIFIER, " ", Current.Line, Current.Column);
         }
         Node* N = new Node(&Tokens[Position], RETURNNODE, Parent);
@@ -329,19 +370,25 @@ public:
         Parent->Children.push_back(N);
         return Parse(n, Root);
       }
-      if(Current.Text == "include"){
-        if(Expect(STRING)){
+      if(Current.Text == "include")
+      {
+        if(Expect(STRING))
+        {
           std::string Path = Tokens[Position + 1].Text;
           Parser temp = Parser(ReadFile(Path));
           temp.Parse(Parent, Root);
           Position++;
           Position++;
-          for(Function f : temp.Functions){
+          for(Function f : temp.Functions)
+          {
             Functions.push_back(f);
           }
-          for(Type t : temp.Types){
-            for(Type t2 : Types){
-              if(t2.name == t.name){
+          for(Type t : temp.Types)
+          {
+            for(Type t2 : Types)
+            {
+              if(t2.name == t.name)
+              {
                 continue;
               }
             }
@@ -349,10 +396,12 @@ public:
           }
           return Parse(Parent,Root);
         }
-        if(Expect(IDENTIFIER)){
+        if(Expect(IDENTIFIER))
+        {
           ++Position;
           std::string from = Tokens[Position].Text;
-          if(ExpectValue("from")){
+          if(ExpectValue("from"))
+          {
             ++Position;
             std::string Path = Tokens[Position + 1].Text;
             Node* N = new Node(new Token(0,"",0,0), PROGRAM, Parent);
@@ -361,12 +410,15 @@ public:
             cn = std::vector<Container>();
             GetContainers(N);
             Position += 2;
-            for(Container cnt: cn){
-              if(cnt.name == from){
+            for(Container cnt: cn)
+            {
+              if(cnt.name == from)
+              {
                 Parent->Children.push_back(N->Children[0]->Children[0]->Children[0]);
                 cntF = std::vector<Function>();
                 GetFunctions(N);
-                for(Function f : cntF){
+                for(Function f : cntF)
+                {
                   Functions.push_back(f);
                 }    
                 return Parse(Parent, Root);
@@ -376,13 +428,17 @@ public:
           }
         }
       }
-      if(Current.Text == "struct"){
+      if(Current.Text == "struct")
+      {
         if(!Expect(IDENTIFIER)){
           ErrorHandler::PutError(EXPECT_IDENTIFIER, " ", Current.Line, Current.Column);
         }
-        for(Type T : Types){
-          if(T.name == Tokens[Position + 1].Text){
-            ErrorHandler::PutError(
+        for(Type T : Types)
+        {
+          if(T.name == Tokens[Position + 1].Text)
+          {
+            ErrorHandler::PutError
+            (
               REDEFINITION_OF_STRUCT, 
               Tokens[Position+1].Text, Tokens[Position].Line, 
               Tokens[Position].Column
@@ -397,8 +453,10 @@ public:
         Parent->Children.push_back(N);
         return Parse(N, Root);
       }
-      if(Current.Text == "if"){
-        if(!ExpectValue("(")){
+      if(Current.Text == "if")
+      {
+        if(!ExpectValue("("))
+        {
           ErrorHandler::PutError(-1, "If statements require '(' expression ')' block. " , Current.Line, Current.Column);
         }
         Node* N = new Node(&Tokens[Position], IFNODE, Parent);
@@ -407,17 +465,21 @@ public:
         Parent->Children.push_back(N);
         return Parse(N, Root);
       }
-      if(Current.Text == "else"){
+      if(Current.Text == "else")
+      {
         Node* N = new Node(&Tokens[Position], ELSENODE, Parent);
-        if(!ExpectValue("if")){
+        if(!ExpectValue("if"))
+        {
           ++Position;
         }
         ++Position;
         Parent->Children.push_back(N);
         return Parse(N, Root);
       }
-      if(Current.Text == "while"){
-        if(!ExpectValue("(")){
+      if(Current.Text == "while")
+      {
+        if(!ExpectValue("("))
+        {
           ErrorHandler::PutError(-1, "while statements require '(' expression ')' block. " , Current.Line, Current.Column);
         }
         Node* N = new Node(&Tokens[Position], WHILENODE, Parent);
@@ -426,8 +488,10 @@ public:
         Parent->Children.push_back(N);
         return Parse(N, Root);
       }
-      if(Current.Text == "unless"){
-        if(!ExpectValue("(")){
+      if(Current.Text == "unless")
+      {
+        if(!ExpectValue("("))
+        {
           ErrorHandler::PutError(-1, "while statements require '(' expression ')' block. " , Current.Line, Current.Column);
         }
         Node* N = new Node(&Tokens[Position], UNLESSNODE, Parent);
@@ -436,7 +500,8 @@ public:
         Parent->Children.push_back(N);
         return Parse(N, Root);
       }
-      if(ExpectValue(".")){
+      if(ExpectValue("."))
+      {
         std::string var = Current.Text;
         ++Position;
         ++Position;
@@ -451,13 +516,16 @@ public:
       for(Type t : Types){
         if(Current.Text == t.name)
         {
-          if(Expect(IDENTIFIER) && Tokens[Position + 2].Text == "("){
+          if(Expect(IDENTIFIER) && Tokens[Position + 2].Text == "(")
+          {
             ++Position;
             int Type = FUNCTION;
             Node* F = new Node(&Tokens[Position - 1], Type, Parent);
             F->Children.push_back(new Node(&Tokens[Position], NAME, F));
-            for(Function func : Functions){
-              if(func.Name == Tokens[Position].Text){
+            for(Function func : Functions)
+            {
+              if(func.Name == Tokens[Position].Text)
+              {
                 ErrorHandler::PutError(REDEFINITION_OF_FUNCTION, func.Name, Tokens[Position].Line, Tokens[Position].Column);
               }
             }
@@ -486,17 +554,25 @@ public:
       || ExpectValue("+")
       || ExpectValue("-")
       || ExpectValue("/")
-      || ExpectValue("*")){
-        if(Parent->Parent->Type == VAR){
+      || ExpectValue("*"))
+      {
+        if(Parent->Parent->Type == VAR)
+        {
           Var v = Var(Tokens[Position].Text, Parent->NodeToken->Text, Parent->Type == POINTERVAR);
           Variables.push_back(v);
         }
-        if(Parent->Type == EQUAL){
-          for(Var v : Variables){
-            if(Parent->NodeToken->Text == v.name) {
-              for(Var v2 : Variables){
-                if(v2.name == Tokens[Position].Text){
-                  if(v2.TypeName != v.TypeName){
+        if(Parent->Type == EQUAL)
+        {
+          for(Var v : Variables)
+          {
+            if(Parent->NodeToken->Text == v.name) 
+            {
+              for(Var v2 : Variables)
+              {
+                if(v2.name == Tokens[Position].Text)
+                {
+                  if(v2.TypeName != v.TypeName)
+                  {
                     ErrorHandler::PutError(TYPE_DOESNT_MATCH, v.name, Current.Line, Current.Column,v2.name);
                   }
                 }
@@ -528,7 +604,8 @@ public:
         return Parse(N, Root);
       }
       
-      if(ExpectValue("=")){
+      if(ExpectValue("="))
+      {
         Node* N = new Node(&Tokens[Position], EQUAL, Parent);
         ++Position;
         ++Position;
@@ -537,10 +614,13 @@ public:
       }
       int Type = 0;
       
-      if(ExpectValue("(")){
+      if(ExpectValue("("))
+      {
         Type = FUNCTION_CALL;
-        for(Function Func : Functions){
-          if(Func.Name == Tokens[Position].Text){
+        for(Function Func : Functions)
+        {
+          if(Func.Name == Tokens[Position].Text)
+          {
             Node* F = new Node(&Tokens[Position], Type, Parent);
             ++Position;
             ++Position;
@@ -552,20 +632,25 @@ public:
       }
       return Root;
     }
-    Node* Parse(Node* Parent, Node* Root){
-      if(Position > Tokens.size()){
+    Node* Parse(Node* Parent, Node* Root)
+    {
+      if(Position > Tokens.size())
+      {
         return Root;
       }
       Token Current = Tokens[Position];
       switch(Current.Type){
         case STRING:
-        case CONSTANT:{
+        case CONSTANT:
+        {
           return ParseConstant(Parent, Root);
         }
-        case SYMBOL:{
+        case SYMBOL:
+        {
           return ParseSymbol(Parent, Root);
         } break;
-        case IDENTIFIER:{
+        case IDENTIFIER:
+        {
           return ParseIdentifier(Parent, Root, Current);
         } break;
       }
