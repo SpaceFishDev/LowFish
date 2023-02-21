@@ -1,5 +1,11 @@
-include io from "std/std.lf"
+include io from "./std.lf"
 int main(){
-  print("Hello, World!");
+  int x = 3;
+  int i = 5;
+  if(i != x){
+    puts("Here");
+  }
+  exit(0);
 }
+
 

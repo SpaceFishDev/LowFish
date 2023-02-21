@@ -24,6 +24,7 @@ enum NodeTypes{
   CONTAINERNODE,  
   EXTERN,
   RETURNNODE,
+  BLOCKEND,
 };
 class Node
 {
@@ -95,9 +96,9 @@ public:
     return tokens;
   }
   Parser(){}
-  Parser(std::string source)
+  Parser(const std::string& source)
   {
-      lexer = Lexer(source);
+      lexer = Lexer((std::string&)source, source.length());
       while(true)
       {
         Token t = lexer.Tokenize();
@@ -252,6 +253,7 @@ public:
       }
       if(Current.Text == "}")
       {
+        Parent->Children.push_back(new Node(&Tokens[Position], BLOCKEND, Parent));
         ++Position;
         Node* N = Parent;
         if(N->Type == BLOCK && N->Parent->Type == IFNODE){
@@ -261,9 +263,10 @@ public:
             }	
             return Parse(N, Root);
         }
-        while(N->Type != PROGRAM){
+        while(N->Type != PROGRAM && N->Type != CONTAINERNODE){
           N = N->Parent;
         }
+
         return Parse(N, Root);
       }
       if(
@@ -414,7 +417,7 @@ public:
             {
               if(cnt.name == from)
               {
-                Parent->Children.push_back(N->Children[0]->Children[0]->Children[0]);
+                Parent->Children.push_back(N);
                 cntF = std::vector<Function>();
                 GetFunctions(N);
                 for(Function f : cntF)

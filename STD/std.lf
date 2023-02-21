@@ -1,7 +1,0 @@
-container io{
-    extern "printf";
-    int print(string s){
-        asm "push dword [ebp + 8]";
-        asm "call printf";
-    }
-}

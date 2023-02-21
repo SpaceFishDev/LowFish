@@ -9,8 +9,8 @@ public:
   }
   Node* tree;
   Parser parser;
-  Compiler(std::string Source, std::string Choice){
-    parser = Parser(Source);
+  Compiler(const std::string& Source, std::string Choice){
+    parser = Parser(std::move(Source));
     Node* root = new Node(new Token(0,"", 0, 0),PROGRAM, nullptr);
     tree = parser.Parse(root, root);
     if(drawTree)
@@ -24,6 +24,9 @@ public:
           CompileWindows(tree);
         }
         TextAsm = BssAsm + DataAsm + Externs + TextAsm; 
+        if(drawTree){
+          std::cout << TextAsm << "\n";
+        }
         return;
       }
     }
@@ -43,20 +46,72 @@ public:
     int pos;
     std::string name;
     bool inFunc;
-    Variable(int p, std::string n, bool i){
+    std::string type;
+    Variable(int p, std::string n, bool i, std::string t){
       pos = p;
       name = n;
       inFunc = i;
+      type = t;
     }
   };
   std::vector<Variable> Variables;
   int AssemblyIndex = 0;
+  int LoopIndex = 0;
+
   void CompileWindows(Node* node)
   {
     if(node == nullptr)
       return;
     switch(node->Type)
     {
+      case IFNODE:{
+        Node* n = node->Children[0];
+        Node* prev = node->Children[0];
+        while(true){
+          prev = n;
+          if(n->Type == BOOLEXPR && (n->NodeToken->Text == "==" || n->NodeToken->Text == "!="))
+          {
+            if(n->Children[0]->Type == REFERENCE && n->Children[1]->Type == REFERENCE)
+            {
+              bool end = false;
+              for(Variable v1 : Variables)
+              {
+                if(v1.name == n->Children[0]->NodeToken->Text)
+                {
+                  for(Variable v2 : Variables)
+                  {
+                    if(v2.name == n->Children[1]->NodeToken->Text)
+                    {
+                      if(v2.type == "enumurable" && v1.type == "enumurable"){
+                        // adam hates this massive nesting.
+                        // but I dont care that much.
+                        if(v1.inFunc && v2.inFunc){
+                          TextAsm += "push eax\n";
+                          TextAsm += "mov eax, [ ebp + " + std::to_string(v1.pos) + "]\n" ;
+                          TextAsm += "mov edx, [ ebp + " + std::to_string(v2.pos) + "]\n" ;
+                          TextAsm += "cmp edx, eax\n";
+                          if(n->NodeToken->Text == "==")
+                            TextAsm += "jne LO" + std::to_string(LoopIndex) + "\n";
+                          else
+                            TextAsm += "je LO" + std::to_string(LoopIndex) + "\n";
+                        }
+                        end = true;
+                      }
+                    }
+                  }
+                }
+              }
+              if(end){
+                n = n->Children[1];
+                continue;
+              }
+            }
+          } 
+          if(prev = n){
+            break;
+          }
+        }
+      } break;
       case ASSEMBLY:
       {
         TextAsm += parser.Assembly[AssemblyIndex] + "\n";
@@ -65,6 +120,9 @@ public:
       case EXTERN:
       {
         std::string func = node->Children[0]->NodeToken->Text;
+        if(func == "printf"){
+          DataAsm += "strPrnt:\ndd \"%d\",0\n";
+        }
         Externs += std::string("[extern ") + func  + "]\n";
       } break;
       case FUNCTION:
@@ -84,6 +142,7 @@ public:
             DataAsm += std::string("\tdd `") + node->NodeToken->Text + "`,0\n";
             TextAsm += "push dword string";
             TextAsm += std::to_string(StringC) + "\n";
+            ++StringC;
           }else{
             TextAsm += std::string("push dword ") + node->NodeToken->Text + "\n";
           }
@@ -103,47 +162,84 @@ public:
                 }
               }
             }
-          } break;
+          } 
+          if(node->Parent->Type == VAR && node->Parent->Parent->Type != FUNCTION)
+          {
+            if(inFunc){
+              std::string type = node->Parent->NodeToken->Text;
+              if(type != "string"){
+                type = "enumurable";
+              }
+              std::string name = node->NodeToken->Text;
+              TextAsm += "\tpush dword 0\n";
+              Variables.push_back(Variable(StackPos, name, true, type));
+              StackPos += 4;
+            }
+          }
+      }break;
         case EQUAL:
-        {
-          if(node->Parent->Type == VAR){
-            if(node->Children[0]->Type == CONSTANT_NODE && node->Children[0]->NodeToken->Type == STRING){
-              if(inFunc){
+        { 
+          if(node->Parent->Type == VAR)
+          {
+            if(node->Children[0]->Type == CONSTANT_NODE && node->Children[0]->NodeToken->Type == STRING)
+            {
+              if(inFunc)
+              {
                 TextAsm += std::string("\tmov [ebp +") + std::to_string(StackPos + 8) + std::string("]") + ", dword string" + std::to_string(StringC) + "\n";
-                Variables.push_back(Variable(StackPos,node->NodeToken->Text,true));
+                Variables.push_back(Variable(StackPos,node->NodeToken->Text,true, "string"));
                 DataAsm += std::string("string") + std::to_string(StringC) + std::string(":\n\tdd `") + node->Children[0]->NodeToken->Text + "`,0\n";
                 ++StringC;
                 StackPos += 4;
-              }else{
-                Variables.push_back(Variable(0,node->NodeToken->Text,false));
+              }else
+              {
                 DataAsm += node->NodeToken->Text + std::string(":\n\tdd `") + node->Children[0]->NodeToken->Text + "`,0\n";
+                Variables.push_back(Variable(0,node->NodeToken->Text,false, "string"));
+              }
+            }else if(node->Children[0]->NodeToken->Type == CONSTANT)
+            {
+              if(inFunc)
+              {
+                TextAsm += "mov [ebp + " + std::to_string(StackPos) + "], dword " + node->Children[0]->NodeToken->Text + "\n";
+                Variables.push_back(Variable(StackPos, node->NodeToken->Text, true, "enumurable"));
+                StackPos += 4;
               }
             }
           }
         } break;
-        if(node->Parent->Type == VAR)
-        {
-          if(inFunc){
-            std::string type = node->Parent->NodeToken->Text;
-            std::string name = node->NodeToken->Text;
-            TextAsm += "\tpush dword 0\n";
-            Variables.push_back(Variable(StackPos, name, true));
-            StackPos += 4;
-         }
-        }
-      } break;
     }
-    if(node->Type != PROGRAM && node->Parent->Type == FUNCTION_CALL && node->Parent->Children[node->Parent->Children.size() - 1] == node){
+    
+    if
+    (
+      node->Type != PROGRAM 
+      && node->Parent->Type == FUNCTION_CALL 
+      && node->Parent->Children[node->Parent->Children.size() - 1] == node
+    )
+    {
       TextAsm += std::string("\tcall ") + node->Parent->NodeToken->Text;
       TextAsm += "\n";
+      if(node->Parent->Parent->Type == EQUAL)
+      {
+        if(node->Parent->Parent->Parent->Type == VAR)
+        {
+          TextAsm += "\tpush dword eax\n";
+          Variables.push_back(Variable(StackPos,node->Parent->Parent->NodeToken->Text, true, node->Parent->Parent->Parent->NodeToken->Text));
+          StackPos += 4;
+        }
+      }
     }
+    if(node->Type == BLOCKEND){
+      if(node->Parent->Parent->Type == IFNODE){
+        TextAsm += "LO" + std::to_string(LoopIndex) + ":\n";
+      }
+    }
+
     int i = 0;
     for(Node* child : node->Children)
     {
       if
       (
-        node->Type == BLOCK 
-        && node->Parent->Type == FUNCTION 
+        node->Type == BLOCKEND
+        && node->Parent->Parent->Type == FUNCTION 
         && i == node->Children.size()
       )
       {
@@ -151,6 +247,24 @@ public:
         inFunc = false;
         TextAsm += "mov esp, ebp\n";
         TextAsm += "pop ebp\nret\n";
+      }
+      if
+      (
+        node->Type != PROGRAM
+        && node == node->Parent->Children[node->Parent->Children.size() - 1]
+        && node->Parent->Type != FUNCTION_CALL
+        && node->Type != FUNCTION_CALL
+      )
+      {
+        bool isInBlock = false;
+        Node* n = node;
+        while(n->Type != PROGRAM){
+          if(n->Type == BLOCK){
+            isInBlock = true;
+            break;
+          }
+          n = n->Parent;
+        }
       }
       ++i;
       CompileWindows(child);

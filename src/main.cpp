@@ -8,16 +8,20 @@ const char* ReadFile(std::string Path){
   std::vector<char> v;
   if (FILE *fp = fopen(Path.c_str(), "r"))
   {
-    char buf[1024];
-    while (size_t len = fread(buf, 1, sizeof(buf), fp))
+    char buf[1024 * 32]{0};
+    while (size_t len = fread(buf, 1, sizeof(buf), fp)){
       v.insert(v.end(), buf, buf + len);
+    }
     fclose(fp);
   }
+  v[v.size() - 1] =0;
   std::string r = "";
   for(char c : v){
+    if(c == '\0') break; 
     r += c;
   }
-  return r.c_str();
+  char* ptr = &r[0];
+  return ptr;
 }
 std::string NodeTypeToString(int type);
 class Node;
@@ -89,6 +93,8 @@ std::string NodeTypeToString(int type) {
   return "ASSEMBLY";
   case CONTAINERNODE:
   return "CONTAINER";
+  case BLOCKEND:
+  return "BLOCKEND";
   case EXTERN:
   return "EXTERN";
   default:
@@ -129,7 +135,7 @@ std::string strip_extention(std::string str){
 int main(int argc, char** argv){
   int i = 1;
   --argc;
-  std::string out = "a.o";
+  std::string out = "a.exe";
   std::string in = "main.lf ";
   while(argc--){
     if(strcmp("-o", argv[i]) == 0){
@@ -146,7 +152,7 @@ int main(int argc, char** argv){
     ++i;
   }
   std::string str = ReadFile(in);
-  Compiler compiler(str, "w");
+  Compiler compiler(std::move(str), "w");
   Compiler::WriteFile(compiler.TextAsm, strip_extention(out) + ".asm");
   std::cout << "LOWFISH: Output to executable file '" << strip_extention(out) << ".exe" << "' into working directory.\n"; 
   system(

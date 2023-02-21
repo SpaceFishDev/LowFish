@@ -1,0 +1,17 @@
+container io{
+    extern "printf";
+    extern "exit";
+    int puts(string s){
+        asm "push dword [ebp + 8]";
+        asm "call printf";
+    }
+    int puti(int i){
+        asm "push dword [ebp + 8]";
+        asm "push dword strPrnt";
+        asm "call printf";
+    }
+    int exit(int i){
+        asm "push dword [ebp + 8]";
+        asm "call exit";
+    }
+}
