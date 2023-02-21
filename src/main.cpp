@@ -2,6 +2,7 @@
 #include<cstring>
 #include <fstream>
 #include<vector> 
+#define VERSION 0.1
 // #include<algorithm>
 #include<sstream>
 const char* ReadFile(std::string Path){
@@ -145,6 +146,10 @@ int main(int argc, char** argv){
     }
     else if(strcmp("-t", argv[i]) == 0){
       drawTree = !drawTree;
+    }
+    else if(strcmp("-v", argv[i]) == 0){
+      std::cout << "LowFish: V" << VERSION << "\n";
+      return 0;
     }
     else{
       in = argv[i];

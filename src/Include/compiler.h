@@ -64,6 +64,13 @@ public:
       return;
     switch(node->Type)
     {
+      case FUNCTION_CALL:
+      {
+        if(node->Children.size() == 0)
+        {
+          TextAsm += "call " + node->NodeToken->Text + "\n";
+        }
+      } break;
       case IFNODE:{
         Node* n = node->Children[0];
         Node* prev = node->Children[0];
@@ -150,14 +157,19 @@ public:
       }
       case REFERENCE:
       {
-          if(node->Parent->Type == FUNCTION_CALL){
-            for(Variable var : Variables){
-              if(var.name == node->NodeToken->Text){
-                if(!var.inFunc){
+          if(node->Parent->Type == FUNCTION_CALL)
+          {
+            for(Variable var : Variables)
+            {
+              if(var.name == node->NodeToken->Text)
+              {
+                if(!var.inFunc)
+                {
                   TextAsm += "\tpush ";
                   TextAsm += node->NodeToken->Text;
                   TextAsm += "\n";
-                }else{
+                }else
+                {
                   TextAsm += std::string("\tpush dword [ebp +  ") + std::to_string(( var.pos) + 8) + "]\n";
                 }
               }
@@ -227,13 +239,16 @@ public:
         }
       }
     }
-    if(node->Type == BLOCKEND){
-      if(node->Parent->Parent->Type == IFNODE){
+    if(node->Type == BLOCKEND)
+    {
+      if(node->Parent->Parent->Type == IFNODE)
+      {
         TextAsm += "LO" + std::to_string(LoopIndex) + ":\n";
       }
     }
 
     int i = 0;
+    skip:
     for(Node* child : node->Children)
     {
       if
@@ -258,8 +273,10 @@ public:
       {
         bool isInBlock = false;
         Node* n = node;
-        while(n->Type != PROGRAM){
-          if(n->Type == BLOCK){
+        while(n->Type != PROGRAM)
+        {
+          if(n->Type == BLOCK)
+          {
             isInBlock = true;
             break;
           }
