@@ -1,7 +1,8 @@
 #include<syntax/parser.h>
 class Compiler{
 public:
-  static void WriteFile(std::string txt, std::string path){
+  static void WriteFile(std::string txt, std::string path)
+  {
     std::ofstream file;
     file.open(path.c_str());
     file << txt.c_str();
@@ -9,7 +10,8 @@ public:
   }
   Node* tree;
   Parser parser;
-  Compiler(const std::string& Source, std::string Choice){
+  Compiler(const std::string& Source, std::string Choice)
+  {
     parser = Parser(std::move(Source));
     Node* root = new Node(new Token(0,"", 0, 0),PROGRAM, nullptr);
     tree = parser.Parse(root, root);
@@ -24,7 +26,8 @@ public:
           CompileWindows(tree);
         }
         TextAsm = BssAsm + DataAsm + Externs + TextAsm; 
-        if(drawTree){
+        if(drawTree)
+        {
           std::cout << TextAsm << "\n";
         }
         return;
@@ -47,7 +50,8 @@ public:
     std::string name;
     bool inFunc;
     std::string type;
-    Variable(int p, std::string n, bool i, std::string t){
+    Variable(int p, std::string n, bool i, std::string t)
+    {
       pos = p;
       name = n;
       inFunc = i;
@@ -71,10 +75,12 @@ public:
           TextAsm += "call " + node->NodeToken->Text + "\n";
         }
       } break;
-      case IFNODE:{
+      case WHILENODE:
+      {
         Node* n = node->Children[0];
         Node* prev = node->Children[0];
-        while(true){
+        while(true)
+        {
           prev = n;
           if(n->Type == BOOLEXPR && (n->NodeToken->Text == "==" || n->NodeToken->Text == "!="))
           {
@@ -89,10 +95,65 @@ public:
                   {
                     if(v2.name == n->Children[1]->NodeToken->Text)
                     {
-                      if(v2.type == "enumurable" && v1.type == "enumurable"){
+                      if(v2.type == "enumurable" && v1.type == "enumurable")
+                      {
                         // adam hates this massive nesting.
                         // but I dont care that much.
-                        if(v1.inFunc && v2.inFunc){
+                        if(v1.inFunc && v2.inFunc)
+                        {
+                          TextAsm += "LO" + std::to_string(LoopIndex++) + ":\n";
+                          TextAsm += "mov eax, [ ebp + " + std::to_string(v1.pos) + "]\n" ;
+                          TextAsm += "mov edx, [ ebp + " + std::to_string(v2.pos) + "]\n" ;
+                          TextAsm += "cmp edx, eax\n";
+                          if(n->NodeToken->Text == "==")
+                            TextAsm += "jne LOEND" + std::to_string(LoopIndex) + "\n";
+                          else
+                            TextAsm += "je LOEND" + std::to_string(LoopIndex) + "\n";
+                        }
+                        end = true;
+                      }
+                    }
+                  }
+                }
+              }
+              if(end)
+              {
+                n = n->Children[1];
+                continue;
+              }
+            }
+          } 
+          if(prev = n)
+          {
+            break;
+          }
+        }
+      } break;
+      case IFNODE:{
+        Node* n = node->Children[0];
+        Node* prev = node->Children[0];
+        while(true)
+        {
+          prev = n;
+          if(n->Type == BOOLEXPR && (n->NodeToken->Text == "==" || n->NodeToken->Text == "!="))
+          {
+            if(n->Children[0]->Type == REFERENCE && n->Children[1]->Type == REFERENCE)
+            {
+              bool end = false;
+              for(Variable v1 : Variables)
+              {
+                if(v1.name == n->Children[0]->NodeToken->Text)
+                {
+                  for(Variable v2 : Variables)
+                  {
+                    if(v2.name == n->Children[1]->NodeToken->Text)
+                    {
+                      if(v2.type == "enumurable" && v1.type == "enumurable")
+                      {
+                        // adam hates this massive nesting.
+                        // but I dont care that much.
+                        if(v1.inFunc && v2.inFunc)
+                        {
                           TextAsm += "push eax\n";
                           TextAsm += "mov eax, [ ebp + " + std::to_string(v1.pos) + "]\n" ;
                           TextAsm += "mov edx, [ ebp + " + std::to_string(v2.pos) + "]\n" ;
@@ -108,13 +169,15 @@ public:
                   }
                 }
               }
-              if(end){
+              if(end)
+              {
                 n = n->Children[1];
                 continue;
               }
             }
           } 
-          if(prev = n){
+          if(prev = n)
+          {
             break;
           }
         }
@@ -127,7 +190,8 @@ public:
       case EXTERN:
       {
         std::string func = node->Children[0]->NodeToken->Text;
-        if(func == "printf"){
+        if(func == "printf")
+        {
           DataAsm += "strPrnt:\ndd \"%d\",0\n";
         }
         Externs += std::string("[extern ") + func  + "]\n";
@@ -143,8 +207,10 @@ public:
         TextAsm += "push ebp\nmov ebp, esp\n";
       } break;
       case CONSTANT_NODE:{
-        if(node->Parent->Type == FUNCTION_CALL){
-          if(node->NodeToken->Type == STRING){
+        if(node->Parent->Type == FUNCTION_CALL)
+        {
+          if(node->NodeToken->Type == STRING)
+          {
             DataAsm += std::string("string") + std::to_string(StringC) + ":\n";
             DataAsm += std::string("\tdd `") + node->NodeToken->Text + "`,0\n";
             TextAsm += "push dword string";
@@ -177,9 +243,11 @@ public:
           } 
           if(node->Parent->Type == VAR && node->Parent->Parent->Type != FUNCTION)
           {
-            if(inFunc){
+            if(inFunc)
+            {
               std::string type = node->Parent->NodeToken->Text;
-              if(type != "string"){
+              if(type != "string")
+              {
                 type = "enumurable";
               }
               std::string name = node->NodeToken->Text;
@@ -244,6 +312,11 @@ public:
       if(node->Parent->Parent->Type == IFNODE)
       {
         TextAsm += "LO" + std::to_string(LoopIndex) + ":\n";
+      }
+      if(node->Parent->Parent->Type == WHILENODE)
+      {
+        TextAsm += "jmp LO" + std::to_string(LoopIndex - 1) + "\n";
+        TextAsm += "LOEND" + std::to_string(LoopIndex++) + ":\n";
       }
     }
 

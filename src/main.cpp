@@ -14,6 +14,9 @@ const char* ReadFile(std::string Path){
       v.insert(v.end(), buf, buf + len);
     }
     fclose(fp);
+  }else{
+    std::cout << "File '" << Path << "' does not exist!\n";
+    exit(-1);
   }
   v[v.size() - 1] =0;
   std::string r = "";
@@ -152,6 +155,9 @@ int main(int argc, char** argv){
       return 0;
     }
     else{
+      if(argv[i][0] == '-'){
+        std::cout << "Command '" << argv[i] << "' doesn't exist! Use '-h' to get a list of commands\n";
+      }
       in = argv[i];
     }
     ++i;
@@ -159,7 +165,7 @@ int main(int argc, char** argv){
   std::string str = ReadFile(in);
   Compiler compiler(std::move(str), "w");
   Compiler::WriteFile(compiler.TextAsm, strip_extention(out) + ".asm");
-  std::cout << "LOWFISH: Output to executable file '" << strip_extention(out) << ".exe" << "' into working directory.\n"; 
+  std::cout << "\nLOWFISH: Output to executable file '" << strip_extention(out) << ".exe" << "' into working directory.\n"; 
   system(
     (
       std::string("nasm ") + 
@@ -171,6 +177,20 @@ int main(int argc, char** argv){
   system(
     (
       std::string("golink /entry:main /console msvcrt.dll ") + 
+      std::string(strip_extention(out) + ".obj")
+    ).c_str()
+  );
+  // system
+  // (
+  //   (
+  //     std::string("del /f ") +
+  //     std::string(strip_extention(out) + ".asm")
+  //   ).c_str()
+  // );
+  system
+  (
+    (
+      std::string("del /f ") +
       std::string(strip_extention(out) + ".obj")
     ).c_str()
   );

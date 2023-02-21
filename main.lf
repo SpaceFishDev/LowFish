@@ -1,7 +1,11 @@
 include io from "./std.lf"
 int main(){
-  puts("Hehe Recursion.\n");
-  main();
+  int i = 0;
+  while(i == i){
+    int x = puts("Hello, World!\n");
+    puti(32);
+  }
+  exit(i);
 }
 
 

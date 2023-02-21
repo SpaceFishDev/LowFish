@@ -3,9 +3,9 @@ section .data
 strPrnt:
 dd "%d",0
 string0:
-	dd `Here`,0
+	dd `Hello, World!\n`,0
 [extern printf]
-[extern exit]
+[extern _exit]
 section .text
 puts:
 push ebp
@@ -27,24 +27,28 @@ ret
 exit:
 push ebp
 mov ebp, esp
-call exit
+push dword [ebp + 8]
+call _exit
 mov esp, ebp
 pop ebp
 ret
 main:
 push ebp
 mov ebp, esp
-mov [ebp + 0], dword 3
-mov [ebp + 4], dword 5
-push eax
-mov eax, [ ebp + 4]
+mov [ebp + 0], dword 0
+LO0:
+mov eax, [ ebp + 0]
 mov edx, [ ebp + 0]
 cmp edx, eax
-je LO0
+jne LOEND1
 push dword string0
 	call puts
-LO0:
-push dword 0
+	push dword eax
+push dword 32
+	call puti
+jmp LO0
+LOEND1:
+	push dword [ebp +  8]
 	call exit
 mov esp, ebp
 pop ebp

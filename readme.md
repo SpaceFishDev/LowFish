@@ -4,7 +4,7 @@
 - Low Fish has static types.
 - Goal is to compile to Windows Linux and [MaslOS](https://github.com/marceldobehere/MaslOS).   
 # COMPILER
-- Not fully optimized but as fast as I know how to make.
+- To rebuild compiler just run `make`
 - Fast. 
 - Statically typed.
 

@@ -1,5 +1,4 @@
 #include<Syntax/Lexer.h>
-
 enum NodeTypes{
   PROGRAM,
   FUNCTION,
@@ -128,13 +127,16 @@ public:
       bool correct = false;
       for(Var v : Variables)
       {
-        if(v.name == var){
+        // Find the variable to check its type.
+        if(v.name == var)
+        {
           for(Type t : Types)
           {
             if(t.name == v.TypeName)
             {
               for(std::string m : t.members)
               {
+                // if the variable includes that member correct is now true.
                 if(m == member)
                 {
                   correct = true;
@@ -154,6 +156,7 @@ public:
           }
         }
       }
+      // return wether the member exists or not
       return correct;
     }
     struct Container
@@ -179,6 +182,7 @@ public:
       }
     }
     std::vector<Function> cntF;
+    // Assembly sometimes comes back mangled for whatever reason, so we use this vector to make sure it stays safe. We should probably do this with strings too...
     std::vector<std::string> Assembly;
     void GetFunctions(Node* container)
     {
@@ -202,22 +206,23 @@ public:
     }
     Node* ParseConstant(Node* Parent, Node* Root)
     {
+      //If it is a math operation return a math node or just make a constant node.
       std::string math = "/*+-";
-          for(char c : math)
-          {
-            if(ExpectValue(std::string("") + c))
-            {
-              Node* N = new Node(&Tokens[Position + 1], MATH, Parent);
-              N->Children.push_back(new Node(&Tokens[Position], CONSTANT_NODE, N));
-              Position += 2;	
-              Parent->Children.push_back(N);
-              return Parse(N, Root);
-            }
-          }
-          Node* N = new Node(&Tokens[Position], CONSTANT_NODE, Parent);
-          ++Position;
+      for(char c : math)
+      {
+        if(ExpectValue(std::string("") + c))
+        {
+          Node* N = new Node(&Tokens[Position + 1], MATH, Parent);
+          N->Children.push_back(new Node(&Tokens[Position], CONSTANT_NODE, N));
+          Position += 2;	
           Parent->Children.push_back(N);
-          return Parse(Parent, Root);
+          return Parse(N, Root);
+        }
+      }
+      Node* N = new Node(&Tokens[Position], CONSTANT_NODE, Parent);
+      ++Position;
+      Parent->Children.push_back(N);
+      return Parse(Parent, Root);
     }
     Node* ParseSymbol(Node* Parent, Node* Root)
     {
@@ -253,17 +258,26 @@ public:
       }
       if(Current.Text == "}")
       {
+        //Block end is to make compiling alot easier.
         Parent->Children.push_back(new Node(&Tokens[Position], BLOCKEND, Parent));
         ++Position;
         Node* N = Parent;
-        if(N->Type == BLOCK && N->Parent->Type == IFNODE){
+        if
+        (
+          N->Type == BLOCK && N->Parent->Type == IFNODE 
+          || N->Type == BLOCK && N->Parent->Type == WHILENODE 
+          || N->Type == BLOCK && N->Parent->Type == UNLESSNODE
+        )
+        {
             N = N->Parent;
-            while(N->Type != BLOCK && N->Type != PROGRAM){
+            while(N->Type != BLOCK && N->Type != PROGRAM)
+            {
               N = N->Parent;
             }	
             return Parse(N, Root);
         }
-        while(N->Type != PROGRAM && N->Type != CONTAINERNODE){
+        while(N->Type != PROGRAM && N->Type != CONTAINERNODE)
+        {
           N = N->Parent;
         }
 
@@ -276,11 +290,14 @@ public:
       {
         ++Position;
         Node* N = Parent;
-        if(N->Type == IFNODE || N->Type == NAME){
+        if(N->Type == IFNODE || N->Type == NAME || N->Type == WHILENODE)
+        {
           return Parse(N, Root);
         }
-        if(Parent->Type != BLOCK && Parent->Type != FUNCTION && Parent->Type != IFNODE){
-          while(N->Type != FUNCTION && N->Type != PROGRAM && N->Type != BLOCK && N->Type != IFNODE){
+        if(Parent->Type != BLOCK && Parent->Type != FUNCTION && Parent->Type != IFNODE && Parent->Type != WHILENODE)
+        {
+          while(N->Type != FUNCTION && N->Type != PROGRAM && N->Type != BLOCK && N->Type != IFNODE && N->Type != WHILENODE)
+          {
             N = N->Parent;
           }
         }
@@ -433,7 +450,8 @@ public:
       }
       if(Current.Text == "struct")
       {
-        if(!Expect(IDENTIFIER)){
+        if(!Expect(IDENTIFIER))
+        {
           ErrorHandler::PutError(EXPECT_IDENTIFIER, " ", Current.Line, Current.Column);
         }
         for(Type T : Types)
@@ -483,7 +501,7 @@ public:
       {
         if(!ExpectValue("("))
         {
-          ErrorHandler::PutError(-1, "while statements require '(' expression ')' block. " , Current.Line, Current.Column);
+          ErrorHandler::PutError(-1, "If statements require '(' expression ')' block. " , Current.Line, Current.Column);
         }
         Node* N = new Node(&Tokens[Position], WHILENODE, Parent);
         ++Position;
@@ -516,7 +534,8 @@ public:
         N->Children.push_back(n);
         return Parse(n, Root);			
       }
-      for(Type t : Types){
+      for(Type t : Types)
+      {
         if(Current.Text == t.name)
         {
           if(Expect(IDENTIFIER) && Tokens[Position + 2].Text == "(")
@@ -538,10 +557,12 @@ public:
             Parent->Children.push_back(F);
             return Parse(F->Children[0], Root);
           }
-          if(Parent->Parent->Type == STRUCT){
+          if(Parent->Parent->Type == STRUCT)
+          {
             Types[Types.size() - 1].members.push_back(Tokens[Position + 1].Text);
           }
-          if(Parent->Type == FUNCTION){
+          if(Parent->Type == FUNCTION)
+          {
             Functions[Functions.size() - 1].num_args++;
           }
           Node* E = new Node(&Tokens[Position], VAR, Parent);
@@ -642,7 +663,8 @@ public:
         return Root;
       }
       Token Current = Tokens[Position];
-      switch(Current.Type){
+      switch(Current.Type)
+      {
         case STRING:
         case CONSTANT:
         {
