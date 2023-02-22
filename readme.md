@@ -34,3 +34,5 @@ to get compile time info add flag `-t`
 the output of main.exe is
 `Hello, World!`
 
+# DEPENDENCIES
+- You will need [GoLinker](https://www.godevtool.com/#linker) and [NASM-assembler](https://www.nasm.us/) installed.
