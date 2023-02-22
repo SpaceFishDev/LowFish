@@ -1,11 +1,16 @@
 include io from "./std.lf"
+int x(int i)
+{
+  puti(i);
+}
+
 int main(){
-  int i = 0;
-  while(i == i){
-    int x = puts("Hello, World!\n");
-    puti(32);
+  int i = 1000;
+  while(i != 0){
+    x(i);
+    puts("\n");
+    i = i + -1;
   }
   exit(i);
 }
-
 

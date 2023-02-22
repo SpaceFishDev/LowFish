@@ -163,17 +163,20 @@ public:
       case '"':
       {
         char c = Source[Position];
-        std::string out = "";
+        std::string out = std::string(2048, ' ');
         ++Position;
         ++Column;
+        int i = 0;
         while(Position < Source.length() && Source[Position] != c){
           if(Source[Position] == '\n'){
             ErrorHandler::PutError(NEVER_ENDING_STRING,"", Line, Column);
           }
-          out += Source[Position];
+          out[i] = Source[Position];
           ++Position;
           ++Column;
+          ++i;
         }
+        out.erase(i, 2048 - i);
         Position++;
         Column++;
         return Token(STRING, std::move(out), Line, Column);

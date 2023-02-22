@@ -310,9 +310,16 @@ public:
         || Current.Text == "*"
       )
       {
-        Node* N = new Node(&Tokens[Position], MATH, Parent->Parent);
-        N->Children.push_back(Parent);
-        Parent->Parent->Children[Parent->Parent->Children.size() - 1] = N;
+        if(Parent->Type == MATH){
+          Node* N = new Node(&Tokens[Position], MATH, Parent->Parent);
+          N->Children.push_back(Parent);
+          Parent->Parent->Children[Parent->Parent->Children.size() - 1] = N;
+          ++Position;
+          return Parse(N, Root);
+        }
+        Node* N = new Node(&Tokens[Position], MATH, Parent);
+        N->Children.push_back(Parent->Children[Parent->Children.size() - 1]);
+        Parent->Children[Parent->Children.size() - 1] = N;
         ++Position;
         return Parse(N, Root);
       }
@@ -368,7 +375,7 @@ public:
         Node* n = new Node(&Tokens[Position + 1], NAME, N);
         N->Children.push_back(n);
         ++Position;
-        ++Position;
+        ++Position; 
         Parent->Children.push_back(N);
         return Parse(n, Root);
       }
@@ -580,11 +587,7 @@ public:
       || ExpectValue("/")
       || ExpectValue("*"))
       {
-        if(Parent->Parent->Type == VAR)
-        {
-          Var v = Var(Tokens[Position].Text, Parent->NodeToken->Text, Parent->Type == POINTERVAR);
-          Variables.push_back(v);
-        }
+        
         if(Parent->Type == EQUAL)
         {
           for(Var v : Variables)
@@ -603,6 +606,18 @@ public:
               }
             }
           }
+        }
+        if(Parent->Parent->Type == VAR)
+        {
+          Var v = Var(Tokens[Position].Text, Parent->NodeToken->Text, Parent->Type == POINTERVAR);
+          Variables.push_back(v);
+        }
+        if(!ExpectValue(";") && !ExpectValue(")"))
+        {
+          Node* n = new Node(&Tokens[Position], REFERENCE, n);
+          ++Position;
+          Parent->Children.push_back(n);
+          return Parse(Parent, Root);
         }
         Node* N = new Node(&Tokens[Position], REFERENCE, Parent);
         ++Position;

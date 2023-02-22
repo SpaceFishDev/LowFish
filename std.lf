@@ -1,11 +1,11 @@
 container io{
     extern "printf";
     extern "_exit";
-    int puts(string s){
+    int puts(string format){
         asm "push dword [ebp + 8]";
         asm "call printf";
     }
-    int puti(int i){
+    int puti(int input){
         asm "push dword [ebp + 8]";
         asm "push dword strPrnt";
         asm "call printf";

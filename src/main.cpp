@@ -2,7 +2,7 @@
 #include<cstring>
 #include <fstream>
 #include<vector> 
-#define VERSION 0.1
+#define VERSION 0.3
 // #include<algorithm>
 #include<sstream>
 const char* ReadFile(std::string Path){
@@ -180,13 +180,13 @@ int main(int argc, char** argv){
       std::string(strip_extention(out) + ".obj")
     ).c_str()
   );
-  // system
-  // (
-  //   (
-  //     std::string("del /f ") +
-  //     std::string(strip_extention(out) + ".asm")
-  //   ).c_str()
-  // );
+  system
+  (
+    (
+      std::string("del /f ") +
+      std::string(strip_extention(out) + ".asm")
+    ).c_str()
+  );
   system
   (
     (
