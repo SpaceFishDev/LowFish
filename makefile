@@ -3,6 +3,13 @@ CFLAGS = -std=c++17 -fpermissive -O3 -Ofast -Isrc/include
 
 CPP = g++
 
-all: $(SRC)
-	$(CPP) $(CFLAGS) $(SRC) -o LF.exe 
-
+all: 
+	make clean
+	make build
+	make run
+build: $(SRC)
+	$(CPP) $(CFLAGS) $(SRC) -o LF.exe
+clean:
+	del lf.exe
+run:
+	timer lf.exe --tree

@@ -103,7 +103,6 @@ enum LexerTypes
   CONSTANT,
   STRING,
   IDENTIFIER,
-  EQ,
   SYMBOL,
 };
 
@@ -151,7 +150,9 @@ public:
       case '{':
       case ',':
       case '.':
-      case '}':{
+      case '}':
+      case '[':
+      case ']':{
         if(!(IsDigit(Source[Position + 1]) && Source[Position] == '-')){
           std::string o = " ";
           o[0] = Source[Position];
@@ -257,7 +258,7 @@ public:
           Column++;
           return Token(SYMBOL, "==", Line, Column);
         }
-        return Token(EQ, "=", Line,Column);
+        return Token(SYMBOL, "=", Line,Column);
       }
       case '\0':
       {

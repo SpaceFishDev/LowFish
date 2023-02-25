@@ -1,16 +1,21 @@
-include io from "./std.lf"
-int x(int i)
+#include<stdio.h>
+int printf(){
+
+}
+int scanf(){
+
+}
+int main()
 {
-  puti(i);
-}
+  int num1 = 0;int num2; int sum = 0;
 
-int main(){
-  int i = 1000;
-  while(i != 0){
-    x(i);
-    puts("\n");
-    i = i + -1;
-  }
-  exit(i);
-}
+    printf("Enter the 2 integers of your choice : \n");
 
+    scanf("%d%d",&num1,&num2);
+
+    sum = num1+num2;
+
+    printf("The sum of the 2 integers is : %d",sum);
+
+    return 0;
+}

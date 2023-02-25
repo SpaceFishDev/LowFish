@@ -5,27 +5,40 @@
 #define VERSION 0.3
 // #include<algorithm>
 #include<sstream>
-const char* ReadFile(std::string Path){
-  std::vector<char> v;
-  if (FILE *fp = fopen(Path.c_str(), "r"))
-  {
-    char buf[1024 * 32]{0};
-    while (size_t len = fread(buf, 1, sizeof(buf), fp)){
-      v.insert(v.end(), buf, buf + len);
+
+char* ReadFile(std::string file) {
+    const char* filename = file.c_str();
+    FILE *file_ptr;
+    char ch;
+    int size = 0;
+    char *buffer = NULL;
+
+    file_ptr = fopen(filename, "r");
+
+    if (file_ptr == NULL) {
+        printf("Unable to open file.\n");
+        return NULL;
     }
-    fclose(fp);
-  }else{
-    std::cout << "File '" << Path << "' does not exist!\n";
-    exit(-1);
-  }
-  v[v.size() - 1] =0;
-  std::string r = "";
-  for(char c : v){
-    if(c == '\0') break; 
-    r += c;
-  }
-  char* ptr = &r[0];
-  return ptr;
+
+    // Calculate the size of the file
+    fseek(file_ptr, 0L, SEEK_END);
+    size = ftell(file_ptr);
+    rewind(file_ptr);
+
+    // Allocate memory for the buffer
+    buffer = (char*)malloc(size + 1);
+
+    // Read the file into the buffer
+    int i = 0;
+    while ((ch = fgetc(file_ptr)) != EOF) {
+        buffer[i] = ch;
+        i++;
+    }
+    buffer[i] = '\0'; // Add null-terminator at the end
+
+    fclose(file_ptr);
+
+    return buffer;
 }
 std::string NodeTypeToString(int type);
 class Node;
@@ -101,6 +114,10 @@ std::string NodeTypeToString(int type) {
   return "BLOCKEND";
   case EXTERN:
   return "EXTERN";
+  case INDEX:
+  return "INDEX";
+  case INDEXEND:
+  return "INDEXEND";
   default:
   return "UNKNOWN";
   }
@@ -147,7 +164,7 @@ int main(int argc, char** argv){
       ++i;
       --argc;
     }
-    else if(strcmp("-t", argv[i]) == 0){
+    else if(strcmp("-t", argv[i]) == 0 || strcmp("--tree", argv[i]) == 0){
       drawTree = !drawTree;
     }
     else if(strcmp("-v", argv[i]) == 0){
@@ -164,35 +181,35 @@ int main(int argc, char** argv){
   }
   std::string str = ReadFile(in);
   Compiler compiler(std::move(str), "w");
-  Compiler::WriteFile(compiler.TextAsm, strip_extention(out) + ".asm");
-  std::cout << "\nLOWFISH: Output to executable file '" << strip_extention(out) << ".exe" << "' into working directory.\n"; 
-  system(
-    (
-      std::string("nasm ") + 
-      std::string(strip_extention(out) + ".asm") + 
-      " -f win32 -o" + std::string(strip_extention(out) 
-      + ".obj")
-    ).c_str()
-  );
-  system(
-    (
-      std::string("golink /entry:main /console msvcrt.dll ") + 
-      std::string(strip_extention(out) + ".obj")
-    ).c_str()
-  );
-  system
-  (
-    (
-      std::string("del /f ") +
-      std::string(strip_extention(out) + ".asm")
-    ).c_str()
-  );
-  system
-  (
-    (
-      std::string("del /f ") +
-      std::string(strip_extention(out) + ".obj")
-    ).c_str()
-  );
+  // Compiler::WriteFile(compiler.TextAsm, strip_extention(out) + ".asm");
+  // std::cout << "\nLOWFISH: Output to executable file '" << strip_extention(out) << ".exe" << "' into working directory.\n"; 
+  // system(
+  //   (
+  //     std::string("nasm ") + 
+  //     std::string(strip_extention(out) + ".asm") + 
+  //     " -f win32 -o" + std::string(strip_extention(out) 
+  //     + ".obj")
+  //   ).c_str()
+  // );
+  // system(
+  //   (
+  //     std::string("golink /entry:main /console msvcrt.dll ") + 
+  //     std::string(strip_extention(out) + ".obj")
+  //   ).c_str()
+  // );
+  // system
+  // (
+  //   (
+  //     std::string("del /f ") +
+  //     std::string(strip_extention(out) + ".asm")
+  //   ).c_str()
+  // );
+  // system
+  // (
+  //   (
+  //     std::string("del /f ") +
+  //     std::string(strip_extention(out) + ".obj")
+  //   ).c_str()
+  // );
 }
 

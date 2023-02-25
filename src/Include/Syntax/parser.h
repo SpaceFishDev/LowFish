@@ -24,6 +24,8 @@ enum NodeTypes{
   EXTERN,
   RETURNNODE,
   BLOCKEND,
+  INDEX,
+  INDEXEND,
 };
 class Node
 {
@@ -227,6 +229,35 @@ public:
     Node* ParseSymbol(Node* Parent, Node* Root)
     {
       Token Current = Tokens[Position];
+      if(Current.Text == "="){
+        Node* n = new Node(&Tokens[Position], EQUAL, Parent);
+        Parent->Children.push_back(n);
+        ++Position;
+        return Parse(n, Root);
+      }
+      if(Current.Text == "]")
+      {
+        Node* n = Parent;
+        ++Position;
+        if(n->Type == INDEX)
+        {
+          n->Children.push_back(new Node(&Tokens[Position - 1], INDEXEND, n));
+          return Parse(n->Children[n->Children.size() - 1], Root);
+        }
+        while(n->Type != INDEX)
+        {
+          n = n->Parent;
+        }
+        n->Children.push_back(new Node(&Tokens[Position - 1], INDEXEND, n));
+        return Parse(n->Children[n->Children.size() - 1], Root);
+      }
+      if(Current.Text == "[")
+      {
+        Node* n = new Node(&Tokens[Position], INDEX, Parent);
+        ++Position;
+        Parent->Children.push_back(n);
+        return Parse(n, Root);
+      }
       if(Current.Text == "&")
       {
         if(!Expect(IDENTIFIER))
@@ -290,7 +321,7 @@ public:
       {
         ++Position;
         Node* N = Parent;
-        if(N->Type == IFNODE || N->Type == NAME || N->Type == WHILENODE)
+        if(N->Type == IFNODE || N->Type == NAME || N->Type == WHILENODE )
         {
           return Parse(N, Root);
         }
@@ -585,6 +616,8 @@ public:
       || ExpectValue("+")
       || ExpectValue("-")
       || ExpectValue("/")
+      || ExpectValue("]")
+      || ExpectValue("[")
       || ExpectValue("*"))
       {
         
@@ -612,16 +645,12 @@ public:
           Var v = Var(Tokens[Position].Text, Parent->NodeToken->Text, Parent->Type == POINTERVAR);
           Variables.push_back(v);
         }
-        if(!ExpectValue(";") && !ExpectValue(")"))
-        {
-          Node* n = new Node(&Tokens[Position], REFERENCE, n);
-          ++Position;
-          Parent->Children.push_back(n);
-          return Parse(Parent, Root);
-        }
         Node* N = new Node(&Tokens[Position], REFERENCE, Parent);
         ++Position;
         Parent->Children.push_back(N);
+        if(ExpectValue("[")){
+          return Parse(N, Root);
+        }
         return Parse(Parent, Root);
       }
       

@@ -13,26 +13,7 @@
 - Modular , has 'containers' which are ways to create modules out of your code
 
 # Hello, World!
-
-```less
-include io from "std.lf"
-
-int main(){
-    puts("Hello, World!");
-}
-```
-
-To compile this:
-```
-lf -o main.exe main.lf
-```
-or
-```
-lf main.lf -o main.exe
-```
-to get compile time info add flag `-t`
-the output of main.exe is
-`Hello, World!`
+- Rewriting code gen, so at the moment there is no hello world.
 
 # DEPENDENCIES
 - You will need [GoLinker](https://www.godevtool.com/#linker) and [NASM-assembler](https://www.nasm.us/) installed.
