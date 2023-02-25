@@ -135,14 +135,62 @@ public:
       {
         CompileWhile16(root);
       } break;
+      case IFNODE:
+      {
+        CompileIf16(root);
+      } break;
+      case MATH:
+      {
+        CompileMath16(root);
+      } break;
     }
     for(Node* child : root->Children){
       Compile16(child);
     }
   }
+  void CompileMath16(Node* root)
+  {
+    std::string c1 = "dx";
+    std::string c2 = "cx";
+    if(root->Children[0]->Type == REFERENCE)
+    {
+      Variable v = getVariable(root->Children[0]->NodeToken->Text);
+      Text("mov " + std::string((v.size == 1) ? "dl, " : "dx, ") + ((std::string[5]){"", "byte", "word", "","dword"})[v.size] + "[bp + " + std::to_string(v.stack_pos) + "]");
+      if(v.size == 1)
+        c1 = "dl, ";
+    }
+    if(root->Children[1]->Type == REFERENCE)
+    {
+      Variable v = getVariable(root->Children[1]->NodeToken->Text);
+      Text("mov " + (v.size == 1) ? "cl, " : "cx, " + ((std::string[5]){"", "byte", "word", "","dword"})[v.size] + "[bp + " + std::to_string(v.stack_pos) + "]");
+      if(v.size == 1)
+        c2 = "cl";    
+    }
+    if(root->Children[1]->Type == CONSTANT_NODE && root->Children[1]->NodeToken->Type == CONSTANT)
+    {
+      Text("mov cl, " + root->Children[1]->NodeToken->Text);
+      c2 = "cl";
+    }
+    switch(root->NodeToken->Text[0])
+    {
+      case '+':
+      {
+        Text("add " + c1 + c2);
+      } break;
+      case '-':
+      {
+        Text("sub " + c1 + c2);
+      } break;
+    }
+  }
   void CompileWhile16(Node* root)
   {
     Text("LO" + std::to_string(LoopIndex) + ":");
+    root->ID = LoopIndex++;
+  }
+  void CompileIf16(Node* root)
+  {
+    root->ID = LoopIndex++;
   }
   void CompileBoolExpr16(Node* root)
   {
@@ -181,7 +229,7 @@ public:
         }
         
         Text("cmp "+ c1 + c2);
-        Text("jne LOEND" + std::to_string(LoopIndex));
+        Text("jne LOEND" + std::to_string(root->Parent->ID));
       } 
       if(root->NodeToken->Text == "!=")
       {
@@ -216,7 +264,7 @@ public:
         }
         
         Text("cmp "+ c1 + c2);
-        Text("je LOEND" + std::to_string(LoopIndex));
+        Text("je LOEND" + std::to_string(root->Parent->ID));
       }     
     }
   }
@@ -337,12 +385,12 @@ public:
     }
     if(root->Parent->Parent->Type == WHILENODE)
     {
-      Text("jmp LO" + std::to_string(LoopIndex - 1));
-      Text("LOEND" + std::to_string(LoopIndex++) + ":");
+      Text("jmp LO" + std::to_string(root->Parent->Parent->ID));
+      Text("LOEND" + std::to_string(root->Parent->Parent->ID) + ":");
     }
     if(root->Parent->Parent->Type == IFNODE)
     {
-      Text("LOEND" + std::to_string(LoopIndex++) + ":");
+      Text("LOEND" + std::to_string(root->Parent->Parent->ID) + ":");
     }
   }
 

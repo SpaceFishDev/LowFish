@@ -3,6 +3,7 @@ asm "mov sp, 0x7c00";
 asm "mov bp, sp";
 asm "call main"
 
+
 int putc(char c)
 {
   asm "mov al, [bp + 4]";
@@ -18,21 +19,23 @@ char readchar()
 
 int main()
 {
-  char x = 4;
-  while(x != 13){ # loop till enter
-    x = readchar();
-    if(x == 13)
+  char c = 4;
+  while(c == c) 
+  {
+    c = readchar();
+    if(c == 13) 
     {
-      x = 10;
-    }
-    putc(x);
-    if(x == 8)
+      char f = 10;
+      putc(f);
+    } 
+    putc(c);
+    if(c == 8) 
     {
       char a = ' ';
-      putc(a):
-      putc(x);
+      putc(a);
+      putc(c);
     }
-  }
+  } 
   asm "hlt";
 }
 asm "times 510-($-$$) db 0";

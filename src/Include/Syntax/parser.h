@@ -33,6 +33,7 @@ public:
   Token* NodeToken;
   std::vector<Node*> Children;
   int Type;
+  int ID = 0; 
   Node* Parent; 
   Node(Token* t, int T, Node* Parent)
   {
@@ -73,7 +74,6 @@ struct Function
 	  Name = nm;
   }
 };
-
 
 
 class Parser
