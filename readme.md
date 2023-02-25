@@ -16,4 +16,4 @@
 - Rewriting code gen, so at the moment there is no hello world.
 
 # DEPENDENCIES
-- You will need [GoLinker](https://www.godevtool.com/#linker) and [NASM-assembler](https://www.nasm.us/) installed.
+- You will need and [NASM-assembler](https://www.nasm.us/) installed.
