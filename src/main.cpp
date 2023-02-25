@@ -197,25 +197,5 @@ int main(int argc, char** argv){
       + ".bin")
     ).c_str()
   );
-  // system(
-  //   (
-  //     std::string("golink /entry:main /console msvcrt.dll ") + 
-  //     std::string(strip_extention(out) + ".obj")
-  //   ).c_str()
-  // );
-  // system
-  // (
-  //   (
-  //     std::string("del /f ") +
-  //     std::string(strip_extention(out) + ".asm")
-  //   ).c_str()
-  // );
-  // system
-  // (
-  //   (
-  //     std::string("del /f ") +
-  //     std::string(strip_extention(out) + ".obj")
-  //   ).c_str()
-  // );
 }
 

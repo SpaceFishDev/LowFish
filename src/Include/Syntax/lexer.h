@@ -40,8 +40,9 @@ public:
     switch(type)
     {
       case VAR_DOESNT_EXIST:{
-        std::cout << "Variable " << c << " does not exist in current context LN: " << line << "COL: " << column << "\n";
-      }
+        std::cout << "Variable " << c << " does not exist in current context LN: " << line << " COL: " << column << "\n";
+        exit(-1);
+      } 
       case NEVER_ENDING_STRING:
       {
         std::cout << "String never ends. LN: " << line << " COL: " << column << "\n";

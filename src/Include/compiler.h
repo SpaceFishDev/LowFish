@@ -62,6 +62,7 @@ public:
     std::cout << "Main function not defined. Entry point is required\n";
   }
   int StackPosition = 0;
+  int LoopIndex = 0;
   std::string CurrentFunction = "GLOBAL";
   int AsmIndex = 0;
   struct Variable{
@@ -122,15 +123,122 @@ public:
       {
         CompileReference16(root);
       } break;
-
+      case FUNCTION_CALL:
+      {
+        CompileFunctionCall16(root);
+      } break;
+      case BOOLEXPR:
+      {
+        CompileBoolExpr16(root);
+      } break;
+      case WHILENODE:
+      {
+        CompileWhile16(root);
+      } break;
     }
     for(Node* child : root->Children){
       Compile16(child);
     }
   }
+  void CompileWhile16(Node* root)
+  {
+    Text("LO" + std::to_string(LoopIndex) + ":");
+  }
+  void CompileBoolExpr16(Node* root)
+  {
+    if(root->Parent->Type == IFNODE || root->Parent->Type == WHILENODE)
+    {
+      if(root->NodeToken->Text == "==")
+      {
+        std::string c1 = "dx,";
+        std::string c2 = "cx";
+        if(root->Children[0]->Type == REFERENCE)
+        {
+          Variable v = getVariable(root->Children[0]->NodeToken->Text);
+          if(v.name == "")
+          {
+            ErrorHandler::PutError(VAR_DOESNT_EXIST, root->Children[0]->NodeToken->Text, root->Children[0]->NodeToken->Line, root->Children[0]->NodeToken->Column);
+          }
+          if(v.size == 1 )
+            c1 = "dl,";
+          Text("mov " + c1 + ((std::string[5]){"", "byte", "word", "","dword"})[v.size] + " [bp + " + std::to_string(v.stack_pos) + "]");
+        }
+        if(root->Children[1]->Type == REFERENCE)
+        {
+          Variable v = getVariable(root->Children[1]->NodeToken->Text);
+          if(v.size == 1)
+            c2 = "cl";
+          if(v.name == "")
+          {
+            ErrorHandler::PutError(VAR_DOESNT_EXIST, root->Children[0]->NodeToken->Text, root->Children[0]->NodeToken->Line, root->Children[0]->NodeToken->Column);
+          }
+          Text("mov " + c2 + "," + ((std::string[5]){"", "byte", "word", "","dword"})[v.size] + " [bp + " + std::to_string(v.stack_pos) + "]");
+        }
+        if(root->Children[1]->Type == CONSTANT_NODE && root->Children[1]->NodeToken->Type == CONSTANT)
+        {
+          Text(std::string("mov ") + "cl" + ", "  + "byte " + root->Children[1]->NodeToken->Text);
+          c2 = "cl";
+        }
+        
+        Text("cmp "+ c1 + c2);
+        Text("jne LOEND" + std::to_string(LoopIndex));
+      } 
+      if(root->NodeToken->Text == "!=")
+      {
+        std::string c1 = "dx,";
+        std::string c2 = "cx";
+        if(root->Children[0]->Type == REFERENCE)
+        {
+          Variable v = getVariable(root->Children[0]->NodeToken->Text);
+          if(v.name == "")
+          {
+            ErrorHandler::PutError(VAR_DOESNT_EXIST, root->Children[0]->NodeToken->Text, root->Children[0]->NodeToken->Line, root->Children[0]->NodeToken->Column);
+          }
+          if(v.size == 1 )
+            c1 = "dl,";
+          Text("mov " + c1 + ((std::string[5]){"", "byte", "word", "","dword"})[v.size] + " [bp + " + std::to_string(v.stack_pos) + "]");
+        }
+        if(root->Children[1]->Type == REFERENCE)
+        {
+          Variable v = getVariable(root->Children[1]->NodeToken->Text);
+          if(v.size == 1)
+            c2 = "cl";
+          if(v.name == "")
+          {
+            ErrorHandler::PutError(VAR_DOESNT_EXIST, root->Children[0]->NodeToken->Text, root->Children[0]->NodeToken->Line, root->Children[0]->NodeToken->Column);
+          }
+          Text("mov " + c2 + "," + ((std::string[5]){"", "byte", "word", "","dword"})[v.size] + " [bp + " + std::to_string(v.stack_pos) + "]");
+        }
+        if(root->Children[1]->Type == CONSTANT_NODE && root->Children[1]->NodeToken->Type == CONSTANT)
+        {
+          Text(std::string("mov ") + "cl" + ", "  + "byte " + root->Children[1]->NodeToken->Text);
+          c2 = "cl";
+        }
+        
+        Text("cmp "+ c1 + c2);
+        Text("je LOEND" + std::to_string(LoopIndex));
+      }     
+    }
+  }
   void CompileAssembly16(Node* root)
   {
     Text(parser.Assembly[AsmIndex++]);
+  }
+  void CompileFunctionCall16(Node* root)
+  {
+    if(root->Children.size() == 0)
+    {
+      Text("call " + root->NodeToken->Text);
+      if(root->Parent->Type == EQUAL)
+      {
+        std::string name = root->Parent->NodeToken->Text;
+        Variable v = getVariable(name);
+        if(v.name == ""){
+          ErrorHandler::PutError(VAR_DOESNT_EXIST, name, root->Parent->NodeToken->Line,root->Parent->NodeToken->Column);
+        }
+        Text("mov [bp +" + std::to_string(v.stack_pos) + "], " +((std::string[5]){"", "byte", "word", "","dword"})[v.size] + std::string((v.size == 1) ? " al" : " ax"));
+      }
+    }
   }
   void CompileReference16(Node* root)
   { 
@@ -146,6 +254,15 @@ public:
       if(root->Parent->Children[root->Parent->Children.size() - 1] == root)
       {
         Text("call " + root->Parent->NodeToken->Text);
+        if(root->Parent->Parent->Type == EQUAL)
+        {
+          std::string name = root->Parent->Parent->NodeToken->Text;
+          Variable v = getVariable(name);
+          if(v.name == ""){
+            ErrorHandler::PutError(VAR_DOESNT_EXIST, name, root->Parent->Parent->NodeToken->Line,root->Parent->Parent->NodeToken->Column);
+          }
+          Text("mov [bp +" + std::to_string(v.stack_pos) + "], " +((std::string[5]){"", "byte", "word", "","dword"})[v.size] + " eax");
+        }
       }
     }
   }
@@ -217,6 +334,15 @@ public:
         Text("pop bp");
         Text("ret");
       }
+    }
+    if(root->Parent->Parent->Type == WHILENODE)
+    {
+      Text("jmp LO" + std::to_string(LoopIndex - 1));
+      Text("LOEND" + std::to_string(LoopIndex++) + ":");
+    }
+    if(root->Parent->Parent->Type == IFNODE)
+    {
+      Text("LOEND" + std::to_string(LoopIndex++) + ":");
     }
   }
 

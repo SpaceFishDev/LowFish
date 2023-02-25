@@ -13,3 +13,5 @@ clean:
 	del lf.exe
 run:
 	timer lf.exe --tree
+debug: $(SRC)
+	$(CPP) $(CFLAGS) $(SRC) -o lf.exe -g

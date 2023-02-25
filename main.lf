@@ -10,13 +10,30 @@ int putc(char c)
   asm "int 0x10";
 }
 
+char readchar()
+{
+  asm "mov ah, 0x00";
+  asm "int 0x16";
+}
+
 int main()
 {
-  char x = 3;
-  x = 65;
-  putc(x);
-  char c = 'a';
-  putc(c);
+  char x = 4;
+  while(x != 13){ # loop till enter
+    x = readchar();
+    if(x == 13)
+    {
+      x = 10;
+    }
+    putc(x);
+    if(x == 8)
+    {
+      char a = ' ';
+      putc(a):
+      putc(x);
+    }
+  }
+  asm "hlt";
 }
 asm "times 510-($-$$) db 0";
 asm "dw 0xaa55";
