@@ -392,7 +392,7 @@ public:
           ++Position;
           ++Position;
           Parent->Children.push_back(N);
-          Assembly.push_back(Tokens[Position + 1].Text  );
+          Assembly.push_back(Tokens[Position - 1].Text);
           return Parse(N, Root);
         }
       }
@@ -702,10 +702,6 @@ public:
     }
     Node* Parse(Node* Parent, Node* Root)
     {
-      if(Position > Tokens.size())
-      {
-        return Root;
-      }
       Token Current = Tokens[Position];
       switch(Current.Type)
       {
@@ -722,6 +718,10 @@ public:
         {
           return ParseIdentifier(Parent, Root, Current);
         } break;
+        case END:
+        {
+          return Root;
+        } 
       }
       return Root;
   }

@@ -1,21 +1,22 @@
-#include<stdio.h>
-int printf(){
+asm "[org 0x7c00]";
+asm "mov sp, 0x7c00";
+asm "mov bp, sp";
+asm "call main"
 
+int putc(char c)
+{
+  asm "mov al, [bp + 4]";
+  asm "mov ah, 0x0e";
+  asm "int 0x10";
 }
-int scanf(){
 
-}
 int main()
 {
-  int num1 = 0;int num2; int sum = 0;
-
-    printf("Enter the 2 integers of your choice : \n");
-
-    scanf("%d%d",&num1,&num2);
-
-    sum = num1+num2;
-
-    printf("The sum of the 2 integers is : %d",sum);
-
-    return 0;
+  char x = 3;
+  x = 65;
+  putc(x);
+  char c = 'a';
+  putc(c);
 }
+asm "times 510-($-$$) db 0";
+asm "dw 0xaa55";

@@ -30,6 +30,7 @@ enum ErrorTypes{
   CONTAINER,
   FUNCTION_NOT_EXIST,
   TYPE_DOESNT_MATCH,
+  VAR_DOESNT_EXIST,
 };
 
 class ErrorHandler{
@@ -38,6 +39,9 @@ public:
   {
     switch(type)
     {
+      case VAR_DOESNT_EXIST:{
+        std::cout << "Variable " << c << " does not exist in current context LN: " << line << "COL: " << column << "\n";
+      }
       case NEVER_ENDING_STRING:
       {
         std::cout << "String never ends. LN: " << line << " COL: " << column << "\n";

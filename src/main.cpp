@@ -158,6 +158,7 @@ int main(int argc, char** argv){
   --argc;
   std::string out = "a.exe";
   std::string in = "main.lf ";
+  std::string ld_args = "";
   while(argc--){
     if(strcmp("-o", argv[i]) == 0){
       out = argv[i + 1];
@@ -171,6 +172,11 @@ int main(int argc, char** argv){
       std::cout << "LowFish: V" << VERSION << "\n";
       return 0;
     }
+    else if(argv[i][0] == '$')
+    {
+      argv[i][0] = ' ';
+      ld_args += argv[i];
+    }
     else{
       if(argv[i][0] == '-'){
         std::cout << "Command '" << argv[i] << "' doesn't exist! Use '-h' to get a list of commands\n";
@@ -181,16 +187,16 @@ int main(int argc, char** argv){
   }
   std::string str = ReadFile(in);
   Compiler compiler(std::move(str), "w");
-  // Compiler::WriteFile(compiler.TextAsm, strip_extention(out) + ".asm");
-  // std::cout << "\nLOWFISH: Output to executable file '" << strip_extention(out) << ".exe" << "' into working directory.\n"; 
-  // system(
-  //   (
-  //     std::string("nasm ") + 
-  //     std::string(strip_extention(out) + ".asm") + 
-  //     " -f win32 -o" + std::string(strip_extention(out) 
-  //     + ".obj")
-  //   ).c_str()
-  // );
+  Compiler::WriteFile(compiler.AsmOut(), strip_extention(out) + ".asm");
+  std::cout << "\nLOWFISH: Output to executable file '" << strip_extention(out) << ".bin" << "' into working directory.\n"; 
+  system(
+    (
+      std::string("nasm ") + 
+      std::string(strip_extention(out) + ".asm") + 
+      " -f bin -o" + std::string(strip_extention(out) 
+      + ".bin")
+    ).c_str()
+  );
   // system(
   //   (
   //     std::string("golink /entry:main /console msvcrt.dll ") + 
