@@ -143,9 +143,22 @@ public:
       {
         CompileMath16(root);
       } break;
+      case INDEX:
+      {
+        CompileIndex16(root);
+      } break;
     }
     for(Node* child : root->Children){
       Compile16(child);
+    }
+  }
+  void CompileIndex16(Node* root)
+  {
+    if(root->Parent->Type == EQUAL){
+      Variable v = getVariable(root->NodeToken->Text);
+      if(v.size == 1){
+        Text(std::string("mov eax, byte [bp + ") + std::to_string(v.stack_pos) + "]");
+      }
     }
   }
   void CompileMath16(Node* root)
@@ -298,7 +311,7 @@ public:
       }
       
       Text(std::string("mov ") + std::string((v.size == 1) ? "al," : "ax,") + ((std::string[5]){"", "byte", "word", "","dword"})[v.size] + " " "[bp + " + " " + std::to_string(v.stack_pos) + "]");
-      Text("push eax");
+      Text("push byte eax");
       if(root->Parent->Children[root->Parent->Children.size() - 1] == root)
       {
         Text("call " + root->Parent->NodeToken->Text);

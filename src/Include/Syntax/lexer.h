@@ -91,8 +91,8 @@ public:
       case TYPE_DOESNT_MATCH:
       {
         std::cout << "Assigning variable '" << c << "' to variable '" << d << "' but their types do not match. LN:" << line << " COL:" << column << "\n";
-        exit(-1);
-      }
+        // exit(-1);
+      } break;
       defualt:{
         std::cout << c <<"' in input. LN: " << line << " COL: " << column << "\n";
         exit(-1);

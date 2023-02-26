@@ -20,6 +20,7 @@ char readchar()
 int main()
 {
   char c = 4;
+  string x = "Test";
   while(c == c) 
   {
     c = readchar();
