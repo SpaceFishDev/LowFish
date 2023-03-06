@@ -649,6 +649,7 @@ public:
         ++Position;
         Parent->Children.push_back(N);
         if(ExpectValue("[")){
+          std::cout << "here\n";
           return Parse(N, Root);
         }
         return Parse(Parent, Root);

@@ -1,0 +1,10 @@
+int main(){
+    char @^ = 32;
+    @^ = 45;
+}
+~
+main:
+push bp
+mov bp, sp
+mov [bp +4], byte 32
+mov [bp +4], byte 45

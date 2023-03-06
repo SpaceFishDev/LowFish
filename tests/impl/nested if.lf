@@ -1,0 +1,29 @@
+int main()
+{
+    char @^ = 32;
+    if(@^ == 3)
+    {
+        @^ = 32;
+        if(@^ == 32)
+        {
+            @^ = 4;
+        }
+    }
+}
+~
+main:
+push bp
+mov bp, sp
+mov [bp +4], byte 32
+mov dl,byte [bp + 4]
+mov cl, byte 3
+cmp dl,cl
+jne LOEND0
+mov [bp +4], byte 32
+mov dl,byte [bp + 4]
+mov cl, byte 32
+cmp dl,cl
+jne LOEND1
+mov [bp +4], byte 4
+LOEND1:
+LOEND0:

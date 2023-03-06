@@ -37,7 +37,6 @@ char* ReadFile(std::string file) {
     buffer[i] = '\0'; // Add null-terminator at the end
 
     fclose(file_ptr);
-
     return buffer;
 }
 std::string NodeTypeToString(int type);
@@ -180,14 +179,17 @@ int main(int argc, char** argv){
     else{
       if(argv[i][0] == '-'){
         std::cout << "Command '" << argv[i] << "' doesn't exist! Use '-h' to get a list of commands\n";
+        return -1;
       }
       in = argv[i];
     }
     ++i;
   }
   std::string str = ReadFile(in);
-  Compiler compiler(std::move(str), "w");
+  Compiler compiler(str, "w");
+  delete compiler.tree;
   Compiler::WriteFile(compiler.AsmOut(), strip_extention(out) + ".asm");
+  
   std::cout << "\nLOWFISH: Output to executable file '" << strip_extention(out) << ".bin" << "' into working directory.\n"; 
   system(
     (

@@ -1,0 +1,14 @@
+int @^(){
+}
+int main(){
+}
+~
+@^:
+push bp
+mov bp, sp
+mov sp, bp
+pop bp
+ret
+main:
+push bp
+mov bp, sp

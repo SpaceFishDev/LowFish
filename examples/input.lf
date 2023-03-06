@@ -1,8 +1,8 @@
+
 asm "[org 0x7c00]";
 asm "mov sp, 0x7c00";
 asm "mov bp, sp";
 asm "call main"
-
 
 int putc(char c)
 {
@@ -19,9 +19,10 @@ char readchar()
 
 int main()
 {
+  char[10000] d = 4;
   char c = 4;
   string x = "Test";
-  while(c == c) 
+  while(c != 27) 
   {
     c = readchar();
     if(c == 13) 
@@ -33,6 +34,7 @@ int main()
     if(c == 8) 
     {
       char a = ' ';
+      a = 31 + 1;
       putc(a);
       putc(c);
     }
