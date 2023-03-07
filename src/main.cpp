@@ -44,13 +44,13 @@ class Node;
 void printTree(Node* root, std::string prefix, bool isLastChild);
 bool drawTree = false;
 
-#include<compiler.h>
+#include<codegen.h>
 
 void printTree(Node* root, std::string prefix = "", bool isLastChild = true) {
   std::cout << prefix;
   if (isLastChild && root->Type != PROGRAM) {
   std::cout << "\\---->";
-  prefix += "  ";
+  prefix += "     ";
   }
   else if(!isLastChild){
   std::cout << "|---->";
@@ -186,9 +186,9 @@ int main(int argc, char** argv){
     ++i;
   }
   std::string str = ReadFile(in);
-  Compiler compiler(str, "w");
+  Codegen16 compiler(str, "w");
   delete compiler.tree;
-  Compiler::WriteFile(compiler.AsmOut(), strip_extention(out) + ".asm");
+  Codegen16::WriteFile(compiler.AsmOut(), strip_extention(out) + ".asm");
   
   std::cout << "\nLOWFISH: Output to executable file '" << strip_extention(out) << ".bin" << "' into working directory.\n"; 
   system(

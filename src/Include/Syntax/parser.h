@@ -253,6 +253,13 @@ public:
       }
       if(Current.Text == "[")
       {
+        if(Parent->Children.size() != 0 && Parent->Children[Parent->Children.size() -1]->Type == REFERENCE)
+        {
+          Node* n = new Node(&Tokens[Position], INDEX, Parent->Children[Parent->Children.size() - 1]);
+          ++Position;
+          Parent->Children[Parent->Children.size() - 1]->Children.push_back(n);
+          return Parse(n, Root);
+        }
         Node* n = new Node(&Tokens[Position], INDEX, Parent);
         ++Position;
         Parent->Children.push_back(n);
@@ -648,10 +655,7 @@ public:
         Node* N = new Node(&Tokens[Position], REFERENCE, Parent);
         ++Position;
         Parent->Children.push_back(N);
-        if(ExpectValue("[")){
-          std::cout << "here\n";
-          return Parse(N, Root);
-        }
+        
         return Parse(Parent, Root);
       }
       

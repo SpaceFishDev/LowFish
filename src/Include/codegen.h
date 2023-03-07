@@ -1,5 +1,5 @@
 #include<syntax/parser.h>
-class Compiler{
+class Codegen16{
 public:
   static void WriteFile(std::string txt, std::string path)
   {
@@ -43,7 +43,7 @@ public:
   {
     return TextSection + BssSection + DataSection ;
   }
-  Compiler(const std::string& Source, std::string Choice)
+  Codegen16(const std::string& Source, std::string Choice)
   {
     parser = Parser(std::move(Source));
     Node* root = new Node(new Token(0,"", 0, 0),PROGRAM, nullptr);
@@ -64,6 +64,7 @@ public:
     int size = 0;
     std::string name;
     std::string function;
+    bool pointer;
   };
   int StrIndex = 0;
   std::vector<Variable> Variables;
@@ -90,6 +91,10 @@ public:
     // std::cout << NodeTypeToString(root->Type) << "\n";
     switch(root->Type)
     {
+      case POINTERVAR:
+      {
+        CompilePointerVar16(root);
+      }break;
       case FUNCTION:
       {
         CompileFunction16(root);
@@ -153,30 +158,6 @@ public:
   }
   void CompileIndex16(Node* root)
   {
-    // if(_n->Children[0])
-    // {
-    //   Variable v = getVariable(root->Parent->NodeToken->Text);
-
-    //   int ptr = std::stoi(root->Children[0]->NodeToken->Text) + v.stack_pos;
-      
-    //   Node* n = root->Children[0];
-    //   int i = 0;
-    //   while(i < root->Children.size() && n->Type != INDEXEND)
-    //   {
-    //     n = root->Children[i];
-    //     ++i;
-    //   }
-    //   root = n;
-    //   if(root->Children[0]->Type == CONSTANT_NODE && root->Children[0]->NodeToken->Type == CONSTANT)
-    //     Text("mov [bp +" + std::to_string(ptr) + "], " +((std::string[5]){"", "byte", "word", "","dword"})[v.size] + " " + root->Children[0]->NodeToken->Text);
-    //   if(root->Children[0]->Type == CONSTANT_NODE && root->Children[0]->NodeToken->Type == STRING && root->Children[0]->NodeToken->Text.length() == 1)
-    //     Text("mov [bp +" + std::to_string(ptr) + "], " +((std::string[5]){"", "byte", "word", "","dword"})[v.size] + " '" + root->Children[0]->NodeToken->Text + "'");
-    //   if(root->Children[0]->Type == CONSTANT_NODE && root->Children[0]->NodeToken->Type == STRING && root->Children[0]->NodeToken->Text.length() != 1){
-    //     Data(std::string("string") + std::to_string(StrIndex++) + ":");
-    //     Data("db `" + root->Children[0]->NodeToken->Text + "`,0");
-    //     Text("mov [bp + " + std::to_string(ptr) + "], " + ((std::string[5]){"", "byte", "word", "","dword"})[v.size] + " string" + std::to_string(StrIndex - 1));
-    //   }
-    // }
     if(root->Parent->Type == REFERENCE)
     {
       Variable v = getVariable(root->Parent->NodeToken->Text);
@@ -201,61 +182,63 @@ public:
   }
   void CompileMath16(Node* root)
   {
-    std::string c1 = "dx,";
-    std::string c2 = "cx,";
-    if(root->Children[0]->NodeToken->Type == CONSTANT)
-    {
-       Text("mov dl, " + root->Children[0]->NodeToken->Text);
-      c2 = "dl, ";
-    }
-    if(root->Children[0]->Type == REFERENCE)
-    {
-      Variable v = getVariable(root->Children[0]->NodeToken->Text);
-      Text("mov " + std::string((v.size == 1) ? "dl, " : "dx, ") + ((std::string[5]){"", "byte", "word", "","dword"})[v.size] + "[bp + " + std::to_string(v.stack_pos) + "]");
-      if(v.size == 1)
+    if(root->Parent->Type != MATH){
+      std::string c1 = "dx,";
+      std::string c2 = "cx,";
+      if(root->Children[0]->NodeToken->Type == CONSTANT)
+      {
+        Text("mov dl, " + root->Children[0]->NodeToken->Text);
+        c2 = "dl, ";
+      }
+      if(root->Children[0]->Type == REFERENCE)
+      {
+        Variable v = getVariable(root->Children[0]->NodeToken->Text);
+        Text("mov " + std::string((v.size == 1) ? "dl, " : "dx, ") + ((std::string[5]){"", "byte", "word", "","dword"})[v.size] + "[bp + " + std::to_string(v.stack_pos) + "]");
+        if(v.size == 1)
+          c1 = "dl, ";
+      }
+      if(root->Children[1]->Type == REFERENCE)
+      {
+        Variable v = getVariable(root->Children[1]->NodeToken->Text);
+        Text("mov " + (v.size == 1) ? "cl, " : "cx, " + ((std::string[5]){"", "byte", "word", "","dword"})[v.size] + "[bp + " + std::to_string(v.stack_pos) + "]");
+        if(v.size == 1)
+          c2 = "cl";    
+      }
+      if(root->Children[1]->Type == CONSTANT_NODE && root->Children[1]->NodeToken->Type == CONSTANT)
+      {
+        Text("mov cl, " + root->Children[1]->NodeToken->Text);
+        c2 = "cl";
+      }
+      if(c1 == "dl, ")
+      {
+        c2 = "cl";
+      }
+      if(c2 == "cl")
+      {
         c1 = "dl, ";
-    }
-    if(root->Children[1]->Type == REFERENCE)
-    {
-      Variable v = getVariable(root->Children[1]->NodeToken->Text);
-      Text("mov " + (v.size == 1) ? "cl, " : "cx, " + ((std::string[5]){"", "byte", "word", "","dword"})[v.size] + "[bp + " + std::to_string(v.stack_pos) + "]");
-      if(v.size == 1)
-        c2 = "cl";    
-    }
-    if(root->Children[1]->Type == CONSTANT_NODE && root->Children[1]->NodeToken->Type == CONSTANT)
-    {
-      Text("mov cl, " + root->Children[1]->NodeToken->Text);
-      c2 = "cl";
-    }
-    if(c1 == "dl, ")
-    {
-      c2 = "cl";
-    }
-    if(c2 == "cl")
-    {
-      c1 = "dl, ";
-    }
-    switch(root->NodeToken->Text[0])
-    {
-      case '+':
-      {
-        Text("add " + c1 + c2);
-      } break;
-      case '-':
-      {
-        Text("sub " + c1 + c2);
-      } break;
-    }
-    if(root->Parent->Type == EQUAL)
-    {
-      Variable v = getVariable(root->Parent->NodeToken->Text);
-      if(c1 == "dl, "){
-        c1 = "dl";
       }
-      if(c1 == "dx, "){
-        c1 = "dx";
+      switch(root->NodeToken->Text[0])
+      {
+        case '+':
+        {
+          Text("add " + c1 + c2);
+        } break;
+        case '-':
+        {
+          Text("sub " + c1 + c2);
+        } break;
       }
-      Text("mov [ebp + " + std::to_string(v.stack_pos) + "], " + c1);
+      if(root->Parent->Type == EQUAL)
+      {
+        Variable v = getVariable(root->Parent->NodeToken->Text);
+        if(c1 == "dl, "){
+          c1 = "dl";
+        }
+        if(c1 == "dx, "){
+          c1 = "dx";
+        }
+        Text("mov [ebp + " + std::to_string(v.stack_pos) + "], " + c1);
+      }
     }
   }
   void CompileUnless16(Node* root)
@@ -486,6 +469,27 @@ public:
       Text("ret");
     }
   }
+  void CompilePointerVar16(Node* root)
+  {
+    int sz = 1;
+    if(root->Children.size() > 0 && root->Children[0]->Type == INDEX)
+    {
+      Node* n = root->Children[0]->Children[0];
+      int i = 0;
+      while(i < root->Children[0]->Children.size() && n->Type != INDEXEND)
+      {
+        n = root->Children[0]->Children[i];
+        ++i;
+      }
+      Variable v = (Variable){StackPosition, sz, n->Children[0]->NodeToken->Text, CurrentFunction};
+      Variables.push_back(v);
+      StackPosition += sz;
+    }
+    Variable v = (Variable){StackPosition,sz, root->Children[0]->NodeToken->Text, CurrentFunction, true};
+    Variables.push_back(v);
+    
+    StackPosition += sz;
+  }
   void CompileVar16(Node* root)
   {
     int sz = 0;
@@ -524,6 +528,18 @@ public:
   {
     Variable v = getVariable(root->NodeToken->Text);
     
+    if(root->Children[0]->Type == REFERENCE)
+    {
+      if(root->Children[0]->Children.size() != 0){
+        if(root->Children[0]->Children[0]->Type == INDEX && root->Children[0]->Children[0]->Children[0]->NodeToken->Type == CONSTANT)
+        {
+          Variable v2 = getVariable(root->Children[0]->NodeToken->Text);
+          Text("mov bx, bp");
+          Text("add bx, "+ std::to_string(v2.stack_pos + 0));
+          Text("mov [bp + " + std::to_string(v.stack_pos + std::stoi(root->Children[0]->Children[0]->Children[0]->NodeToken->Text) + 0) + "], bx");
+        }
+      }
+    }
     if(root->Parent->Type == INDEXEND)
     {
       Node* n = root;
@@ -532,7 +548,7 @@ public:
         n = n->Parent;
       }
       v = getVariable(n->NodeToken->Text);
-      int ptr = v.stack_pos + std::stoi(root->Parent->Parent->Children[0]->NodeToken->Text) + 4;
+      int ptr = v.stack_pos + std::stoi(root->Parent->Parent->Children[0]->NodeToken->Text) + 0;
       if(v.size == 0) v.size = 1;
       if(root->Children[0]->Type == CONSTANT_NODE && root->Children[0]->NodeToken->Type == CONSTANT)
         Text("mov [bp +" + std::to_string(ptr) + "], " +((std::string[5]){"", "byte", "word", "","dword"})[v.size] + " " + root->Children[0]->NodeToken->Text);
@@ -549,6 +565,16 @@ public:
     {
       ErrorHandler::PutError(VAR_DOESNT_EXIST, root->NodeToken->Text, root->NodeToken->Line, root->NodeToken->Column);
     }
+    if(v.pointer == true)
+    {
+      if(root->Children[0]->Type == REFERENCE)
+      {
+        Variable v2 = getVariable(root->Children[0]->NodeToken->Text);
+        Text("mov bx, bp");
+        Text("add bx, "+ std::to_string(v2.stack_pos + 0));
+        Text("mov [bp + " + std::to_string(v.stack_pos + 0) + "], bx");
+      }
+    }
     if(root->Children[0]->Type == CONSTANT_NODE && root->Children[0]->NodeToken->Type == CONSTANT)
       Text("mov [bp +" + std::to_string(v.stack_pos) + "], " +((std::string[5]){"", "byte", "word", "","dword"})[v.size] + " " + root->Children[0]->NodeToken->Text);
     if(root->Children[0]->Type == CONSTANT_NODE && root->Children[0]->NodeToken->Type == STRING && root->Children[0]->NodeToken->Text.length() == 1)
@@ -558,6 +584,16 @@ public:
       Data("db `" + root->Children[0]->NodeToken->Text + "`,0");
       Text("mov [bp + " + std::to_string(v.stack_pos) + "], " + ((std::string[5]){"", "byte", "word", "","dword"})[v.size] + " string" + std::to_string(StrIndex - 1));
     }
+    // if(root->Children[0]->Type == REFERENCE && root->Children[0]->Children[0]->Type == INDEX)
+    // {
+    //   if(root->Children[0]->Children[0]->Children[0]->NodeToken->Type == CONSTANT)
+    //   {
+    //     Variable v2 = getVariable(root->Children[0]->NodeToken->Text);
+    //     Text("mov bx, bp");
+    //     Text("add bx, "+ std::to_string(v2.stack_pos + 0));
+    //     Text("mov [bp + " + std::to_string(v.stack_pos + std::stoi(root->Children[0]->Children[0]->Children[0]->NodeToken->Text) + 0) + "], bx");
+    //   }
+    // }
   }
   void CompileFunction16(Node* root)
   {
@@ -572,6 +608,16 @@ public:
   {
     if(root->Parent->Parent->Type == NAME || root->Parent->Parent->Type == FUNCTION)
     {
+      if(root->Parent->Parent->Parent->Type == BLOCK)
+      {
+        CurrentFunction = "GLOBAL";
+        if(root->Parent->Parent->NodeToken->Text != "main"){
+          StackPosition -= 4;
+          Text("mov sp, bp");
+          Text("pop bp");
+          Text("ret");
+        }
+      }
       CurrentFunction = "GLOBAL";
       if(root->Parent->Parent->NodeToken->Text != "main"){
         StackPosition = 0;
@@ -590,6 +636,5 @@ public:
       Text("LOEND" + std::to_string(root->Parent->Parent->ID) + ":");
     }
   }
-
 };
 

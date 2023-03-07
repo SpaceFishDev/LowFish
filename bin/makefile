@@ -15,3 +15,5 @@ run:
 	$(OUT) --tree
 debug: $(SRC)
 	$(CPP) $(CFLAGS) $(SRC) -o $(OUT) -g
+test: 
+	py ../tests/test.py
