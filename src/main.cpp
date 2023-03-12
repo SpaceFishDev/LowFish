@@ -1,6 +1,5 @@
 // Copyright (C) 2023 Liam Gatter
-// See license.md in root for license details.
-
+// See license.md in root directory for license details.
 #include<iostream>  
 #include<cstring>
 #include <fstream>
@@ -47,7 +46,8 @@ class Node;
 void printTree(Node* root, std::string prefix, bool isLastChild);
 bool drawTree = false;
 
-#include<codegen.h>
+#include<codegen32win.h> // INCOMPLETE
+
 
 void printTree(Node* root, std::string prefix = "", bool isLastChild = true) {
   std::cout << prefix;
@@ -161,6 +161,7 @@ int main(int argc, char** argv){
   std::string out = "a.exe";
   std::string in = "main.lf ";
   std::string ld_args = "";
+  bool bin = false;
   while(argc--){
     if(strcmp("-o", argv[i]) == 0){
       out = argv[i + 1];
@@ -173,6 +174,9 @@ int main(int argc, char** argv){
     else if(strcmp("-v", argv[i]) == 0){
       std::cout << "LowFish: V" << VERSION << "\n";
       return 0;
+    }
+    else if(strcmp("-b", argv[i]) == 0){
+      bin = true;
     }
     else if(argv[i][0] == '$')
     {
@@ -189,18 +193,39 @@ int main(int argc, char** argv){
     ++i;
   }
   std::string str = ReadFile(in);
-  Codegen16 compiler(str, "w");
-  delete compiler.tree;
-  Codegen16::WriteFile(compiler.AsmOut(), strip_extention(out) + ".asm");
+  if(bin){
+    Codegen16 compiler(str, "w");
+    delete compiler.tree;
+    Codegen16::WriteFile(compiler.AsmOut(), strip_extention(out) + ".asm");
+    std::cout << "\nLOWFISH: Output to executable file '" << strip_extention(out) << ".bin" << "' into working directory.\n"; 
+    system(
+      (
+        std::string("nasm ") + 
+        std::string(strip_extention(out) + ".asm") + 
+        " -f bin -o" + std::string(strip_extention(out) 
+        + ".bin")
+      ).c_str() 
+    );
+  }
+  else
+  {
+    #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+      CodegenWin32 compiler(str);
+      delete compiler.tree;
+      Codegen16::WriteFile(compiler.AsmOut(), strip_extention(out) + ".asm");
+      system(
+        (
+          std::string("nasm ") + 
+          std::string(strip_extention(out) + ".asm") + 
+          " -f win32 -o" + std::string(strip_extention(out) 
+          + ".obj")
+        ).c_str()
+      );
+    #else
+      printf("LINUX COMPILATION IS CURRENTLY NOT SUPPORTED.\n");
+      return 0;
+    #endif
+  }
   
-  std::cout << "\nLOWFISH: Output to executable file '" << strip_extention(out) << ".bin" << "' into working directory.\n"; 
-  system(
-    (
-      std::string("nasm ") + 
-      std::string(strip_extention(out) + ".asm") + 
-      " -f bin -o" + std::string(strip_extention(out) 
-      + ".bin")
-    ).c_str()
-  );
 }
 

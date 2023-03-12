@@ -1,7 +1,7 @@
 int main()
 {
-    char[300] a;
-    a[4] = 1;
+  char[300] a;
+  a[4] = 1;
 }
 ~
 main:

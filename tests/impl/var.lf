@@ -1,5 +1,5 @@
 int main(){
-    char @^ = 32;
+  char @^ = 32;
 }
 ~
 main:

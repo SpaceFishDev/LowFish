@@ -24,32 +24,32 @@ int main()
   char y = 0;
   while(c != 27) 
   {
+  x = x + 1;
+  c = readchar();
+  if(c == 13) 
+  {
+    char f = 10;
+    x = 0;
+    y = y + 1;
+    putc(f);
+  } 
+  if(x == -1)
+  {
+    if(c == 8)
+    {
+    c = 'b';
     x = x + 1;
-    c = readchar();
-    if(c == 13) 
-    {
-      char f = 10;
-      x = 0;
-      y = y + 1;
-      putc(f);
-    } 
-    if(x == -1)
-    {
-      if(c == 8)
-      {
-        c = 'b';
-        x = x + 1;
-      }
     }
+  }
+  putc(c);
+  if(c == 8) 
+  {
+   
+    char a = ' ';
+    a = 31 + 1;
+    putc(a);
     putc(c);
-    if(c == 8) 
-    {
-     
-      char a = ' ';
-      a = 31 + 1;
-      putc(a);
-      putc(c);
-    }
+  }
   } 
   asm "hlt";
 }

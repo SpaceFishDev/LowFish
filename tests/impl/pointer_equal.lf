@@ -1,8 +1,8 @@
 char x(char* a)
 {
-    a[0] = 32;
-    char b = a[0];
-    return b;
+  a[0] = 32;
+  char b = a[0];
+  return b;
 }
 
 int main()

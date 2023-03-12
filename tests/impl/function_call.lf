@@ -1,11 +1,11 @@
 char abc(short foo)
 {
-    abc(foo);
+  abc(foo);
 }
 int main()
 {
-    char a = 3;
-    abc(a);
+  char a = 3;
+  abc(a);
 }
 ~
 abc:

@@ -1,9 +1,9 @@
 int main()
 {
-    char main2()
-    {
-        int @^ = 0;
-    }
+  char main2()
+  {
+    int @^ = 0;
+  }
 }
 ~
 main:
