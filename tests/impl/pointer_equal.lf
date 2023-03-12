@@ -1,0 +1,28 @@
+char x(char* a)
+{
+    a[0] = 32;
+    char b = a[0];
+    return b;
+}
+
+int main()
+{
+
+}
+
+~
+x:
+push bp
+mov bp, sp
+mov bx, bp
+add bx, 0
+mov [bx], byte 32
+mov bx, bp
+add bx, 4
+mov [bp + 5], bx
+mov sp, bp
+pop bp
+ret
+main:
+push bp
+mov bp, sp

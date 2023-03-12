@@ -1,5 +1,51 @@
+
+asm "[org 0x7c00]";
+asm "mov sp, 0x7c00";
+asm "mov bp, sp";
+asm "call main"
+
+int putc(char c)
+{
+  asm "mov al, [bp + 4]";
+  asm "mov ah, 0x0e";
+  asm "int 0x10";
+}
+
+char readchar()
+{
+  asm "mov ah, 0x00";
+  asm "int 0x16";
+}
+
+char test(char x)
+{
+    char c = x[0];
+    putc(c);
+}
+
 int main()
 {
-    char[300] a;
-    a[4] = 1;
+  char c = 4;
+  string x = "Test";
+  test(x);
+  while(c != 27) 
+  {
+    c = readchar();
+    if(c == 13) 
+    {
+      char f = 10;
+      putc(f);
+    } 
+    putc(c);
+    if(c == 8) 
+    {
+      char a = ' ';
+      a = 31 + 1;
+      putc(a);
+      putc(c);
+    }
+  } 
+  asm "hlt";
 }
+asm "times 510-($-$$) db 0";
+asm "dw 0xaa55";

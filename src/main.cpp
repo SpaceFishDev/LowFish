@@ -1,3 +1,5 @@
+// Copyright (C) 2023 Liam Gatter
+
 #include<iostream>  
 #include<cstring>
 #include <fstream>

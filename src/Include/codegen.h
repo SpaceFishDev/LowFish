@@ -17,7 +17,8 @@ public:
 
   void Data(std::string str, bool nl = true)
   {
-    if(!nl){
+    if(!nl)
+    {
       DataSection += str;
       return;
     }
@@ -25,7 +26,8 @@ public:
   }
   void Text(std::string str, bool nl = true)
   {
-    if(!nl){
+    if(!nl)
+    {
       TextSection += str;
       return;
     }
@@ -33,7 +35,8 @@ public:
   }
   void Bss(std::string str, bool nl = true)
   {
-    if(!nl){
+    if(!nl)
+    {
       BssSection += str;
       return;
     }
@@ -72,19 +75,27 @@ public:
   {
     for(Variable v : Variables)
     {
-      if(v.name == name && v.function == CurrentFunction)
+      if
+      (
+        v.name == name 
+        && v.function == CurrentFunction
+      )
       {
         return v;
       }
     }
     for(Variable v : Variables)
     {
-      if(v.name == name && v.function == "GLOBAL")
+      if
+      (
+        v.name == name 
+        && v.function == "GLOBAL"
+      )
       {
         return v;
       }
     }
-    return (Variable){0, 0, "", ""};
+    return (Variable){0, 0, "", "", false};
   }
   void Compile16(Node* root)
   {
@@ -166,7 +177,11 @@ public:
 
       Node* n = root->Children[0];
       int i = 0;
-      while(i < root->Children.size() && n->Type != INDEXEND)
+      while
+      (
+        i < root->Children.size() 
+        && n->Type != INDEXEND
+      )
       {
         n = root->Children[i];
         ++i;
@@ -174,7 +189,8 @@ public:
     }
     if(root->Parent->Type == VAR && CurrentFunction != "GLOBAL")
     {
-      if(root->Children[0]->NodeToken->Type == CONSTANT){
+      if(root->Children[0]->NodeToken->Type == CONSTANT)
+      {
         StackPosition += std::stoi(root->Children[0]->NodeToken->Text);
       }
 
@@ -182,7 +198,8 @@ public:
   }
   void CompileMath16(Node* root)
   {
-    if(root->Parent->Type != MATH){
+    if(root->Parent->Type != MATH)
+    {
       std::string c1 = "dx,";
       std::string c2 = "cx,";
       if(root->Children[0]->NodeToken->Type == CONSTANT)
@@ -193,18 +210,36 @@ public:
       if(root->Children[0]->Type == REFERENCE)
       {
         Variable v = getVariable(root->Children[0]->NodeToken->Text);
-        Text("mov " + std::string((v.size == 1) ? "dl, " : "dx, ") + ((std::string[5]){"", "byte", "word", "","dword"})[v.size] + "[bp + " + std::to_string(v.stack_pos) + "]");
+        Text
+        (
+          "mov " 
+          + std::string((v.size == 1) ? "dl, " : "dx, ") 
+          + ((std::string[5]){"", "byte", "word", "","dword"})[v.size] 
+          + "[bp + " + std::to_string(v.stack_pos) 
+          + "]"
+        );
         if(v.size == 1)
           c1 = "dl, ";
       }
       if(root->Children[1]->Type == REFERENCE)
       {
         Variable v = getVariable(root->Children[1]->NodeToken->Text);
-        Text("mov " + (v.size == 1) ? "cl, " : "cx, " + ((std::string[5]){"", "byte", "word", "","dword"})[v.size] + "[bp + " + std::to_string(v.stack_pos) + "]");
+        Text
+        (
+          "mov " + (v.size == 1) ? "cl, " : "cx, " 
+          + ((std::string[5]){"", "byte", "word", "","dword"})[v.size] 
+          + "[bp + " 
+          + std::to_string(v.stack_pos) 
+          + "]"
+        );
         if(v.size == 1)
           c2 = "cl";    
       }
-      if(root->Children[1]->Type == CONSTANT_NODE && root->Children[1]->NodeToken->Type == CONSTANT)
+      if
+      (
+        root->Children[1]->Type == CONSTANT_NODE 
+        && root->Children[1]->NodeToken->Type == CONSTANT
+      )
       {
         Text("mov cl, " + root->Children[1]->NodeToken->Text);
         c2 = "cl";
@@ -231,10 +266,12 @@ public:
       if(root->Parent->Type == EQUAL)
       {
         Variable v = getVariable(root->Parent->NodeToken->Text);
-        if(c1 == "dl, "){
+        if(c1 == "dl, ")
+        {
           c1 = "dl";
         }
-        if(c1 == "dx, "){
+        if(c1 == "dx, ")
+        {
           c1 = "dx";
         }
         Text("mov [ebp + " + std::to_string(v.stack_pos) + "], " + c1);
@@ -268,7 +305,13 @@ public:
           Variable v = getVariable(root->Children[0]->NodeToken->Text);
           if(v.name == "")
           {
-            ErrorHandler::PutError(VAR_DOESNT_EXIST, root->Children[0]->NodeToken->Text, root->Children[0]->NodeToken->Line, root->Children[0]->NodeToken->Column);
+            ErrorHandler::PutError
+            (
+              VAR_DOESNT_EXIST, 
+              root->Children[0]->NodeToken->Text, 
+              root->Children[0]->NodeToken->Line, 
+              root->Children[0]->NodeToken->Column
+            );
           }
           if(v.size == 1 )
             c1 = "dl,";
@@ -281,11 +324,21 @@ public:
             c2 = "cl";
           if(v.name == "")
           {
-            ErrorHandler::PutError(VAR_DOESNT_EXIST, root->Children[0]->NodeToken->Text, root->Children[0]->NodeToken->Line, root->Children[0]->NodeToken->Column);
+            ErrorHandler::PutError
+            (
+              VAR_DOESNT_EXIST,
+              root->Children[0]->NodeToken->Text,
+              root->Children[0]->NodeToken->Line,
+              root->Children[0]->NodeToken->Column
+            );
           }
           Text("mov " + c2 + "," + ((std::string[5]){"", "byte", "word", "","dword"})[v.size] + " [bp + " + std::to_string(v.stack_pos) + "]");
         }
-        if(root->Children[1]->Type == CONSTANT_NODE && root->Children[1]->NodeToken->Type == CONSTANT)
+        if
+        (
+          root->Children[1]->Type == CONSTANT_NODE 
+          && root->Children[1]->NodeToken->Type == CONSTANT
+        )
         {
           Text(std::string("mov ") + "cl" + ", "  + "byte " + root->Children[1]->NodeToken->Text);
           c2 = "cl";
@@ -303,7 +356,13 @@ public:
           Variable v = getVariable(root->Children[0]->NodeToken->Text);
           if(v.name == "")
           {
-            ErrorHandler::PutError(VAR_DOESNT_EXIST, root->Children[0]->NodeToken->Text, root->Children[0]->NodeToken->Line, root->Children[0]->NodeToken->Column);
+            ErrorHandler::PutError
+            (
+              VAR_DOESNT_EXIST, 
+              root->Children[0]->NodeToken->Text, 
+              root->Children[0]->NodeToken->Line, 
+              root->Children[0]->NodeToken->Column
+            );
           }
           if(v.size == 1 )
             c1 = "dl,";
@@ -316,11 +375,21 @@ public:
             c2 = "cl";
           if(v.name == "")
           {
-            ErrorHandler::PutError(VAR_DOESNT_EXIST, root->Children[0]->NodeToken->Text, root->Children[0]->NodeToken->Line, root->Children[0]->NodeToken->Column);
+            ErrorHandler::PutError
+            (
+              VAR_DOESNT_EXIST, 
+              root->Children[0]->NodeToken->Text, 
+              root->Children[0]->NodeToken->Line, 
+              root->Children[0]->NodeToken->Column
+            );
           }
           Text("mov " + c2 + "," + ((std::string[5]){"", "byte", "word", "","dword"})[v.size] + " [bp + " + std::to_string(v.stack_pos) + "]");
         }
-        if(root->Children[1]->Type == CONSTANT_NODE && root->Children[1]->NodeToken->Type == CONSTANT)
+        if
+        (
+          root->Children[1]->Type == CONSTANT_NODE 
+          && root->Children[1]->NodeToken->Type == CONSTANT
+        )
         {
           Text(std::string("mov ") + "cl" + ", "  + "byte " + root->Children[1]->NodeToken->Text);
           c2 = "cl";
@@ -330,7 +399,11 @@ public:
         Text("je LOEND" + std::to_string(root->Parent->ID));
       }
     }
-    if(root->Parent->Type == IFNODE || root->Parent->Type == WHILENODE)
+    if
+    (
+      root->Parent->Type == IFNODE 
+      || root->Parent->Type == WHILENODE
+    )
     {
       if(root->NodeToken->Text == "==")
       {
@@ -358,7 +431,11 @@ public:
           }
           Text("mov " + c2 + "," + ((std::string[5]){"", "byte", "word", "","dword"})[v.size] + " [bp + " + std::to_string(v.stack_pos) + "]");
         }
-        if(root->Children[1]->Type == CONSTANT_NODE && root->Children[1]->NodeToken->Type == CONSTANT)
+        if
+        (
+          root->Children[1]->Type == CONSTANT_NODE 
+          && root->Children[1]->NodeToken->Type == CONSTANT
+        )
         {
           Text(std::string("mov ") + "cl" + ", "  + "byte " + root->Children[1]->NodeToken->Text);
           c2 = "cl";
@@ -380,7 +457,15 @@ public:
           }
           if(v.size == 1 )
             c1 = "dl,";
-          Text("mov " + c1 + ((std::string[5]){"", "byte", "word", "","dword"})[v.size] + " [bp + " + std::to_string(v.stack_pos) + "]");
+          Text("mov " + c1 + 
+          ((std::string[5])
+          {"",
+            "byte",
+            "word",
+            "",
+            "dword"
+          })
+          [v.size] + " [bp + " + std::to_string(v.stack_pos) + "]");
         }
         if(root->Children[1]->Type == REFERENCE)
         {
@@ -393,7 +478,11 @@ public:
           }
           Text("mov " + c2 + "," + ((std::string[5]){"", "byte", "word", "","dword"})[v.size] + " [bp + " + std::to_string(v.stack_pos) + "]");
         }
-        if(root->Children[1]->Type == CONSTANT_NODE && root->Children[1]->NodeToken->Type == CONSTANT)
+        if
+        (
+          root->Children[1]->Type == CONSTANT_NODE 
+          && root->Children[1]->NodeToken->Type == CONSTANT
+        )
         {
           Text(std::string("mov ") + "cl" + ", "  + "byte " + root->Children[1]->NodeToken->Text);
           c2 = "cl";
@@ -417,7 +506,8 @@ public:
       {
         std::string name = root->Parent->NodeToken->Text;
         Variable v = getVariable(name);
-        if(v.name == ""){
+        if(v.name == "")
+        {
           ErrorHandler::PutError(VAR_DOESNT_EXIST, name, root->Parent->NodeToken->Line,root->Parent->NodeToken->Column);
         }
         Text("mov [bp +" + std::to_string(v.stack_pos) + "], " +((std::string[5]){"", "byte", "word", "","dword"})[v.size] + std::string((v.size == 1) ? " al" : " ax"));
@@ -433,11 +523,19 @@ public:
     if(root->Parent->Type == FUNCTION_CALL)
     {
       Variable v = getVariable(root->NodeToken->Text);
-      if(v.name == ""){
+      if(v.name == "")
+      {
         ErrorHandler::PutError(VAR_DOESNT_EXIST, root->NodeToken->Text, root->NodeToken->Line, root->NodeToken->Column);
       }
       
-      Text(std::string("mov ") + std::string((v.size == 1) ? "al," : "ax,") + ((std::string[5]){"", "byte", "word", "","dword"})[v.size] + " " "[bp + " + " " + std::to_string(v.stack_pos) + "]");
+      Text
+      (
+        std::string("mov ") + 
+        std::string(
+        (v.size == 1) ? "al," : "ax,") +
+        ((std::string[5]){"", "byte", "word", "","dword"})[v.size] + " " + 
+        "[bp + " + " " + std::to_string(v.stack_pos) + "]"
+      );
       Text("push byte eax");
       if(root->Parent->Children[root->Parent->Children.size() - 1] == root)
       {
@@ -446,7 +544,8 @@ public:
         {
           std::string name = root->Parent->Parent->NodeToken->Text;
           Variable v = getVariable(name);
-          if(v.name == ""){
+          if(v.name == "")
+          {
             ErrorHandler::PutError(VAR_DOESNT_EXIST, name, root->Parent->Parent->NodeToken->Line,root->Parent->Parent->NodeToken->Column);
           }
           Text("mov [bp +" + std::to_string(v.stack_pos) + "], " +((std::string[5]){"", "byte", "word", "","dword"})[v.size] + " eax");
@@ -461,7 +560,11 @@ public:
 
   void CompileReturn16(Node* root)
   {
-    if(root->Children[0]->Type == CONSTANT_NODE && root->Children[0]->NodeToken->Type == CONSTANT)
+    if
+    (
+      root->Children[0]->Type == CONSTANT_NODE 
+      && root->Children[0]->NodeToken->Type == CONSTANT
+    )
     {
       Text("mov ax, " + root->Children[0]->NodeToken->Text);
       Text("mov sp, bp");
@@ -472,11 +575,19 @@ public:
   void CompilePointerVar16(Node* root)
   {
     int sz = 1;
-    if(root->Children.size() > 0 && root->Children[0]->Type == INDEX)
+    if
+    (
+      root->Children.size() > 0 
+      && root->Children[0]->Type == INDEX
+    )
     {
       Node* n = root->Children[0]->Children[0];
       int i = 0;
-      while(i < root->Children[0]->Children.size() && n->Type != INDEXEND)
+      while
+      (
+        i < root->Children[0]->Children.size() 
+        && n->Type != INDEXEND
+      )
       {
         n = root->Children[0]->Children[i];
         ++i;
@@ -485,7 +596,14 @@ public:
       Variables.push_back(v);
       StackPosition += sz;
     }
-    Variable v = (Variable){StackPosition,sz, root->Children[0]->NodeToken->Text, CurrentFunction, true};
+    Variable v = (Variable)
+    {
+      StackPosition,
+      sz, 
+      root->Children[0]->NodeToken->Text, 
+      CurrentFunction, 
+      true
+    };
     Variables.push_back(v);
     
     StackPosition += sz;
@@ -497,29 +615,40 @@ public:
     {
       sz = 4;
     }
-    if(root->NodeToken->Text == "char"){
+    if(root->NodeToken->Text == "char")
+    {
       sz = 1;
     }
-    if(root->NodeToken->Text == "short"){
+    if(root->NodeToken->Text == "short")
+    {
       sz = 2;
     }
-    if(root->NodeToken->Text == "string"){
+    if(root->NodeToken->Text == "string")
+    {
       sz = 1;
     }
-    if(root->Children.size() > 0 && root->Children[0]->Type == INDEX)
+    if
+    (
+      root->Children.size() > 0 
+      && root->Children[0]->Type == INDEX
+    )
     {
       Node* n = root->Children[0]->Children[0];
       int i = 0;
-      while(i < root->Children[0]->Children.size() && n->Type != INDEXEND)
+      while
+      (
+        i < root->Children[0]->Children.size() 
+        && n->Type != INDEXEND
+      )
       {
         n = root->Children[0]->Children[i];
         ++i;
       }
-      Variable v = (Variable){StackPosition, sz, n->Children[0]->NodeToken->Text, CurrentFunction};
+      Variable v = (Variable){StackPosition, sz, n->Children[0]->NodeToken->Text, CurrentFunction, false};
       Variables.push_back(v);
       StackPosition += sz;
     }
-    Variable v = (Variable){StackPosition,sz, root->Children[0]->NodeToken->Text, CurrentFunction};
+    Variable v = (Variable){StackPosition,sz, root->Children[0]->NodeToken->Text, CurrentFunction, false};
     Variables.push_back(v);
     
     StackPosition += sz;
@@ -530,8 +659,13 @@ public:
     
     if(root->Children[0]->Type == REFERENCE)
     {
-      if(root->Children[0]->Children.size() != 0){
-        if(root->Children[0]->Children[0]->Type == INDEX && root->Children[0]->Children[0]->Children[0]->NodeToken->Type == CONSTANT)
+      if(root->Children[0]->Children.size() != 0)
+      {
+        if
+        (
+          root->Children[0]->Children[0]->Type == INDEX 
+          && root->Children[0]->Children[0]->Children[0]->NodeToken->Type == CONSTANT
+        )
         {
           Variable v2 = getVariable(root->Children[0]->NodeToken->Text);
           Text("mov bx, bp");
@@ -543,18 +677,67 @@ public:
     if(root->Parent->Type == INDEXEND)
     {
       Node* n = root;
-      while(n->Parent && n->Type != REFERENCE)
+      while
+      (
+        n->Parent && n->Type != REFERENCE 
+        && n->Type != POINTERREFERENCE
+      )
       {
         n = n->Parent;
       }
       v = getVariable(n->NodeToken->Text);
       int ptr = v.stack_pos + std::stoi(root->Parent->Parent->Children[0]->NodeToken->Text) + 0;
       if(v.size == 0) v.size = 1;
-      if(root->Children[0]->Type == CONSTANT_NODE && root->Children[0]->NodeToken->Type == CONSTANT)
+      if(v.pointer)
+      {
+        Text("mov bx, bp");
+        Text("add bx, " + std::to_string(ptr - v.stack_pos));
+        if
+        (
+          root->Children[0]->Type == CONSTANT_NODE 
+          && root->Children[0]->NodeToken->Type == CONSTANT
+        )
+          Text("mov [bx], " +((std::string[5]){"", "byte", "word", "","dword"})[v.size] + " " + root->Children[0]->NodeToken->Text);
+        if
+        (
+          root->Children[0]->Type == CONSTANT_NODE 
+          && root->Children[0]->NodeToken->Type == STRING 
+          && root->Children[0]->NodeToken->Text.length() == 1
+        )
+          Text("mov [bx], " +((std::string[5]){"", "byte", "word", "","dword"})[v.size] + " '" + root->Children[0]->NodeToken->Text + "'");
+        if
+        (
+          root->Children[0]->Type == CONSTANT_NODE 
+          && root->Children[0]->NodeToken->Type == STRING 
+          && root->Children[0]->NodeToken->Text.length() != 1
+        )
+        {
+          Data(std::string("string") + std::to_string(StrIndex++) + ":");
+          Data("db `" + root->Children[0]->NodeToken->Text + "`,0");
+          Text("mov [bx], " + ((std::string[5]){"", "byte", "word", "","dword"})[v.size] + " string" + std::to_string(StrIndex - 1));
+        }
+        return;
+      }
+      if
+      (
+        root->Children[0]->Type == CONSTANT_NODE 
+        && root->Children[0]->NodeToken->Type == CONSTANT
+      )
         Text("mov [bp +" + std::to_string(ptr) + "], " +((std::string[5]){"", "byte", "word", "","dword"})[v.size] + " " + root->Children[0]->NodeToken->Text);
-      if(root->Children[0]->Type == CONSTANT_NODE && root->Children[0]->NodeToken->Type == STRING && root->Children[0]->NodeToken->Text.length() == 1)
+      if
+      (
+        root->Children[0]->Type == CONSTANT_NODE 
+        && root->Children[0]->NodeToken->Type == STRING 
+        && root->Children[0]->NodeToken->Text.length() == 1
+      )
         Text("mov [bp +" + std::to_string(ptr) + "], " +((std::string[5]){"", "byte", "word", "","dword"})[v.size] + " '" + root->Children[0]->NodeToken->Text + "'");
-      if(root->Children[0]->Type == CONSTANT_NODE && root->Children[0]->NodeToken->Type == STRING && root->Children[0]->NodeToken->Text.length() != 1){
+      if
+      (
+        root->Children[0]->Type == CONSTANT_NODE 
+        && root->Children[0]->NodeToken->Type == STRING 
+        && root->Children[0]->NodeToken->Text.length() != 1
+      )
+      {
         Data(std::string("string") + std::to_string(StrIndex++) + ":");
         Data("db `" + root->Children[0]->NodeToken->Text + "`,0");
         Text("mov [bp + " + std::to_string(ptr) + "], " + ((std::string[5]){"", "byte", "word", "","dword"})[v.size] + " string" + std::to_string(StrIndex - 1));
@@ -572,28 +755,33 @@ public:
         Variable v2 = getVariable(root->Children[0]->NodeToken->Text);
         Text("mov bx, bp");
         Text("add bx, "+ std::to_string(v2.stack_pos + 0));
-        Text("mov [bp + " + std::to_string(v.stack_pos + 0) + "], bx");
+        Text("mov [bp + " + std::to_string(v.stack_pos + 0) + "], [bx]");
       }
     }
-    if(root->Children[0]->Type == CONSTANT_NODE && root->Children[0]->NodeToken->Type == CONSTANT)
+    if
+    (
+      root->Children[0]->Type == CONSTANT_NODE 
+      && root->Children[0]->NodeToken->Type == CONSTANT
+    )
       Text("mov [bp +" + std::to_string(v.stack_pos) + "], " +((std::string[5]){"", "byte", "word", "","dword"})[v.size] + " " + root->Children[0]->NodeToken->Text);
-    if(root->Children[0]->Type == CONSTANT_NODE && root->Children[0]->NodeToken->Type == STRING && root->Children[0]->NodeToken->Text.length() == 1)
+    if
+    (
+      root->Children[0]->Type == CONSTANT_NODE 
+      && root->Children[0]->NodeToken->Type == STRING 
+      && root->Children[0]->NodeToken->Text.length() == 1
+    )
       Text("mov [bp +" + std::to_string(v.stack_pos) + "], " +((std::string[5]){"", "byte", "word", "","dword"})[v.size] + " '" + root->Children[0]->NodeToken->Text + "'");
-    if(root->Children[0]->Type == CONSTANT_NODE && root->Children[0]->NodeToken->Type == STRING && root->Children[0]->NodeToken->Text.length() != 1){
+    if
+    (
+      root->Children[0]->Type == CONSTANT_NODE 
+      && root->Children[0]->NodeToken->Type == STRING 
+      && root->Children[0]->NodeToken->Text.length() != 1
+    )
+    {
       Data(std::string("string") + std::to_string(StrIndex++) + ":");
       Data("db `" + root->Children[0]->NodeToken->Text + "`,0");
       Text("mov [bp + " + std::to_string(v.stack_pos) + "], " + ((std::string[5]){"", "byte", "word", "","dword"})[v.size] + " string" + std::to_string(StrIndex - 1));
     }
-    // if(root->Children[0]->Type == REFERENCE && root->Children[0]->Children[0]->Type == INDEX)
-    // {
-    //   if(root->Children[0]->Children[0]->Children[0]->NodeToken->Type == CONSTANT)
-    //   {
-    //     Variable v2 = getVariable(root->Children[0]->NodeToken->Text);
-    //     Text("mov bx, bp");
-    //     Text("add bx, "+ std::to_string(v2.stack_pos + 0));
-    //     Text("mov [bp + " + std::to_string(v.stack_pos + std::stoi(root->Children[0]->Children[0]->Children[0]->NodeToken->Text) + 0) + "], bx");
-    //   }
-    // }
   }
   void CompileFunction16(Node* root)
   {
@@ -606,7 +794,11 @@ public:
   }
   void CompileBlockEnd16(Node* root)
   {
-    if(root->Parent->Parent->Type == NAME || root->Parent->Parent->Type == FUNCTION)
+    if
+    (
+      root->Parent->Parent->Type == NAME 
+      || root->Parent->Parent->Type == FUNCTION
+    )
     {
       if(root->Parent->Parent->Parent->Type == BLOCK)
       {
@@ -619,7 +811,8 @@ public:
         }
       }
       CurrentFunction = "GLOBAL";
-      if(root->Parent->Parent->NodeToken->Text != "main"){
+      if(root->Parent->Parent->NodeToken->Text != "main")
+      {
         StackPosition = 0;
         Text("mov sp, bp");
         Text("pop bp");

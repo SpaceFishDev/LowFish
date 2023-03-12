@@ -18,9 +18,10 @@ def test(path, name):
     os.system("lf " + name + ".lf " + "-o " + name + ".asm")
     out = open(name + ".asm", "r").read()
     out = out.replace(o, " ")
-    os.remove(name + ".lf")
-    os.remove(name + ".asm")
-    os.remove(name + ".bin")
+    if out.isspace():
+        os.remove(name + ".lf")
+        os.remove(name + ".asm")
+        os.remove(name + ".bin")
     return out.isspace()
 
 def get_num(str):
