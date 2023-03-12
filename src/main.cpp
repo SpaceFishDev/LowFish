@@ -1,4 +1,5 @@
 // Copyright (C) 2023 Liam Gatter
+// See license.md in root for license details.
 
 #include<iostream>  
 #include<cstring>
