@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 AL PUBLIC LICENSE
+=======
+                    GNU GENERAL PUBLIC LICENSE
+>>>>>>> 4797a96620ab02f97e907ab01be1dbb44a1709c4
                        Version 3, 29 June 2007
 
  Copyright (C) 2007 Free Software Foundation, Inc. <https://fsf.org/>
