@@ -4,8 +4,7 @@
 #include<cstring>
 #include <fstream>
 #include<vector> 
-#define VERSION 0.3
-// #include<algorithm>
+#define VERSION 0.4
 #include<sstream>
 
 char* ReadFile(std::string file) {
@@ -46,7 +45,7 @@ class Node;
 void printTree(Node* root, std::string prefix, bool isLastChild);
 bool drawTree = false;
 
-#include<codegen32win.h> // INCOMPLETE
+#include<IR.h>  
 
 
 void printTree(Node* root, std::string prefix = "", bool isLastChild = true) {
@@ -112,8 +111,6 @@ std::string NodeTypeToString(int type) {
   return "ASSEMBLY";
   case CONTAINERNODE:
   return "CONTAINER";
-  case BLOCKEND:
-  return "BLOCKEND";
   case EXTERN:
   return "EXTERN";
   case INDEX:
@@ -193,39 +190,8 @@ int main(int argc, char** argv){
     ++i;
   }
   std::string str = ReadFile(in);
-  if(bin){
-    Codegen16 compiler(str, "w");
-    delete compiler.tree;
-    Codegen16::WriteFile(compiler.AsmOut(), strip_extention(out) + ".asm");
-    std::cout << "\nLOWFISH: Output to executable file '" << strip_extention(out) << ".bin" << "' into working directory.\n"; 
-    system(
-      (
-        std::string("nasm ") + 
-        std::string(strip_extention(out) + ".asm") + 
-        " -f bin -o" + std::string(strip_extention(out) 
-        + ".bin")
-      ).c_str() 
-    );
-  }
-  else
-  {
-    #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
-      CodegenWin32 compiler(str);
-      delete compiler.tree;
-      Codegen16::WriteFile(compiler.AsmOut(), strip_extention(out) + ".asm");
-      system(
-        (
-          std::string("nasm ") + 
-          std::string(strip_extention(out) + ".asm") + 
-          " -f win32 -o" + std::string(strip_extention(out) 
-          + ".obj")
-        ).c_str()
-      );
-    #else
-      printf("LINUX COMPILATION IS CURRENTLY NOT SUPPORTED.\n");
-      return 0;
-    #endif
-  }
-  
+  IR ir = IR(str);
+  ir.Compile(ir.tree);
+  std::cout << ir.IRCode << "\n";
 }
 

@@ -1,12 +1,3 @@
-
-char x(char b)
-{
-  b = b + 1;
-  return b;
-}
-
-int main()
-{
-  char b = 32;
-  char a = x(b);
+int main(){
+    int x = 1 + 2 + 44 * 3;
 }

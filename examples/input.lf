@@ -2,7 +2,7 @@
 asm "[org 0x7c00]";
 asm "mov sp, 0x7c00";
 asm "mov bp, sp";
-asm "call main"
+asm "jmp main"
 
 int putc(char c)
 {
@@ -19,7 +19,6 @@ char readchar()
 
 int main()
 {
-  char[10000] d = 4;
   char c = 4;
   string x = "Test";
   while(c != 27) 

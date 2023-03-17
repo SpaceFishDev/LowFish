@@ -121,7 +121,7 @@ public:
   int Column;
   Lexer( std::string src, int l)
   {
-  src[l - 1] = 0;
+  src[l] = 0;
   for(char c : src)
   {
     if(c == 0){
@@ -136,14 +136,14 @@ public:
   Lexer(){}
   Token Tokenize()
   {
-  if(Source[Position] == '#')
-  {
-    while(Source[Position] != '\n' && Source[Position] != '\0'){
-    ++Position;
+    if(Source[Position] == '#')
+    {
+      while(Source[Position] != '\n' && Source[Position] != '\0'){
+        ++Position;
+      }
+      ++Position;
+      return Tokenize();
     }
-    ++Position;
-    return Tokenize();
-  }
   switch(Source[Position])
   {
     case '+':
@@ -158,12 +158,12 @@ public:
     case '}':
     case '[':
     case ']':{
-    if(!(IsDigit(Source[Position + 1]) && Source[Position] == '-')){
-      std::string o = " ";
-      o[0] = Source[Position];
-      ++Position;
-      return Token(SYMBOL, o, Line, Column);
-    }
+      if(!(IsDigit(Source[Position + 1]) && Source[Position] != '-')){
+        std::string o = " ";
+        o[0] = Source[Position];
+        ++Position;
+        return Token(SYMBOL, o, Line, Column);
+      }
     } break;
     case '\'':
     case '"':
@@ -189,10 +189,10 @@ public:
     }
     case '\n':
     {
-    ++Line;
-    ++Position;
-    Column = 0;
-    return Tokenize();
+      ++Line;
+      ++Position;
+      Column = 0;
+      return Tokenize();
     }
     case ':':
     case '\\':
@@ -288,9 +288,9 @@ public:
     ++Position;
     while(IsDigit(Source[Position]))
     {
-    out += Source[Position];
-    ++Position;
-    ++Column;
+      out += Source[Position];
+      ++Position;
+      ++Column;
     }
     return Token(CONSTANT, out	, Line, Column);
   }
