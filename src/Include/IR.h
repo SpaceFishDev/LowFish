@@ -19,7 +19,7 @@ class IR
             tree = parser.Parse(tree, tree);
             printTree(tree, "", true);
         }
-
+        int LoopId = 0;
         void Compile(Node* root)
         {
             switch(root->Type)
@@ -40,6 +40,18 @@ class IR
                 {
                     CompileReference(root);
                 } break;
+                case IFNODE:
+                {
+                    CompileIfNode(root);
+                } break;
+                case BOOLEXPR:
+                {
+                    CompileBoolExpr(root);
+                } break;
+                case RETURNNODE:
+                {
+                    CompileReturn(root);
+                } break;
             }
             for(Node* child : root->Children)
             {
@@ -49,7 +61,53 @@ class IR
             {
                 CompileFunctionCall(root);
             }
+            
+            if(root->Type == BLOCK)
+            {
+                if(root->Parent->Type == IFNODE)
+                {
+                    AppendIR("LO" + std::to_string(root->Parent->ID) + "END:");
+                }
+            }
             CompileEndOfNode(root);
+        }
+        void CompileBoolExpr(Node* root)
+        {
+            if
+            (
+                (root->Children[0]->Type == REFERENCE
+                && root->Children[1]->Type == REFERENCE)
+                || root->Children[0]->Type == REFERENCE 
+                && root->Children[1]->NodeToken->Type == CONSTANT
+            )
+            {
+                if(root->Parent->Type == IFNODE)
+                {
+                    AppendIR
+                    (
+                        "cmp " + 
+                        root->Children[0]->NodeToken->Text + 
+                        " " +
+                        root->Children[1]->NodeToken->Text
+                    );
+                    if(root->NodeToken->Text == "==")
+                    {
+                        AppendIR("jne LO" + std::to_string(root->Parent->ID) + "END");
+                    }
+                }
+            }
+            
+        }
+        void CompileReturn(Node* root)
+        {
+            if(root->Children[0]->Type == REFERENCE || root->Children[0]->NodeToken->Type == CONSTANT)
+            {
+                AppendIR("set \%eax " + root->Children[0]->NodeToken->Text);
+            }
+        }
+        void CompileIfNode(Node* root)
+        {
+            root->ID = LoopId++;
         }
         void CompileReference(Node* root)
         {
@@ -101,6 +159,7 @@ class IR
                 || root->Children[0]->Type == EQUAL
             )
                 AppendIR("let " + root->Children[0]->NodeToken->Text);
+            
         }
         void CompileEndOfNode(Node* root)
         {
