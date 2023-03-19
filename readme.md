@@ -13,3 +13,4 @@ Basically a simpler version of C but with Containers. Containers are like namesp
 3. IR. Intermedate representation is created out of the code.
 4. Code generation. Create assembly code out of the Intermediate Representation.
 ```
+- [x] What?
