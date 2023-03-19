@@ -3,9 +3,12 @@
 class IR
 {
     public:
+
         Node* tree;
         std::string IRCode = "";
-
+        std::string CurrentFunction = "global";
+        std::vector<std::string> DefinedVariables;
+        std::vector<std::string> DefinedVariablesScopes;
         void AppendIR(std::string str)
         {
             IRCode += str;
@@ -52,6 +55,14 @@ class IR
                 {
                     CompileReturn(root);
                 } break;
+                case ASSEMBLY:
+                {
+                    CompileAssembly(root);
+                } break;
+                case WHILENODE:
+                {
+                    CompileWhileNode(root);
+                } break;
             }
             for(Node* child : root->Children)
             {
@@ -64,12 +75,30 @@ class IR
             
             if(root->Type == BLOCK)
             {
-                if(root->Parent->Type == IFNODE)
+                if(root->Parent->Type == IFNODE || root->Parent->Type == WHILENODE)
                 {
-                    AppendIR("LO" + std::to_string(root->Parent->ID) + "END:");
+                    AppendIR("label LO" + std::to_string(root->Parent->ID) + "END");
+                }
+                if(root->Parent->Type == WHILENODE)
+                {
+                    AppendIR("jmp LO" + root->Parent->ID);
+                }
+                if(root->Parent->Type == FUNCTION)
+                {
+                    CurrentFunction = "global";
                 }
             }
             CompileEndOfNode(root);
+        }
+        void CompileWhileNode(Node* root)
+        {
+            root->ID = LoopId;
+            ++LoopId;
+            AppendIR("label LO" + root->ID);
+        }
+        void CompileAssembly(Node* root)
+        {
+            AppendIR("native \"" + root->NodeToken->Text + "\"");
         }
         void CompileBoolExpr(Node* root)
         {
@@ -81,7 +110,7 @@ class IR
                 && root->Children[1]->NodeToken->Type == CONSTANT
             )
             {
-                if(root->Parent->Type == IFNODE)
+                if(root->Parent->Type == IFNODE || root->Parent->Type == WHILENODE)
                 {
                     AppendIR
                     (
@@ -94,6 +123,26 @@ class IR
                     {
                         AppendIR("jne LO" + std::to_string(root->Parent->ID) + "END");
                     }
+                    if(root->NodeToken->Text == "!=")
+                    {
+                        AppendIR("je LO" + std::to_string(root->Parent->ID) + "END");
+                    }
+                    if(root->NodeToken->Text == ">")
+                    {
+                        AppendIR("jl LO" + std::to_string(root->Parent->ID) + "END");
+                    }
+                    if(root->NodeToken->Text == "<")
+                    {
+                        AppendIR("jg LO" + std::to_string(root->Parent->ID) + "END");
+                    }
+                    if(root->NodeToken->Text == ">=")
+                    {
+                        AppendIR("jlne LO" + std::to_string(root->Parent->ID) + "END");
+                    }
+                    if(root->NodeToken->Text == "<=")
+                    {
+                        AppendIR("jgne LO" + std::to_string(root->Parent->ID) + "END");
+                    }
                 }
             }
             
@@ -103,6 +152,7 @@ class IR
             if(root->Children[0]->Type == REFERENCE || root->Children[0]->NodeToken->Type == CONSTANT)
             {
                 AppendIR("set \%eax " + root->Children[0]->NodeToken->Text);
+                AppendIR("return");
             }
         }
         void CompileIfNode(Node* root)
@@ -158,8 +208,29 @@ class IR
                 root->Children[0]->Type == REFERENCE
                 || root->Children[0]->Type == EQUAL
             )
+            {
+                int i = 0;
+                for(std::string v : DefinedVariables)
+                {
+                    if
+                    (
+                        v == root->Children[0]->NodeToken->Text
+                        && DefinedVariablesScopes[i] == CurrentFunction
+                    )
+                    {
+                        ErrorHandler::PutError(
+                            REDEFINITION_OF_VARIABLE,
+                            root->Children[0]->NodeToken->Text, 
+                            root->Children[0]->NodeToken->Line, 
+                            root->Children[0]->NodeToken->Column
+                        );
+                    }
+                    i++;
+                }
+                DefinedVariablesScopes.push_back(CurrentFunction);
+                DefinedVariables.push_back(root->Children[0]->NodeToken->Text);
                 AppendIR("let " + root->Children[0]->NodeToken->Text);
-            
+            }
         }
         void CompileEndOfNode(Node* root)
         {
@@ -174,12 +245,13 @@ class IR
                 && root == root->Parent->Children[root->Parent->Children.size() - 1]
             )
             {
-                AppendIR("return");
+                AppendIR("return\n");
             }
         }
         void CompileFunction(Node* root)
         {
             AppendIR("func " + root->Children[0]->NodeToken->Text);
+            CurrentFunction = root->Children[0]->NodeToken->Text;
         }
     private:
 };

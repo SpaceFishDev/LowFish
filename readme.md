@@ -1,6 +1,5 @@
 ![LowFish](Logo.png "LowFish") 
-
-<b>LowFish a compiled language.</b>
+<u><b>LowFish a compiled language.</b> </u>
 ## LOWFISH:
  - Fast compiler. 
  - It is compiled to x86 intel assembly (will not work on ARM chips)

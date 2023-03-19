@@ -172,6 +172,10 @@ int main(int argc, char** argv){
       std::cout << "LowFish: V" << VERSION << "\n";
       return 0;
     }
+    else if(strcmp("-h", argv[i]) == 0){
+      std::cout << "Idk man, learn them .\n";
+      return 0;
+    }
     else if(strcmp("-b", argv[i]) == 0){
       bin = true;
     }

@@ -31,6 +31,7 @@ enum ErrorTypes{
   FUNCTION_NOT_EXIST,
   TYPE_DOESNT_MATCH,
   VAR_DOESNT_EXIST,
+  REDEFINITION_OF_VARIABLE,
 };
 
 class ErrorHandler{
@@ -39,6 +40,11 @@ public:
   {
   switch(type)
   {
+    case REDEFINITION_OF_VARIABLE:
+    {
+    std::cout << "Variable '" << c << "' redefined LN: " << line << " COL: " << column << "\n";
+    exit(-1);
+    }
     case VAR_DOESNT_EXIST:{
     std::cout << "Variable " << c << " does not exist in current context LN: " << line << " COL: " << column << "\n";
     exit(-1);

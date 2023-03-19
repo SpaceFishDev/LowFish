@@ -1,11 +1,8 @@
-int y(char i)
-{
-    if(i == 32)
-    {
-        return 0;
-    }
-}
 int main()
 {
-
+    int a = 2;
+    while(a == 1)
+    {
+        a = 3 + 1;  
+    }
 }

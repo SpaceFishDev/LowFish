@@ -205,6 +205,12 @@ public:
   }
   Node* ParseConstant(Node *Parent)
   {
+    if(Tokens[Position].Type == IDENTIFIER)
+    {
+      Node* N = new Node(&Tokens[Position], REFERENCE, Parent);
+      ++Position;
+      return N;
+    }
     Node* N = new Node(&Tokens[Position], CONSTANT_NODE, Parent);
     ++Position;
     return N;
@@ -345,23 +351,6 @@ public:
       }
       return Parse(N, Root);
     }
-    // if (
-    //     Current.Text == "+" || Current.Text == "-" || Current.Text == "/" || Current.Text == "*")
-    // {
-    //   if (Parent->Type == MATH)
-    //   {
-    //     Node *N = new Node(&Tokens[Position], MATH, Parent->Parent);
-    //     N->Children.push_back(Parent);
-    //     Parent->Parent->Children[Parent->Parent->Children.size() - 1] = N;
-    //     ++Position;
-    //     return Parse(N, Root);
-    //   }
-    //   Node *N = new Node(&Tokens[Position], MATH, Parent);
-    //   N->Children.push_back(Parent->Children[Parent->Children.size() - 1]);
-    //   Parent->Children[Parent->Children.size() - 1] = N;
-    //   ++Position;
-    //   return Parse(N, Root);
-    // }
     if (
         Current.Text == "==" || Current.Text == "!=" || Current.Text == "<" || Current.Text == ">" || Current.Text == ">=" || Current.Text == "<=" || Current.Text == "&&" || Current.Text == "||")
     {

@@ -1,7 +1,7 @@
 
 int main100(){
 	int x = 0;
-	main101();
+	asm "hlt";	
 }
 int main99(){
 	int x = 0;

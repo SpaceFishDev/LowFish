@@ -4,45 +4,44 @@ native "mov bp, sp"
 native "jmp main"
 
 func putc
-    letc c
-    native "mov al, [bp + 4]"
-    native "mov ah, 0x0e"
-    native "int 0x10"
+letc c
+native "mov al, [bp + 4]"
+native "mov ah, 0x0e"
+native "int 0x10"
 return
 func readchar
-    native "mov ah, 0x00"
-    native "int 0x16"
+native "mov ah, 0x00"
+native "int 0x16"
 return
 
 func main
-    letc c 4
-    lets x "Test"
-    label LO0
-    call readchar
-    set c %al
-    cmp c 13
-        ne LO1END
-        let f 10
-        push f
-        call putc
-    label LO1END
-    push c
-    call putc
-    cmp c 8
-        ne LO2END
-        let a ' '
-        set a 31
-        add a 1
-        push a
-        call putc
-        push c
-        call putc
-    label LO2END
-    cmp c 27 
-    ne LO0
-    native "hlt"
+let c 4
+let x "Test"
+label LO0
+call readchar
+set c %al
+cmp c 13
+jne LO1END
+let f 10
+push f
+call putc
+label LO1END
+push c
+call putc
+cmp c 8
+jne LO2END
+let a ' '
+set a 31
+add a 1
+push a
+call putc
+push c
+call putc
+label LO2END
+cmp c 27 
+jne LO0
+native "hlt"
 
 native "times 510-($-$$) db 0"
 native "dw 0xaa55"
 
-    
