@@ -199,11 +199,11 @@ public:
       GetFunctions(child);
     }
   }
-  Node *GetContainerContent(Node *N)
+  Node* GetContainerContent(Node *N)
   {
-    return N->Children[1];
+      return N->Children[1];
   }
-  Node* ParseConstant(Node *Parent)
+  Node* ParseExpression(Node* Parent, Node** Discard = 0)
   {
     if(Tokens[Position].Type == IDENTIFIER)
     {
@@ -217,25 +217,37 @@ public:
   }
   Node* ParseTerm(Node *Parent, Node *Root)
   {
-    Node* left = ParseFactor(Parent);
+    Node* DiscardL = 0;
+    Node* DiscardR = 0;
+    Node* left = ParseFactor(Parent, &DiscardL);
+    
     while(Tokens[Position].Text == "+" || Tokens[Position].Text == "-")
     {
       Node* binOp = new Node(&Tokens[Position++], MATH, Parent);
-      Node* right = ParseFactor(Parent);
+      Node* right = ParseFactor(Parent, &DiscardR);
       binOp->Children.push_back(left);
       left = binOp;
       left->Children.push_back(right);
+      if(DiscardR != 0)
+      {
+        return Parse(right, Root);
+      }
     }
     Parent->Children.push_back(left);
+    if(DiscardL != 0)
+    {
+      return Parse(left, Root);
+    }
+    
     return Parse(Parent, Root);
   }
-  Node* ParseFactor(Node* Parent)
+  Node* ParseFactor(Node* Parent, Node** Discard)
   {
-    Node* left =  ParseConstant(Parent);
+    Node* left =  ParseExpression(Parent, Discard);
     while(Tokens[Position].Text == "*" || Tokens[Position].Text == "/")
     {
       Node* binOp = new Node(&Tokens[Position++], MATH, Parent);
-      Node* right = ParseConstant(Parent);
+      Node* right = ParseExpression(Parent);
       binOp->Children.push_back(left);
       left = binOp;
       left->Children.push_back(right);
@@ -597,6 +609,10 @@ public:
         return Parse(E, Root);
       }
     }
+    if(ExpectValue("+") || ExpectValue("-") || ExpectValue("/") || ExpectValue("*"))
+    {
+      return ParseTerm(Parent, Root);
+    }
     if (ExpectValue(";") || ExpectValue(")") || ExpectValue(",") || ExpectValue("+") || ExpectValue("-") || ExpectValue("/") || ExpectValue("]") || ExpectValue("[") || ExpectValue("*"))
     {
 
@@ -619,11 +635,12 @@ public:
           }
         }
       }
-      if (Parent->Parent->Type == VAR)
+      if (Parent->Parent && Parent->Parent->Type == VAR)
       {
         Var v = Var(Tokens[Position].Text, Parent->NodeToken->Text, Parent->Type == POINTERVAR);
         Variables.push_back(v);
       }
+      
       Node *N = new Node(&Tokens[Position], REFERENCE, Parent);
       ++Position;
       Parent->Children.push_back(N);
@@ -631,8 +648,16 @@ public:
       return Parse(Parent, Root);
     }
 
-    if (
-        ExpectValue("==") || ExpectValue("!=") || ExpectValue("<") || ExpectValue(">") || ExpectValue(">=") || ExpectValue("<=") || ExpectValue("&&"))
+    if 
+    (
+        ExpectValue("==") 
+        || ExpectValue("!=") 
+        || ExpectValue("<") 
+        || ExpectValue(">") 
+        || ExpectValue(">=") 
+        || ExpectValue("<=") 
+        || ExpectValue("&&")
+    )
     {
       Node *N = new Node(&Tokens[Position + 1], BOOLEXPR, Parent);
       N->Children.push_back(new Node(&Tokens[Position], REFERENCE, N));

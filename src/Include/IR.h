@@ -9,10 +9,62 @@ class IR
         std::string CurrentFunction = "global";
         std::vector<std::string> DefinedVariables;
         std::vector<std::string> DefinedVariablesScopes;
-        void AppendIR(std::string str)
+        std::vector<std::string> Assembly;
+        int AssemblyIndex = 0;
+        std::vector<std::string> FunctionCalls;
+        void GetCalls(Node* Root)
+        {
+            if(Root->Type == FUNCTION_CALL)
+            {
+                FunctionCalls.push_back(Root->NodeToken->Text);
+            }
+            for(Node* c : Root->Children)
+            {
+                GetCalls(c);
+            }
+        }
+        void CullUnused(Node* Root)
+        {
+            if(Root->Type == FUNCTION)
+            {
+                std::string name = Root->Children[0]->NodeToken->Text;
+                bool called = false;
+                if(name == "main")
+                {
+                    called = true;
+                }
+                for(std::string f : FunctionCalls)
+                {
+                    if(f == name )
+                    {
+                        called = true;
+                    }
+                }
+                if(!called)
+                {
+                    Node* p = Root->Parent;
+                    int i = 0;
+                    for(Node* c : p->Children)
+                    {
+                        if(c == Root)
+                        {
+                            break;
+                        }
+                        ++i;
+                    }
+                    p->Children.erase(p->Children.begin() + i);
+                }
+            }
+            for(Node* child : Root->Children)
+            {
+                CullUnused(child);
+            }
+        }
+        void AppendIR(std::string str, bool New = true)
         {
             IRCode += str;
-            IRCode += "\n";
+            if(New)
+                IRCode += "\n";
         }
 
         IR(std::string str)
@@ -21,8 +73,76 @@ class IR
             tree = new Node(new Token(0,"root", 0, 0),PROGRAM, 0);
             tree = parser.Parse(tree, tree);
             printTree(tree, "", true);
+            GetCalls(tree);
+            CullUnused(tree);
+            std::cout << "CULLING ACTIVE:\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n"; 
+            printTree(tree, "", true);
+            Assembly = parser.Assembly;
+
         }
         int LoopId = 0;
+        void CompileMath(Node* root)
+        {
+            if(root->Children[0]->Type == REFERENCE)
+            {
+                AppendIR("add " + root->Children[0]->NodeToken->Text + " " + Evaluate(root->Children[1])->NodeToken->Text);
+            }
+            else if(root->Children[0]->Type == MATH)
+            {
+                if(root->Children[0]->Children[0]->Type == REFERENCE)
+                {
+                    AppendIR("add " + root->Children[0]->Children[0]->NodeToken->Text + " " + Evaluate(root->Children[1])->NodeToken->Text);
+                    return;
+                }
+            }
+            else
+            {
+                return;
+            }
+            for(Node* r : root->Children)
+            {
+                CompileMath(r);
+            }
+        }
+        Node* Evaluate(Node* root)
+        {
+            if(root->Type == MATH)
+            {
+                for(Node* child : root->Children)
+                {
+                    if(child->Type == REFERENCE)
+                    {
+                        return root;
+                    }
+                }
+                root->Type = CONSTANT_NODE;
+                root->Children[0] = Evaluate(root->Children[0]);
+                root->Children[1] = Evaluate(root->Children[1]);
+                if(root->Children[0]->Type == MATH || root->Children[1]->Type == MATH)
+                {
+                    return root;
+                }
+                int x = 0;
+                
+                switch(root->NodeToken->Text[0]){
+                    case '+':{
+                            x = std::stoi(root->Children[0]->NodeToken->Text.c_str()) + std::stoi(root->Children[1]->NodeToken->Text.c_str());
+                    } break;
+                    case '-':{
+                            x = std::stoi(root->Children[0]->NodeToken->Text.c_str()) - std::stoi(root->Children[1]->NodeToken->Text.c_str());
+                    } break;
+                    case '/':{
+                            x = std::stoi(root->Children[0]->NodeToken->Text.c_str()) / std::stoi(root->Children[1]->NodeToken->Text.c_str());
+                    } break;
+                    case '*':{
+                            x = std::stoi(root->Children[0]->NodeToken->Text.c_str()) * std::stoi(root->Children[1]->NodeToken->Text.c_str());
+                    } break;
+                }
+                root->NodeToken = new Token( CONSTANT,std::to_string(x), root->NodeToken->Line, root->NodeToken->Column);
+            }
+            
+            return root;
+        }
         void Compile(Node* root)
         {
             switch(root->Type)
@@ -81,7 +201,7 @@ class IR
                 }
                 if(root->Parent->Type == WHILENODE)
                 {
-                    AppendIR("jmp LO" + root->Parent->ID);
+                    AppendIR("jmp LO" + std::to_string(root->Parent->ID));
                 }
                 if(root->Parent->Type == FUNCTION)
                 {
@@ -94,14 +214,31 @@ class IR
         {
             root->ID = LoopId;
             ++LoopId;
-            AppendIR("label LO" + root->ID);
+            AppendIR("label LO" + std::to_string(root->ID));
         }
         void CompileAssembly(Node* root)
         {
-            AppendIR("native \"" + root->NodeToken->Text + "\"");
+            AppendIR("native \"" +  Assembly[AssemblyIndex++] + "\"");
         }
+        
         void CompileBoolExpr(Node* root)
         {
+            if
+            (
+                root->Children[0]->NodeToken->Type == CONSTANT
+            )
+            {
+                if(root->Parent->Type == IFNODE || root->Parent->Type == WHILENODE)
+                {
+                    AppendIR
+                    (
+                        "cmp " + 
+                        root->Children[0]->NodeToken->Text + 
+                        ", 1\n" +
+                        "jge LO" + std::to_string(root->Parent->ID) + "END" 
+                    );
+                }
+            }
             if
             (
                 (root->Children[0]->Type == REFERENCE
@@ -198,6 +335,18 @@ class IR
                         o += " \"" +  root->Children[0]->NodeToken->Text + "\"";
                     }
                 } break;
+                case MATH:
+                {
+                    Node* newN = Evaluate(root->Children[0]);
+                    if(root->Children[0]->NodeToken->Type == CONSTANT)
+                    {
+                        o += " " +  root->Children[0]->NodeToken->Text;
+                        AppendIR(o);
+                        return;
+                    }
+                    CompileMath(root->Children[0]);
+                    return; 
+                }
             }
             AppendIR(o);
         }
@@ -234,6 +383,10 @@ class IR
         }
         void CompileEndOfNode(Node* root)
         {
+            if(root->Type == BLOCK && root->Children.size() == 0)
+            {
+                AppendIR("return\n");
+            }
             if
             (
                 root->Type != PROGRAM
@@ -252,6 +405,6 @@ class IR
         {
             AppendIR("func " + root->Children[0]->NodeToken->Text);
             CurrentFunction = root->Children[0]->NodeToken->Text;
-        }
+        }   
     private:
 };

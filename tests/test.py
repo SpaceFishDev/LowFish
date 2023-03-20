@@ -1,5 +1,6 @@
 import random
 import string
+import os
 func_id = 0
 
 def randStr(chars = string.ascii_uppercase + string.ascii_lowercase, N=10):
@@ -33,7 +34,6 @@ def get_num(str):
     i = i + 1
 
 i = 0
-import os
 tests = []
 num_t = 0
 for path in os.scandir("impl/"):
@@ -49,10 +49,8 @@ for n in succeed:
   print("TEST " + str(i) + "(TYPE=" + tests[i][0] + ", INPUT=" + tests[i][1] +") : SUCCEED=" + str(n))
   if n == False:
      success = n
-  import os
   name = tests[i][1]
   i = i + 1
 
 if success == False:
   print("\n[One or more tests failed.]")
-
