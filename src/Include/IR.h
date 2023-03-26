@@ -92,8 +92,12 @@ class IR
                 if(root->Children[0]->Children[0]->Type == REFERENCE)
                 {
                     AppendIR("add " + root->Children[0]->Children[0]->NodeToken->Text + " " + Evaluate(root->Children[1])->NodeToken->Text);
-                    return;
                 }
+                if(root->Parent->Type == EQUAL)
+                {
+                    AppendIR("set " + root->Parent->NodeToken->Text + " \%eax");
+                }
+                return;
             }
             else
             {
@@ -103,6 +107,11 @@ class IR
             {
                 CompileMath(r);
             }
+            if(root->Parent->Type == EQUAL)
+            {
+                AppendIR("set " + root->Parent->NodeToken->Text + " \%eax");
+            }
+            
         }
         Node* Evaluate(Node* root)
         {
@@ -126,16 +135,20 @@ class IR
                 
                 switch(root->NodeToken->Text[0]){
                     case '+':{
-                            x = std::stoi(root->Children[0]->NodeToken->Text.c_str()) + std::stoi(root->Children[1]->NodeToken->Text.c_str());
+                            x = std::stoi(root->Children[0]->NodeToken->Text.c_str()) 
+                                + std::stoi(root->Children[1]->NodeToken->Text.c_str());
                     } break;
                     case '-':{
-                            x = std::stoi(root->Children[0]->NodeToken->Text.c_str()) - std::stoi(root->Children[1]->NodeToken->Text.c_str());
+                            x = std::stoi(root->Children[0]->NodeToken->Text.c_str()) 
+                            - std::stoi(root->Children[1]->NodeToken->Text.c_str());
                     } break;
                     case '/':{
-                            x = std::stoi(root->Children[0]->NodeToken->Text.c_str()) / std::stoi(root->Children[1]->NodeToken->Text.c_str());
+                            x = std::stoi(root->Children[0]->NodeToken->Text.c_str()) 
+                            / std::stoi(root->Children[1]->NodeToken->Text.c_str());
                     } break;
                     case '*':{
-                            x = std::stoi(root->Children[0]->NodeToken->Text.c_str()) * std::stoi(root->Children[1]->NodeToken->Text.c_str());
+                            x = std::stoi(root->Children[0]->NodeToken->Text.c_str()) 
+                            * std::stoi(root->Children[1]->NodeToken->Text.c_str());
                     } break;
                 }
                 root->NodeToken = new Token( CONSTANT,std::to_string(x), root->NodeToken->Line, root->NodeToken->Column);
@@ -183,6 +196,10 @@ class IR
                 {
                     CompileWhileNode(root);
                 } break;
+                case CONSTANT_NODE:
+                {
+                    CompileConstantNode(root);
+                }
             }
             for(Node* child : root->Children)
             {
@@ -195,7 +212,7 @@ class IR
             
             if(root->Type == BLOCK)
             {
-                if(root->Parent->Type == IFNODE || root->Parent->Type == WHILENODE)
+                if(root->Parent->Type == IFNODE || root->Parent->Type == WHILENODE) 
                 {
                     AppendIR("label LO" + std::to_string(root->Parent->ID) + "END");
                 }
@@ -203,12 +220,22 @@ class IR
                 {
                     AppendIR("jmp LO" + std::to_string(root->Parent->ID));
                 }
-                if(root->Parent->Type == FUNCTION)
+                else if(root->Parent->Type == FUNCTION) [[likely]]
                 {
                     CurrentFunction = "global";
                 }
             }
             CompileEndOfNode(root);
+        }
+        void CompileConstantNode(Node* root)
+        {
+            if(root->Parent->Type == FUNCTION_CALL)
+            {
+                if(root->NodeToken->Type == STRING)
+                {
+                    AppendIR("push " + root->NodeToken->Text);
+                }
+            }        
         }
         void CompileWhileNode(Node* root)
         {
@@ -396,7 +423,7 @@ class IR
                         || root->Parent->Parent->Type == FUNCTION
                     )
                 && root == root->Parent->Children[root->Parent->Children.size() - 1]
-            )
+            ) 
             {
                 AppendIR("return\n");
             }

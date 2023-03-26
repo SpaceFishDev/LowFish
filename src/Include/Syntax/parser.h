@@ -379,9 +379,10 @@ public:
     {
       if (Expect(STRING))
       {
-        Node *N = new Node(&Tokens[Position], EXTERN, Parent);
-        ++Position;
+        Node *N = new Node(&Tokens[Position + 1], EXTERN, Parent);
         Parent->Children.push_back(N);
+        Functions.push_back(N->NodeToken->Text);
+        Position += 2;
         return Parse(N, Root);
       }
     }
