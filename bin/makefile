@@ -3,18 +3,24 @@ CFLAGS = -std=c++20 -fpermissive -O3 -Ofast -I../src/include res\ico.res
 OUT = lf.exe
 CPP = g++
 CC = gcc
-SRC_C = $(wildcard ../src/IR/*.c)
-OUT_C = lfir.exe
-CFLAGSC = -O3 -Ofast -I../src/ir/include 
+SRC_C = $(wildcard ../src/IR/*.cpp)
+OUT_C = lf_ir.exe
+CFLAGSC = -std=c++20 -O3 -Ofast -I../src/ir/include  -fpermissive
 
 all: 
 	make clean
 	make build
 	make run
+	make ir 
 build: $(SRC)
 	windres res\ico.rc -O coff -o res\ico.res
 	$(CPP) $(CFLAGS) $(SRC) -o $(OUT)
-	$(CC) $(CFLAGSC) $(SRC_C) -o $(OUT_C)
+ir:
+	$(CPP) $(CFLAGSC) $(SRC_C) -o $(OUT_C)
+	$(OUT_C)
+dir:
+	$(CPP) $(CFLAGSC) $(SRC_C) -o $(OUT_C) -g
+
 clean:
 	del $(OUT)
 	del res\ico.res

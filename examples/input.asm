@@ -24,7 +24,7 @@ push bp
 mov bp, sp
 mov [bp +4], byte 4
 mov [bp +5], byte 0
-mov [bp +6], byte 0
+mov [bp +6], byte 0 
 LO0:
 mov dl,byte [bp + 4]
 mov cl, byte 27

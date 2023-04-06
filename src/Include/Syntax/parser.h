@@ -84,12 +84,14 @@ public:
   int Position = 0;
   std::vector<Token> Tokens;
   std::vector<Function> Functions;
-  std::vector<Type> Types = {
-      Type("string"),
-      Type("long"),
-      Type("char"),
-      Type("int"),
-      Type("short")};
+  std::vector<Type> Types = 
+  {
+    Type("string"),
+    Type("long"),
+    Type("char"),
+    Type("int"),
+    Type("short")
+  };
   std::vector<Var> Variables;
   std::vector<Token> ReorderTokens(std::vector<Token> tokens)
   {

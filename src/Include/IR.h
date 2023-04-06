@@ -199,7 +199,11 @@ class IR
                 case CONSTANT_NODE:
                 {
                     CompileConstantNode(root);
-                }
+                } break;
+                case EXTERN:
+                {
+                    CompileExtern(root);
+                } break;
             }
             for(Node* child : root->Children)
             {
@@ -227,13 +231,21 @@ class IR
             }
             CompileEndOfNode(root);
         }
+        void CompileExtern(Node* root)
+        {
+            AppendIR("native \"[extern " + root->NodeToken->Text + "]\"");
+        }
         void CompileConstantNode(Node* root)
         {
             if(root->Parent->Type == FUNCTION_CALL)
             {
                 if(root->NodeToken->Type == STRING)
                 {
-                    AppendIR("push " + root->NodeToken->Text);
+                    AppendIR(std::string("push ") + "\"" + root->NodeToken->Text + "\"");
+                }
+                else
+                {
+                    AppendIR(std::string("push ") + root->NodeToken->Text);
                 }
             }        
         }
@@ -377,6 +389,26 @@ class IR
             }
             AppendIR(o);
         }
+        size_t getSize(std::string var)
+        {
+            if(var == "byte")
+            {
+                return 8;
+            }
+            if(var == "char")
+            {
+                return 8;
+            }
+            if(var == "int")
+            {
+                return 32;
+            }
+            if(var == "long")
+            {
+                return 64;
+            }
+            return -1;
+        }
         void CompileVar(Node* root)
         {
             if
@@ -405,14 +437,18 @@ class IR
                 }
                 DefinedVariablesScopes.push_back(CurrentFunction);
                 DefinedVariables.push_back(root->Children[0]->NodeToken->Text);
-                AppendIR("let " + root->Children[0]->NodeToken->Text);
+                if(root->NodeToken->Text != "string")
+                    AppendIR("let" + std::to_string(getSize(root->NodeToken->Text)) + " "  + root->Children[0]->NodeToken->Text);
+                else
+                    AppendIR("letstr "  + root->Children[0]->NodeToken->Text);
+
             }
         }
         void CompileEndOfNode(Node* root)
         {
             if(root->Type == BLOCK && root->Children.size() == 0)
             {
-                AppendIR("return\n");
+                AppendIR("retend\n");
             }
             if
             (
@@ -425,7 +461,7 @@ class IR
                 && root == root->Parent->Children[root->Parent->Children.size() - 1]
             ) 
             {
-                AppendIR("return\n");
+                AppendIR("retend\n");
             }
         }
         void CompileFunction(Node* root)

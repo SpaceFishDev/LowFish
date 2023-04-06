@@ -193,7 +193,7 @@ public:
     case '"':
     {
       char c = Source[Position];
-      std::string out = std::string(2048, ' ');
+      std::string out = std::string(1024 * 16, ' ');
       ++Position;
       ++Column;
       int i = 0;
@@ -208,7 +208,7 @@ public:
         ++Column;
         ++i;
       }
-      out.erase(i, 2048 - i);
+      out.erase(i, 1024 * 16 - i);
       Position++;
       Column++;
       return Token(STRING, std::move(out), Line, Column);
