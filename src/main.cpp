@@ -203,7 +203,8 @@ int main(int argc, char** argv){
   outFile.close();
   system("lf_ir");
   system("del out.asm > nul 2> nul");
-  system("del out.lfir > nul 2> nul");
+  system("del out.obj > nul 2> nul");
+  // system("del out.lfir > nul 2> nul");
   system((std::string("del ") + out + " > nul 2> nul").c_str());
   system(("rename \".\\out.exe\" \"" + out + "\" > nul 2> nul").c_str());
   std::cout << "Output to file " << out << "\n";

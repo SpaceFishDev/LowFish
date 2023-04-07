@@ -1,0 +1,30 @@
+native "[extern printf]"
+native "[extern exit]"
+native "[extern getchar]"
+func main
+letptr x
+set x "Hello, world\n"
+push x
+call printf
+let32 a
+call getchar
+set a %eax
+sub a 48
+set a %eax
+label LO0
+cmp a 1
+jne LO0END
+push a
+push "%d\n"
+call printf
+jmp LO0
+label LO0END
+add a 48
+set a %eax
+push a
+push "%c\n"
+call printf
+push 0
+call exit
+retend
+

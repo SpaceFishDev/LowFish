@@ -9,7 +9,6 @@ void main()
   {
     printf(a, "%d\n"); 
   } 
-  a = a + 48;
-  printf(a, "%c\n"); 
+  printf(a, "%d\n"); 
   exit(0);
 }
