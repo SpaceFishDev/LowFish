@@ -16,10 +16,14 @@ Basically a simpler version of C but with Containers. Containers are like namesp
 ## Hello world!
 
 ```py
-extern "printf"; # extern the printf function from c std lib
+extern "printf"; # extern the printf function from c std lib, the language currently has no std lib.
 
 int main()
 {
   printf("Hello, world!");
 }
 ```
+
+To compile, simply use it like gcc
+`lf.exe main.lf -o main.exe`
+and an exe file will be produced , if you have nasm and golinker installed
