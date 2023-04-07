@@ -27,3 +27,6 @@ int main()
 To compile, simply use it like gcc
 `lf.exe main.lf -o main.exe`
 and an exe file will be produced , if you have nasm and golinker installed
+
+# Docs
+The docs are found in the [wiki](https://github.com/SpaceFishDev/LowFish/wiki).
