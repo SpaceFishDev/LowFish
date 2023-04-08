@@ -12,6 +12,9 @@ class IR
         std::vector<std::string> Assembly;
         int AssemblyIndex = 0;
         std::vector<std::string> FunctionCalls;
+        int strIndex = 0;
+        std::vector<std::string> Strings;
+        int StringIndex = 0;
         void GetCalls(Node* Root)
         {
             if(Root->Type == FUNCTION_CALL)
@@ -23,8 +26,33 @@ class IR
                 GetCalls(c);
             }
         }
+        void RemoveStrings(Node* root)
+        {
+            if(root == nullptr)
+            {
+                return;
+            }
+            if(root->NodeToken->Type == STRING && StringIndex > 0 && StringIndex < Strings.size())
+            {
+                Strings.erase(std::next(begin(Strings) ,StringIndex));
+                StringIndex--;
+                return;
+            }
+            else if(root->NodeToken->Type == STRING)
+            {
+                std::cout << StringIndex << " " << Strings.size() << "\n";
+            }
+            for(Node* c : root->Children)
+            {
+                RemoveStrings(c);
+            }
+        }
         void CullUnused(Node* Root)
         {
+            if(Root->Type == STRING)
+            {
+                ++StringIndex;
+            }
             if(Root->Type == FUNCTION)
             {
                 std::string name = Root->Children[0]->NodeToken->Text;
@@ -52,6 +80,7 @@ class IR
                         }
                         ++i;
                     }
+                    RemoveStrings(p);
                     p->Children.erase(p->Children.begin() + i);
                 }
             }
@@ -66,15 +95,34 @@ class IR
             if(New)
                 IRCode += "\n";
         }
-
+        void FixStrings(Node* n)
+        {
+            if(n != nullptr)
+            {
+                if(n->NodeToken->Type == STRING)
+                {
+                    std::cout << "here lmao\n";
+                }
+                if(n->Children.size() > 0)
+                {
+                    for(Node* c : n->Children)
+                    {
+                        FixStrings(c);
+                    }
+                }
+            }
+        }
         IR(std::string str)
         {
             Parser parser = Parser(str);
             tree = new Node(new Token(0,"root", 0, 0),PROGRAM, 0);
             tree = parser.Parse(tree, tree);
+            Strings = parser.Strings;
             printTree(tree, "", true);
             GetCalls(tree);
             CullUnused(tree);
+            StringIndex = 0;
+            FixStrings(tree);
             std::cout << "CULLING ACTIVE:\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n"; 
             printTree(tree, "", true);
             Assembly = parser.Assembly;
@@ -236,9 +284,13 @@ class IR
                 {
                     CurrentFunction = "global";
                 }
-                if(root->Parent->Type == IFNODE || root->Parent->Type == WHILENODE) 
+                else if(root->Parent->Type == IFNODE || root->Parent->Type == WHILENODE) 
                 {
                     AppendIR("label LO" + std::to_string(root->Parent->ID) + "END");
+                }
+                else
+                {
+                    std::cout << NodeTypeToString(root->Parent->Type) << "\n";
                 }
             }
             CompileEndOfNode(root);
@@ -308,7 +360,19 @@ class IR
         
         void CompileBoolExpr(Node* root)
         {
-            if
+            if(root->Children[0]->NodeToken->Type == CONSTANT && root->Children[1]->NodeToken->Type == CONSTANT)
+            {
+                if(root->NodeToken->Text == "==")
+                {
+                    int a = std::atoi(root->Children[0]->NodeToken->Text.c_str());
+                    int b = std::atoi(root->Children[1]->NodeToken->Text.c_str());
+                    if(a != b)
+                    {
+                        AppendIR("jmp LO" + std::to_string(root->Parent->ID) + "END");
+                    }
+                }
+            }
+            else if
             (
                 root->Children[0]->NodeToken->Type == CONSTANT
             )
@@ -324,7 +388,7 @@ class IR
                     );
                 }
             }
-            if
+            else if
             (
                 (root->Children[0]->Type == REFERENCE
                 && root->Children[1]->Type == REFERENCE)
@@ -494,7 +558,7 @@ class IR
                 }
                 DefinedVariablesScopes.push_back(CurrentFunction);
                 DefinedVariables.push_back(root->Children[0]->NodeToken->Text);
-                AppendIR("letptr "  + root->Children[0]->NodeToken->Text);
+                AppendIR("letptr" + std::to_string(getSize(root->NodeToken->Text)) + " " + root->Children[0]->NodeToken->Text);
             } 
         }
         void CompileVar(Node* root)

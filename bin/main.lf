@@ -1,15 +1,7 @@
-extern "printf";
-extern "exit";
-extern "getchar";
+extern "printf"
 void main()
 {
-  int a = getchar();
-  a = a - 48; # 48 is ascii value of '0'
-  while(a == 1)
-  {
-    printf(a, "%d\n"); 
-  } 
-  a = a + 48;
-  printf(a, "%c\n"); 
-  exit(0);
+	string s = "Hello, world!\n";
+	s[1] = 'a';
+	printf(s);
 }

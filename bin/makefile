@@ -15,7 +15,7 @@ all:
 build: $(SRC)
 	windres res\ico.rc -O coff -o res\ico.res
 	$(CPP) $(CFLAGS) $(SRC) -o $(OUT)
-	$(CPP) $(CFLAGSC) $(SRC_C) -o $(OUT_C)
+	$(CPP) $(CFLAGSC) $(SRC_C) -o $(OUT_C) 
 ir:
 	$(OUT_C)
 dir:

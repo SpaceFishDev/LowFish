@@ -1,3 +1,4 @@
+#pragma GCC diagnostic ignored "-Wreturn-type"
 #include<iostream>
 #include<fstream>
 #include<vector>
@@ -166,6 +167,36 @@ struct var
         initialized = false;
     }
 };
+
+struct label
+{
+    bool used = false;
+    int index = 0;
+    std::string name;
+    std::string scope;
+    label(int index, std::string name, std::string scope)
+    {
+        this->index = index;
+        this->name = name;
+        this->scope = scope;    
+    }
+};
+
+std::vector<token> Optimize(std::vector<token> tokens)
+{
+    std::string scope = "";
+    std::vector<label> Labels;
+    for(int i = 0; i != tokens.size(); ++i)
+    {
+        switch(tokens[i].Type)
+        {
+            case IDENTIFIER:
+            {
+                
+            }
+        }
+    }    
+}
 
 std::string compile_win32(std::vector<token> tokens)
 {
@@ -375,7 +406,25 @@ std::string compile_win32(std::vector<token> tokens)
                     else if(tokens[i].Text == "letptr")
                     {
                         add_element(map, init_element(new var(stack_pos, scope, 1  , true), (tokens[i + 1].Text + scope).c_str()));
-                        stack_pos += 1;
+                        stack_pos += 4;
+                        ++i;
+                    }
+                    else if(tokens[i].Text == "letptr32")
+                    {
+                        add_element(map, init_element(new var(stack_pos, scope, 4  , true), (tokens[i + 1].Text + scope).c_str()));
+                        stack_pos += 4;
+                        ++i;
+                    }
+                    else if(tokens[i].Text == "letptr8")
+                    {
+                        add_element(map, init_element(new var(stack_pos, scope, 1  , true), (tokens[i + 1].Text + scope).c_str()));
+                        stack_pos += 4;
+                        ++i;
+                    }
+                    else if(tokens[i].Text == "letptr16")
+                    {
+                        add_element(map, init_element(new var(stack_pos, scope, 2  , true), (tokens[i + 1].Text + scope).c_str()));
+                        stack_pos += 4;
                         ++i;
                     }
                     else if(tokens[i].Text == "let32")
@@ -414,10 +463,9 @@ std::string compile_win32(std::vector<token> tokens)
                                 if(tokens[i + 2].Type == NUMBER)
                                 {
                                     int index = std::atoi(str.c_str());
-                                    v->size = (v->size == 1) ? 4 : v->size;
-                                    int s = v->size;
-                                    std::string reg = (sizes[v->size] == "dword") ? "ebx" : "bx";  
-                                    std::string reg2 = (sizes[v->size] == "dword") ? "ebp" : "bp";  
+                                    std::string reg = (sizes[v->size] == "dword") ? "ebx" : "ebx";  
+                                    std::string reg2 = (sizes[v->size] == "dword") ? "ebp" : "ebp";  
+                                    std::cout << v->size << "\n";
                                     text += "push " + reg + "\n";
                                     text += "mov " + reg + ", [" + reg2 +" +" + std::to_string(v->stack_pos) + "]\n";
                                     text += "add " + reg + ", " + std::to_string(index ) + "\n";
@@ -428,10 +476,9 @@ std::string compile_win32(std::vector<token> tokens)
                                 else if(tokens[i + 2].Type == STRING)
                                 {
                                     int index = std::atoi(str.c_str());
-                                    v->size = (v->size == 1) ? 4 : v->size;
                                     int s = v->size;
-                                    std::string reg = (sizes[v->size] == "dword") ? "ebx" : "bx";  
-                                    std::string reg2 = (sizes[v->size] == "dword") ? "ebp" : "bp";  
+                                    std::string reg = (sizes[v->size] == "dword") ? "ebx" : "ebx";  
+                                    std::string reg2 = "ebp";  
                                     text += "push " + reg + "\n";
                                     text += "mov " + reg + ", [" + reg2 +" +" + std::to_string(v->stack_pos) + "]\n";
                                     text += "add " + reg + ", " + std::to_string(index ) + "\n";
@@ -581,5 +628,5 @@ int main()
     outFile << assembly;
     outFile.close();
     system("nasm out.asm -f win32 -o out.obj");
-    system("golink /entry:main /console msvcrt.dll out.obj > nul 2> nul");
+    system("golink /entry:main /console msvcrt.dll kernel32.dll  out.obj > nul 2> nul");
 }

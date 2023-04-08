@@ -35,6 +35,7 @@ public:
   int Type;
   int ID = 0;
   Node *Parent;
+  bool Impossible = false;
   Node(Token *t, int T, Node *Parent)
   {
     NodeToken = t;
@@ -84,6 +85,7 @@ public:
   int Position = 0;
   std::vector<Token> Tokens;
   std::vector<Function> Functions;
+  std::vector<std::string> Strings;
   std::vector<Type> Types = 
   {
     Type("void"),
@@ -106,6 +108,10 @@ public:
     {
       Token t = lexer.Tokenize();
       Tokens.push_back(t);
+      if(t.Type == STRING)
+      {
+        Strings.push_back(t.Text);
+      }
       if (t.Type == END && lexer.Position == lexer.Source.length())
       {
         Tokens = ReorderTokens(Tokens);
@@ -331,6 +337,17 @@ public:
     {
       ++Position;
       Node *N = Parent;
+      if(N->Parent->Type == IFNODE)
+      {
+        if(N->Parent->Impossible)
+        {
+          N->Parent->Parent->Children.erase
+          (
+            std::begin(N->Parent->Parent->Children) + N->Parent->Parent->Children.size() - 2,
+            std::begin(N->Parent->Parent->Children) + N->Parent->Parent->Children.size() - 1
+          );
+        }
+      }
       if (
           N->Type == BLOCK && N->Parent->Type == IFNODE || N->Type == BLOCK && N->Parent->Type == WHILENODE || N->Type == BLOCK && N->Parent->Type == UNLESSNODE)
       {
@@ -378,6 +395,26 @@ public:
   }
   Node *ParseIdentifier(Node *Parent, Node *Root, Token Current)
   {
+    if(Current.Text == "true")
+    {
+      Node* n = new Node(new Token(SYMBOL, "==", Tokens[Position].Line, Tokens[Position].Column), BOOLEXPR, Parent);
+      n->Children.push_back(new Node(new Token(CONSTANT, "1", Tokens[Position].Line, Tokens[Position].Column), CONSTANT_NODE, n));
+      n->Children.push_back(new Node(new Token(CONSTANT, "1", Tokens[Position].Line, Tokens[Position].Column), CONSTANT_NODE, n));
+      Parent->Children.push_back(n);
+      ++Position;
+      return Parse(Parent, Root);
+    }
+    if(Current.Text == "false")
+    {
+      Node* n = new Node(new Token(SYMBOL, "==", Tokens[Position].Line, Tokens[Position].Column), BOOLEXPR, Parent);
+      n->Children.push_back(new Node(new Token(CONSTANT, "0", Tokens[Position].Line, Tokens[Position].Column), CONSTANT_NODE, n));
+      n->Children.push_back(new Node(new Token(CONSTANT, "1", Tokens[Position].Line, Tokens[Position].Column), CONSTANT_NODE, n));
+      ++Position;
+      Parent->Children.push_back(n);
+      ++Position;
+      Parent->Impossible = true;
+      return Parse(Parent, Root);
+    }
     if (Current.Text == "extern")
     {
       if (Expect(STRING))
