@@ -1,7 +1,13 @@
 extern "printf"
+extern "exit"
 void main()
 {
-	string s = "Hello, world!\n";
-	s[1] = 'a';
-	printf(s);
+	int i = 0;
+	while(i != 10000)
+	{
+		printf(i,"%d\n");
+		i = i + 1;
+	}
+	printf("Hello, world\n");
+	exit(0);
 }

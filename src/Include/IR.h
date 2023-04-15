@@ -32,15 +32,12 @@ class IR
             {
                 return;
             }
-            if(root->NodeToken->Type == STRING && StringIndex > 0 && StringIndex < Strings.size())
+            if(root->NodeToken->Type == STRING)
             {
+                std::cout << "FUNC REMOVING STRINGS ???\n";
                 Strings.erase(std::next(begin(Strings) ,StringIndex));
                 StringIndex--;
                 return;
-            }
-            else if(root->NodeToken->Type == STRING)
-            {
-                std::cout << StringIndex << " " << Strings.size() << "\n";
             }
             for(Node* c : root->Children)
             {
@@ -101,9 +98,10 @@ class IR
             {
                 if(n->NodeToken->Type == STRING)
                 {
-                    std::cout << "here lmao\n";
+                    std::cout << Strings.size() << " " << StringIndex << "\n";
+                    n->NodeToken->Text = Strings[StringIndex++];
                 }
-                if(n->Children.size() > 0)
+                else if(n->Children.size() > 0)
                 {
                     for(Node* c : n->Children)
                     {
@@ -284,7 +282,7 @@ class IR
                 {
                     CurrentFunction = "global";
                 }
-                else if(root->Parent->Type == IFNODE || root->Parent->Type == WHILENODE) 
+                else if(root->Parent->Type == IFNODE) 
                 {
                     AppendIR("label LO" + std::to_string(root->Parent->ID) + "END");
                 }
@@ -292,6 +290,10 @@ class IR
                 {
                     std::cout << NodeTypeToString(root->Parent->Type) << "\n";
                 }
+            }
+            if(root->Type == WHILENODE)
+            {
+                AppendIR("label LO" + std::to_string(root->ID) + "END\n");
             }
             CompileEndOfNode(root);
         }
@@ -459,6 +461,10 @@ class IR
             {
                 AppendIR("set " + root->Parent->NodeToken->Text + " \%eax");
             }
+            if(root->Parent->Type == FUNCTION_CALL)
+            {
+                AppendIR("push \%eax");
+            }
         }
         void CompileEqual(Node* root)
         {
@@ -598,6 +604,7 @@ class IR
         }
         void CompileEndOfNode(Node* root)
         {
+            
             if(root->Type == BLOCK && root->Children.size() == 0)
             {
                 AppendIR("retend\n");

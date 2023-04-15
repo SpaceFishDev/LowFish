@@ -395,6 +395,16 @@ public:
   }
   Node *ParseIdentifier(Node *Parent, Node *Root, Token Current)
   {
+    if(Parent->Type == FUNCTION_CALL)
+    {
+      if(Tokens[Position + 1].Text == "(")
+      {
+        Node* n = new Node(&Tokens[Position], FUNCTION_CALL, Parent);
+        Position += 2;
+        Parent->Children.push_back(n);
+        return Parse(n,Root);
+      }
+    }
     if(Current.Text == "true")
     {
       Node* n = new Node(new Token(SYMBOL, "==", Tokens[Position].Line, Tokens[Position].Column), BOOLEXPR, Parent);

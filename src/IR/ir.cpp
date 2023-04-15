@@ -520,79 +520,82 @@ std::string compile_win32(std::vector<token> tokens)
                                 }
                                 else
                                 {
-                                    if(tokens[i + 1].Type == STRING)
+                                    switch(tokens[i + 1].Type)
                                     {
-                                        printf("Cannot assign string to non pointer variable %s\n", name.c_str());
-                                        exit(1);
-                                    }
-                                    else if(tokens[ i + 1].Type == NUMBER)
-                                    {
-                                        text += "push ebx\n";
-                                        text += "mov ebx, ebp\n";
-                                        text += "add ebx, " + std::to_string(v->stack_pos) + "\n";
-                                        text += "mov [ebx], " + sizes[v->size] + " " + tokens[i + 1].Text + "\n";
-                                        text += "pop ebx\n";
-                                    }
-                                    else if(tokens[i + 1].Type == REGISTER)
-                                    {
-                                        text += "mov [ebp + " + std::to_string(v->stack_pos) + "], " + tokens[i + 1].Text + "\n";
-                                    }
-                                    else if(tokens[i + 1].Type == INDEX)
-                                    {
-                                        if(tokens[i + 2].Text[0] >= '0' && tokens[i + 2].Text[0] <= '9'){
-                                            int index = std::atoi(tokens[i + 1].Text.c_str());
-                                            ++i;
-                                            ++i;
-                                            if(!(hash_contains(map, (tokens[i].Text + scope).c_str())))
-                                            {
-                                                printf("Variable %s doesn't exist.\n", tokens[i].Text.c_str());
-                                                exit(-1);
-                                            }
-                                            hash_map_element* el = get_element(map, (tokens[i].Text + scope).c_str());
-                                            var* v1 = el->value;
-                                            text += "push ebx\n";
-                                            text += "push eax\n";
-                                            text += "mov ebx, ebp\n";
-                                            text += "add ebx, " + std::to_string(v->stack_pos) + "\n";
-                                            text += "mov eax, [ebp + " + std::to_string(v1->stack_pos) + "]\n";
-                                            text += "add eax, " + std::to_string(index) + "\n";
-                                            text += "mov eax, [eax]\n";
-                                            text += "mov [ebx], eax\n";
-                                            text += "pop eax\n";
-                                            text += "pop ebx\n";
-                                            --i;
-                                        }
-                                        else
+                                        case STRING:
                                         {
-                                            std::string str = tokens[i + 1].Text;
-                                            if(!hash_contains(map, (str + scope).c_str()))
-                                            {
-                                                printf("Variable %s doesn't exist.\n", tokens[i].Text.c_str());
-                                                exit(-1);
-                                            }
-                                            hash_map_element* el = get_element(map, (str + scope).c_str());
-                                            ++i;
-                                            if(!hash_contains(map, (tokens[i + 1].Text + scope).c_str()))
-                                            {
-                                                printf("Variable %s doesn't exist.\n", tokens[i].Text.c_str());
-                                                exit(-1);
-                                            }
-                                            std::cout << str << " " << tokens[i + 1].Text << "\n";
-                                            hash_map_element* el2 = get_element(map, (tokens[i + 1].Text + scope).c_str());
-                                            var* v1 = el->value;
-                                            var* v2 = el2->value;
+                                            printf("Cannot assign string to non pointer variable %s\n", name.c_str());
+                                            exit(1);
+                                        } break;
+                                        case NUMBER:
+                                        {
                                             text += "push ebx\n";
-                                            text += "push eax\n";
                                             text += "mov ebx, ebp\n";
                                             text += "add ebx, " + std::to_string(v->stack_pos) + "\n";
-                                            text += "mov eax, [ebp + " + std::to_string(v2->stack_pos) + "]\n";
-                                            text += "add eax, [ebp + " + std::to_string(v1->stack_pos) + "]\n";
-                                            text += "mov eax, [eax]\n";
-                                            text += "mov [ebx], eax\n";
-                                            text += "pop eax\n";
+                                            text += "mov [ebx], " + sizes[v->size] + " " + tokens[i + 1].Text + "\n";
                                             text += "pop ebx\n";
-                                        }
-                                    }
+                                        } break;
+                                        case REGISTER:
+                                        {
+                                            text += "mov [ebp + " + std::to_string(v->stack_pos) + "], " + tokens[i + 1].Text + "\n";
+                                        } break;
+                                        case INDEX:
+                                        {
+                                            if (tokens[i + 2].Text[0] >= '0' && tokens[i + 2].Text[0] <= '9') {
+                                                int index = std::atoi(tokens[i + 1].Text.c_str());
+                                                ++i;
+                                                ++i;
+                                                if (!(hash_contains(map, (tokens[i].Text + scope).c_str())))
+                                                {
+                                                    printf("Variable %s doesn't exist.\n", tokens[i].Text.c_str());
+                                                    exit(-1);
+                                                }
+                                                hash_map_element* el = get_element(map, (tokens[i].Text + scope).c_str());
+                                                var* v1 = el->value;
+                                                text += "push ebx\n";
+                                                text += "push eax\n";
+                                                text += "mov ebx, ebp\n";
+                                                text += "add ebx, " + std::to_string(v->stack_pos) + "\n";
+                                                text += "mov eax, [ebp + " + std::to_string(v1->stack_pos) + "]\n";
+                                                text += "add eax, " + std::to_string(index) + "\n";
+                                                text += "mov eax, [eax]\n";
+                                                text += "mov [ebx], eax\n";
+                                                text += "pop eax\n";
+                                                text += "pop ebx\n";
+                                                --i;
+                                            }
+                                            else
+                                            {
+                                                std::string str = tokens[i + 1].Text;
+                                                if (!hash_contains(map, (str + scope).c_str()))
+                                                {
+                                                    printf("Variable %s doesn't exist.\n", tokens[i].Text.c_str());
+                                                    exit(-1);
+                                                }
+                                                hash_map_element* el = get_element(map, (str + scope).c_str());
+                                                ++i;
+                                                if (!hash_contains(map, (tokens[i + 1].Text + scope).c_str()))
+                                                {
+                                                    printf("Variable %s doesn't exist.\n", tokens[i].Text.c_str());
+                                                    exit(-1);
+                                                }
+                                                std::cout << str << " " << tokens[i + 1].Text << "\n";
+                                                hash_map_element* el2 = get_element(map, (tokens[i + 1].Text + scope).c_str());
+                                                var* v1 = el->value;
+                                                var* v2 = el2->value;
+                                                text += "push ebx\n";
+                                                text += "push eax\n";
+                                                text += "mov ebx, ebp\n";
+                                                text += "add ebx, " + std::to_string(v->stack_pos) + "\n";
+                                                text += "mov eax, [ebp + " + std::to_string(v2->stack_pos) + "]\n";
+                                                text += "add eax, [ebp + " + std::to_string(v1->stack_pos) + "]\n";
+                                                text += "mov eax, [eax]\n";
+                                                text += "mov [ebx], eax\n";
+                                                text += "pop eax\n";
+                                                text += "pop ebx\n";
+                                            }
+                                        } break;
+                                    } 
                                     ++i;
                                 }
                             }
