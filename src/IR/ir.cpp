@@ -307,6 +307,18 @@ std::string compile_win32(std::vector<token> tokens)
                             {
                                 text += "cmp ebx, " + tokens[i].Text + "\n";
                             }
+                            else if(tokens[i].Type == IDENTIFIER)
+                            {
+                                if(!hash_contains(map, (tokens[i].Text + scope).c_str()))
+                                {
+                                    printf("Variable %s doesnt exist.\n", tokens[i].Text.c_str());
+                                    exit(-1);
+                                }
+                                hash_map_element* el2 = get_element(map, (tokens[i].Text + scope).c_str());
+                                var* v2 = el2->value;
+                                text += "mov eax, " + sizes[v2->size] + "[ebp + " + std::to_string(v2->stack_pos) + "]\n";
+                                text += "cmp ebx, eax\n";
+                            }
                         }
                     }
                     else if(tokens[i].Text == "jne")

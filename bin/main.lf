@@ -1,13 +1,22 @@
 extern "printf"
 extern "exit"
+extern "getchar"
 void main()
 {
 	int i = 0;
-	while(i != 10000)
+	int x = getchar();
+	x = x - 48;
+	unless(i != x)
 	{
 		printf(i,"%d\n");
 		i = i + 1;
 	}
-	printf("Hello, world\n");
+	if(i == 1)
+	{
+		printf("Huh\n");
+	}else
+	{
+		printf("Hello, world\n");
+	}
 	exit(0);
 }

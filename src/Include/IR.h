@@ -230,6 +230,10 @@ class IR
                 {
                     CompileIfNode(root);
                 } break;
+                case ELSENODE:
+                {
+                    CompileElseNode(root);
+                } break;
                 case BOOLEXPR:
                 {
                     CompileBoolExpr(root);
@@ -284,6 +288,10 @@ class IR
                 }
                 else if(root->Parent->Type == IFNODE) 
                 {
+                    if(root->Parent->Parent->Children[FindNodeInParent(root->Parent) + 1]->Type == ELSENODE)
+                    {
+                        AppendIR("jmp LO" + std::to_string(root->Parent->ID + 1) + "END");
+                    }
                     AppendIR("label LO" + std::to_string(root->Parent->ID) + "END");
                 }
                 else
@@ -291,11 +299,13 @@ class IR
                     std::cout << NodeTypeToString(root->Parent->Type) << "\n";
                 }
             }
-            if(root->Type == WHILENODE)
+            if(root->Type == WHILENODE || root->Type == ELSENODE)
             {
                 AppendIR("label LO" + std::to_string(root->ID) + "END\n");
+            }else
+            {
+                CompileEndOfNode(root);
             }
-            CompileEndOfNode(root);
         }
         void CompileIndex(Node* root)
         {
@@ -359,7 +369,20 @@ class IR
         {
             AppendIR("native \"" +  Assembly[AssemblyIndex++] + "\"");
         }
-        
+        int FindNodeInParent(Node* r)
+        {
+            Node* Par = r->Parent;
+            int i = 0;
+            for(Node* child : Par->Children)
+            {
+                if(child == r)
+                {
+                    return i;
+                }
+                ++i;
+            }
+            return -1;
+        }
         void CompileBoolExpr(Node* root)
         {
             if(root->Children[0]->NodeToken->Type == CONSTANT && root->Children[1]->NodeToken->Type == CONSTANT)
@@ -398,7 +421,7 @@ class IR
                 && root->Children[1]->NodeToken->Type == CONSTANT
             )
             {
-                if(root->Parent->Type == IFNODE || root->Parent->Type == WHILENODE)
+                if(root->Parent->Type == IFNODE || root->Parent->Type == WHILENODE) [[likely]]
                 {
                     AppendIR
                     (
@@ -444,6 +467,10 @@ class IR
             }
         }
         void CompileIfNode(Node* root)
+        {
+            root->ID = LoopId++;
+        }
+        void CompileElseNode(Node* root)
         {
             root->ID = LoopId++;
         }
@@ -604,11 +631,6 @@ class IR
         }
         void CompileEndOfNode(Node* root)
         {
-            
-            if(root->Type == BLOCK && root->Children.size() == 0)
-            {
-                AppendIR("retend\n");
-            }
             if
             (
                 root->Type != PROGRAM

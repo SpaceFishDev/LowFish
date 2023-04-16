@@ -337,15 +337,18 @@ public:
     {
       ++Position;
       Node *N = Parent;
-      if(N->Parent->Type == IFNODE)
+      if(N->Parent)
       {
-        if(N->Parent->Impossible)
+        if(N->Parent->Type == IFNODE)
         {
-          N->Parent->Parent->Children.erase
-          (
-            std::begin(N->Parent->Parent->Children) + N->Parent->Parent->Children.size() - 2,
-            std::begin(N->Parent->Parent->Children) + N->Parent->Parent->Children.size() - 1
-          );
+          if(N->Parent->Impossible)
+          {
+            N->Parent->Parent->Children.erase
+            (
+              std::begin(N->Parent->Parent->Children) + N->Parent->Parent->Children.size() - 2,
+              std::begin(N->Parent->Parent->Children) + N->Parent->Parent->Children.size() - 1
+            );
+          }
         }
       }
       if (
@@ -577,10 +580,6 @@ public:
     if (Current.Text == "else")
     {
       Node *N = new Node(&Tokens[Position], ELSENODE, Parent);
-      if (!ExpectValue("if"))
-      {
-        ++Position;
-      }
       ++Position;
       Parent->Children.push_back(N);
       return Parse(N, Root);
@@ -589,7 +588,7 @@ public:
     {
       if (!ExpectValue("("))
       {
-        ErrorHandler::PutError(-1, "If statements require '(' expression ')' block. ", Current.Line, Current.Column);
+        ErrorHandler::PutError(-1, "While statements require '(' expression ')' block. ", Current.Line, Current.Column);
       }
       Node *N = new Node(&Tokens[Position], WHILENODE, Parent);
       ++Position;
@@ -601,9 +600,9 @@ public:
     {
       if (!ExpectValue("("))
       {
-        ErrorHandler::PutError(-1, "while statements require '(' expression ')' block. ", Current.Line, Current.Column);
+        ErrorHandler::PutError(-1, "Unless statements require '(' expression ')' block. ", Current.Line, Current.Column);
       }
-      Node *N = new Node(&Tokens[Position], UNLESSNODE, Parent);
+      Node *N = new Node(&Tokens[Position], WHILENODE, Parent);
       ++Position;
       ++Position;
       Parent->Children.push_back(N);
