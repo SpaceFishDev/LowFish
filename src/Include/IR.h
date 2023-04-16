@@ -94,20 +94,17 @@ class IR
         }
         void FixStrings(Node* n)
         {
-            if(n != nullptr)
+            if(!n)
             {
-                if(n->NodeToken->Type == STRING)
-                {
-                    std::cout << Strings.size() << " " << StringIndex << "\n";
-                    n->NodeToken->Text = Strings[StringIndex++];
-                }
-                else if(n->Children.size() > 0)
-                {
-                    for(Node* c : n->Children)
-                    {
-                        FixStrings(c);
-                    }
-                }
+                return;
+            }
+            if(n->NodeToken->Type == STRING)
+            {
+                n->NodeToken->Text = Strings[StringIndex++];
+            }
+            for(Node* c : n->Children)
+            {
+                FixStrings(c);
             }
         }
         IR(std::string str)
@@ -131,7 +128,6 @@ class IR
         {
             if(root->Children[0]->Type == REFERENCE)
             {
-                std::cout << root->NodeToken->Text << "\n";
                 switch(root->NodeToken->Text[0]){
                     case '+':
                         AppendIR("add " + root->Children[0]->NodeToken->Text + " " + Evaluate(root->Children[1])->NodeToken->Text);
@@ -296,7 +292,6 @@ class IR
                 }
                 else
                 {
-                    std::cout << NodeTypeToString(root->Parent->Type) << "\n";
                 }
             }
             if(root->Type == WHILENODE || root->Type == ELSENODE)
@@ -325,6 +320,7 @@ class IR
                     }
                     else if(n->Type == REFERENCE)
                     {
+                        AppendIR("set $" + n->NodeToken->Text + " " + root->Parent->NodeToken->Text + " \"" + t->Text + "\"");
                     }   
                 }
                 else if(root->Parent->Parent->Type == EQUAL && root->Parent->Parent->NodeToken->Text != "=")

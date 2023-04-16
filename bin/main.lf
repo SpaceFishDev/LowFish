@@ -1,22 +1,11 @@
-extern "printf"
-extern "exit"
-extern "getchar"
 void main()
 {
+	char* buf = "      ";
 	int i = 0;
-	int x = getchar();
-	x = x - 48;
-	unless(i != x)
+	while(i != 5)
 	{
-		printf(i,"%d\n");
+		buf[i] = 'a';
 		i = i + 1;
 	}
-	if(i == 1)
-	{
-		printf("Huh\n");
-	}else
-	{
-		printf("Hello, world\n");
-	}
-	exit(0);
+	buf[4] = 0;
 }

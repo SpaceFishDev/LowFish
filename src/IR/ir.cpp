@@ -470,7 +470,44 @@ std::string compile_win32(std::vector<token> tokens)
                             }
                             hash_map_element* el = get_element(map, (tokens[i + 1].Text + scope).c_str());
                             var* v = el->value;
-                            if(str[0] >= '0' || str[0] <= '9')
+                            if(str[0] == '_' || str[0] >= 'a' && str[1] <= 'z' || str[0] >= 'A' && str[0] <= 'Z')
+                            {
+                                if(tokens[i + 2].Type == NUMBER)
+                                {
+                                    if(!hash_contains(map, (str + scope).c_str()))
+                                    {
+                                        printf("Variable %s, doesn't exist!\n", str.c_str());
+                                    } 
+                                    hash_map_element* el2 = get_element(map, (str + scope).c_str());
+                                    var* v2 = el2->value;
+                                    text += "push ebx\n";
+                                    text += "push eax\n";
+                                    text += "mov eax," + sizes[v2->size] + "[ebp + " + std::to_string(v2->stack_pos) + "]\n";
+                                    text += "mov ebx, [ebp + " + std::to_string(v->stack_pos) + "]\n";
+                                    text += "add ebx, eax\n";
+                                    text += "mov [ebx], " + sizes[v->size] + " " + tokens[i + 2].Text + "\n";
+                                    text += "pop eax\n";
+                                    text += "pop ebx\n";
+                                }
+                                else if(tokens[i + 2].Type == STRING)
+                                {
+                                    if(!hash_contains(map, (str + scope).c_str()))
+                                    {
+                                        printf("Variable %s, doesn't exist!\n", str.c_str());
+                                    } 
+                                    hash_map_element* el2 = get_element(map, (str + scope).c_str());
+                                    var* v2 = el2->value;
+                                    text += "push ebx\n";
+                                    text += "push eax\n";
+                                    text += "mov eax," + sizes[v2->size] + "[ebp + " + std::to_string(v2->stack_pos) + "]\n";
+                                    text += "mov ebx, [ebp + " + std::to_string(v->stack_pos) + "]\n";
+                                    text += "add ebx, eax\n";
+                                    text += "mov [ebx], " + sizes[v->size] + " " + std::to_string((int)tokens[i + 2].Text[0]) + "\n";
+                                    text += "pop eax\n";
+                                    text += "pop ebx\n";
+                                }
+                            }
+                            else if(str[0] >= '0' || str[0] <= '9')
                             {
                                 if(tokens[i + 2].Type == NUMBER)
                                 {
@@ -499,6 +536,7 @@ std::string compile_win32(std::vector<token> tokens)
                                     i++;
                                 }
                             }
+                            
                             ++i;
 
                         }
