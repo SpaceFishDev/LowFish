@@ -30,3 +30,6 @@ debug: $(SRC)
 	$(CPP) $(CFLAGS) $(SRC) -o $(OUT) -g
 test: 
 	py ../tests/test.py
+linux:
+	$(CPP) -std=c++20 -fpermissive -O3 -Ofast -I../src/include $(SRC) -o lf.o
+	$(CPP) $(CFLAGSC) $(SRC_C) -o lf_ir.o

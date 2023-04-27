@@ -1,11 +1,20 @@
+extern "malloc";
+extern "exit";
+extern "printf";
+extern "getchar";
 void main()
 {
-	char* buf = "      ";
-	int i = 0;
-	while(i != 5)
+	while(true)
 	{
-		buf[i] = 'a';
-		i = i + 1;
+		int c = getchar();
+		int x = "e";
+		if(c == x)
+		{
+			printf("beans.\n");
+		}
+		else
+		{
+			printf(c, "%c");
+		}
 	}
-	buf[4] = 0;
-}
+} 

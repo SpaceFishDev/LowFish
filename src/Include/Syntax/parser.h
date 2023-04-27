@@ -42,8 +42,6 @@ public:
     Type = T;
     this->Parent = Parent;
   }
-
-private:
 };
 
 struct Type
@@ -398,9 +396,10 @@ public:
   }
   Node *ParseIdentifier(Node *Parent, Node *Root, Token Current)
   {
-    if(Parent->Type == FUNCTION_CALL)
+    std::cout << Parent->NodeToken->Text << "\n";
+    if(Parent && Parent->Type == FUNCTION_CALL)
     {
-      if(Tokens[Position + 1].Text == "(")
+      if(Tokens.size() < Position + 1 && Tokens[Position + 1].Text == "(")
       {
         Node* n = new Node(&Tokens[Position], FUNCTION_CALL, Parent);
         Position += 2;

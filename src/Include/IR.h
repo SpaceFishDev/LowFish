@@ -309,6 +309,7 @@ class IR
                 if(root->Children[1]->Children.size() != 0 && root->Children[1]->Children[0]->Type == EQUAL)
                 {
                     Node* n = Evaluate(root->Children[0]);
+                
                     Token* t = Evaluate(root->Children[1]->Children[0]->Children[0])->NodeToken;
                     if(n->Type == CONSTANT_NODE && t->Type == CONSTANT)
                     {
@@ -318,9 +319,13 @@ class IR
                     {
                         AppendIR("set $" + n->NodeToken->Text + " " + root->Parent->NodeToken->Text + " \"" + t->Text + "\"");
                     }
-                    else if(n->Type == REFERENCE)
+                    else if(n->Type == REFERENCE && t->Type == STRING)
                     {
                         AppendIR("set $" + n->NodeToken->Text + " " + root->Parent->NodeToken->Text + " \"" + t->Text + "\"");
+                    }   
+                    else if(n->Type == REFERENCE && t->Type == CONSTANT)
+                    {
+                        AppendIR("set $" + n->NodeToken->Text + " " + root->Parent->NodeToken->Text + " " + t->Text + "");
                     }   
                 }
                 else if(root->Parent->Parent->Type == EQUAL && root->Parent->Parent->NodeToken->Text != "=")

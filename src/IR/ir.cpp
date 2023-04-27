@@ -75,6 +75,7 @@ class Lexer
     }
     token Lex()
     {
+        
         if(current >= 'A' && current <= 'Z' || current >= 'a' && current <= 'z' || current == '_')
         {
             std::string temp = "";

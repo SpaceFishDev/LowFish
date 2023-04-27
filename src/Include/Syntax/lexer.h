@@ -34,6 +34,7 @@ enum ErrorTypes
   TYPE_DOESNT_MATCH,
   VAR_DOESNT_EXIST,
   REDEFINITION_OF_VARIABLE,
+  MISSING_SEMI,
 };
 
 class ErrorHandler
@@ -43,6 +44,11 @@ public:
   {
     switch (type)
     {
+    case MISSING_SEMI:
+    {
+      std::cout << "Missing semicolon ';' LN:" << line << " COL: " << column << "\n";
+      exit(-1); 
+    }
     case REDEFINITION_OF_VARIABLE:
     {
       std::cout << "Variable '" << c << "' redefined LN: " << line << " COL: " << column << "\n";
@@ -146,8 +152,24 @@ public:
     Column = 0;
   }
   Lexer() {}
+  Token LastToken;
   Token Tokenize()
   {
+    if(Source[Position] == '\n')
+    {
+      std::string eol_possible[] = {"else", "if", "while", "unless", "from", "import", ")" , "{" , "}", "(", ";"};
+      bool found = false;
+      for(int i = 0; i != 11; ++i)
+      {
+        if(LastToken.Text == eol_possible[i])
+        {
+          found = true;
+        }
+      }
+      if(!found ){
+        ErrorHandler::PutError(MISSING_SEMI,"", Line, Column, "");
+      }
+    } 
     if (Source[Position] == '#')
     {
       while (Source[Position] != '\n' && Source[Position] != '\0')
@@ -166,6 +188,7 @@ public:
       std::string o = " ";
       o[0] = Source[Position];
       ++Position;
+      LastToken = Token(SYMBOL, o, Line, Column);
       return Token(SYMBOL, o, Line, Column);
     }
     case '+':
@@ -184,6 +207,7 @@ public:
         std::string o = " ";
         o[0] = Source[Position];
         ++Position;
+        LastToken = Token(SYMBOL, o, Line, Column);
         return Token(SYMBOL, o, Line, Column);
       }
 
@@ -211,6 +235,7 @@ public:
       out.erase(i, 1024 * 16 - i);
       Position++;
       Column++;
+      LastToken = Token(STRING, std::move(out), Line, Column);
       return Token(STRING, std::move(out), Line, Column);
     }
     case '\n':
@@ -233,6 +258,7 @@ public:
     {
       ++Position;
       ++Column;
+      LastToken = Token(SYMBOL, ";", Line, Column);
       return Token(SYMBOL, ";", Line, Column);
     }
     case '<':
@@ -245,8 +271,10 @@ public:
       {
         Position++;
         Column++;
+        LastToken = Token(SYMBOL, std::string(std::string("") + c) + "=", Line, Column);
         return Token(SYMBOL, std::string(std::string("") + c) + "=", Line, Column);
       }
+      LastToken = Token(SYMBOL, std::string("") + c, Line, Column);
       return Token(SYMBOL, std::string("") + c, Line, Column);
     }
     case '!':
@@ -257,6 +285,7 @@ public:
       {
         Position++;
         Column++;
+        LastToken = Token(SYMBOL, "!=", Line, Column);
         return Token(SYMBOL, "!=", Line, Column);
       }
       ErrorHandler::PutError(-1, "'!' has to be followed by a '=' for bolean expressions.", Line, Column);
@@ -270,6 +299,7 @@ public:
       {
         Position++;
         Column++;
+        LastToken = Token(SYMBOL, "||", Line, Column);
         return Token(SYMBOL, "||", Line, Column);
       }
     }
@@ -281,8 +311,10 @@ public:
       {
         Position++;
         Column++;
+        LastToken = Token(SYMBOL, "&&", Line, Column);
         return Token(SYMBOL, "&&", Line, Column);
       }
+      LastToken = Token(SYMBOL, "&", Line, Column);
       return Token(SYMBOL, "&", Line, Column);
     }
     case '=':
@@ -293,6 +325,7 @@ public:
       {
         Position++;
         Column++;
+        LastToken = Token(SYMBOL, "==", Line, Column);
         return Token(SYMBOL, "==", Line, Column);
       }
       return Token(SYMBOL, "=", Line, Column);
@@ -311,6 +344,7 @@ public:
         ++Position;
         ++Column;
       }
+      LastToken = Token(IDENTIFIER, out, Line, Column);
       return Token(IDENTIFIER, out, Line, Column);
     }
     if (IsDigit(Source[Position]) || Source[Position] == '-')
@@ -324,6 +358,7 @@ public:
         ++Position;
         ++Column;
       }
+      LastToken = Token(CONSTANT, out, Line, Column);
       return Token(CONSTANT, out, Line, Column);
     }
     if (Position >= Source.length())
