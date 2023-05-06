@@ -1,0 +1,11 @@
+{
+    "files.associations": {
+        "*.embeddedhtml": "html",
+        "lexer.h": "c",
+        "stddef.h": "c",
+        "stdlib.h": "c",
+        "string.h": "c",
+        "parser.h": "c",
+        "util.h": "c"
+    }
+}

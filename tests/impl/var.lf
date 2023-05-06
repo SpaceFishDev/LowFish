@@ -1,8 +1,0 @@
-int main(){
-  char @^ = 32;
-}
-~
-main:
-push bp
-mov bp, sp
-mov [bp +4], byte 32

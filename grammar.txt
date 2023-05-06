@@ -1,0 +1,174 @@
+grammar lowfish;
+
+program: (function | struct | enum | (extern SEMI))* EOF;
+struct:
+	'struct' ID BEGINOFBLOCK (vardecl SEMI)* ENDOFBLOCK |
+	'struct' ID (vardecl SEMI)* 'end';
+enum:
+	'enum' ID BEGINOFBLOCK (expression SEMI) * ENDOFBLOCK |
+	'enum' ID (expression SEMI)* 'end';
+
+function: type ID OPENBR vardecl* CLOSEBR block;
+block: begin line* end | ARROW (expression | conditional | booleanexpression | vardecl | native) (end | semiend );
+begin: BEGINOFBLOCK;
+end: ENDOFBLOCK;
+semiend: ';';
+line: ((expression SEMI) | (conditional) | (booleanexpression SEMI) | (vardecl SEMI) | (native SEMI) ) ('\n')?;
+extern:
+	'extern' OPENBR STRING CLOSEBR;
+native:
+	'native' OPENBR STRING CLOSEBR;
+basic_expression:
+	'true' |
+	'false'|
+	STRING |
+	NUMBER |
+	ID;
+functioncall:
+	ID OPENBR (expression)? ((COMMA expression)*)? CLOSEBR;
+math:
+	basic_expression PLUS basic_expression |
+	basic_expression MINUS basic_expression |
+	basic_expression DIV basic_expression |
+	basic_expression MUL basic_expression |
+	basic_expression MOD basic_expression |
+	basic_expression LOGICALOR basic_expression |
+	basic_expression XOR basic_expression |
+	basic_expression LOGICALAND basic_expression |
+	math PLUS math |
+	math MINUS math |
+	math DIV math |
+	math MUL math |
+	math MOD math |
+	math LOGICALOR math |
+	math XOR math |
+	math LOGICALAND math;
+PLUS:
+	'+';
+MINUS:
+	'-';
+DIV:
+	'/';
+MUL:
+	'*';
+MOD: 
+	'%';
+LOGICALOR: 
+	'|';
+XOR:
+	'^';
+LOGICALAND:
+	'&';
+expression: 
+	basic_expression |
+	ID index |
+	expression index |
+	OPENBR type CLOSEBR expression |
+	math |
+	assignment |
+	'return' basic_expression
+	| functioncall;
+assignment:
+	ID equal;
+simplebooleanexpr:
+	expression |
+	eq |
+	noteq|
+	EXCLAMATION expression |
+	expression MORE expression |
+	expression LESS expression |
+	expression MOREEQUAL expression |
+	expression LESSEQUAL expression;
+booleanexpression:
+	OPENBR booleanexpression CLOSEBR |
+	simplebooleanexpr |
+	simplebooleanexpr BOOLNOTEQUAL simplebooleanexpr |
+	simplebooleanexpr BOOLEQUAL simplebooleanexpr |
+	EXCLAMATION  simplebooleanexpr |
+	simplebooleanexpr MORE simplebooleanexpr |
+	simplebooleanexpr LESS simplebooleanexpr |
+	simplebooleanexpr MOREEQUAL simplebooleanexpr |
+	simplebooleanexpr LESSEQUAL simplebooleanexpr |
+	simplebooleanexpr BOOLAND simplebooleanexpr |
+	simplebooleanexpr BOOLOR simplebooleanexpr;
+eq:
+	expression BOOLEQUAL expression;
+noteq:
+	expression BOOLNOTEQUAL expression;
+conditional:
+	if |
+	while |
+	repeat |
+	fOR |
+	unless |
+	else;
+if:
+	'if' booleanexpression block;
+while:
+	'while' booleanexpression block;
+repeat:
+	'repeat' expression ARROW expression block;
+for:
+	'for' (vardecl | ID) COMMA expression ARROW expression block ;
+else:
+	'else' block |
+	'else' conditional;
+unless:
+	'unless' booleanexpression block ;
+	
+type: (struct ID) | void | i64 | i32 | i16 | i8 | u64 | u32 | u16 | u8 | ptr8 | ptr16 | ptr32 | ptr64;
+void: 'void';
+i64: 'i64';
+i32: 'i32';
+i16: 'i16';
+i8: 'i8';
+u64: 'u64';
+u32: 'u32';
+u16: 'u16';
+u8: 'u8';
+ptr64: 'ptr64';
+ptr32: 'ptr32';
+ptr16: 'ptr16';
+ptr8: 'ptr8';
+
+equal:
+	EQUAL basic_expression |
+	EQUAL expression;
+
+vardecl: 
+	type ID (equal)?
+	| type index (EQUAL BEGINOFBLOCK expression COMMA* ENDOFBLOCK)?;	
+index:
+	INDEXBROPEN expression INDEXBRCLOSE;
+SEMI:
+	';';
+COMMENT: '#' ~[\r\n]* -> channel(HIDDEN);	
+WS: [ \t\r\n]+ -> skip;
+ID: [a-zA-Z_][a-zA-Z0-9_]*;
+NUMBER: DIGIT+ ('.' DIGIT+)?;
+fragment DIGIT: [0-9];
+STRING: '"'(.*?)'"';
+BEGINOFBLOCK: '{';
+ENDOFBLOCK: '}';
+OPENBR: '(';
+CLOSEBR: ')'
+EQUAL: '=';
+BOOLNOTEQUAL: '!=';
+BOOLEQUAL: '==';
+EXCLAMATION: '!';
+INDEXBROPEN: '[';
+INDEXBRCLOSE: ']';
+MORE: '>';
+ARROW: '->';
+LESS: '<';
+MOREEQUAL: '>=';
+LESSEQUAL: '<=';
+BOOLOR: '||';
+BOOLAND: '&&';
+LOGICALAND: '&';
+LOGICALOR: '|';
+XOR: '^';
+PLUS: '+';
+MINUS: '-';
+DIV: '/';
+MUL: '*';
