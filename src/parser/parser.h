@@ -6,16 +6,18 @@
 #include<stdlib.h>
 #include<stdint.h>
 #include<stddef.h>
+#include<stdio.h>
 #include<util.h>
 
 typedef enum
 {
-    PROGRAM,
-    FUNCTION,
-    TYPE,
-    IDNODE,
-    OPENBRNODE,
-    CLOSEBRNODE,
+    PROGRAM ,
+    FUNCTION ,
+    TYPE ,
+    TOKENNODE ,
+    BLOCK ,
+    NORMALBLOCK ,
+    ARROW_BLOCK ,
 } node_type;
 
 
@@ -38,11 +40,11 @@ typedef struct
     node* current_parent;
 } parser;
 
-parser* create_parser(token* tokens, size_t n_token);
+parser* create_parser( token* tokens , size_t n_token );
 
 
-node* parse(parser* Parser);
-node* create_node(node_type type, token node_token, node* parent);
-void print_tree(node* n, int indent);
+node* parse( parser* Parser );
+node* create_node( node_type type , token node_token , node* parent );
+void print_tree( node* n , int indent );
 
 #endif

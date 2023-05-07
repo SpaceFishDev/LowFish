@@ -9,10 +9,11 @@ enum:
 	'enum' ID (expression SEMI)* 'end';
 
 function: type ID OPENBR vardecl* CLOSEBR block;
-block: begin line* end | ARROW (expression | conditional | booleanexpression | vardecl | native) (end | semiend );
+block: normal_block | arrow_block;
+normal_block: begin line* end;
+arrow_block: ARROW (expression | conditional | booleanexpression | vardecl | native) (end | SEMI );
 begin: BEGINOFBLOCK;
 end: ENDOFBLOCK;
-semiend: ';';
 line: ((expression SEMI) | (conditional) | (booleanexpression SEMI) | (vardecl SEMI) | (native SEMI) ) ('\n')?;
 extern:
 	'extern' OPENBR STRING CLOSEBR;

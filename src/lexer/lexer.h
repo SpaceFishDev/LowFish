@@ -12,41 +12,43 @@
 
 typedef enum
 {
-    STRING,
-    NUMBER,
-    ID,
-    BEGINOFBLOCK,
-    ENDOFBLOCK,
-    OPENBR,
-    CLOSEBR,
-    EQUAL,
-    BOOLNOTEQUAL,
-    BOOLEQUAL,
-    EXCLAMATION,
-    INDEXBROPEN,
-    INDEXBRCLOSE,
-    MORE,
-    ARROW,
-    LESS,
-    MOREEQUAL,
-    LESSEQUAL,
-    BOOLOR,
-    BOOLAND,
-    LOGICALAND,
-    LOGICALOR,
-    XOR,
-    PLUS,
-    MINUS,
-    DIV,
-    MUL,
-    SEMI,
-    END_OF_FILE,
-    BAD,
+    STRING ,
+    NUMBER ,
+    ID ,
+    BEGINOFBLOCK ,
+    ENDOFBLOCK ,
+    OPENBR ,
+    CLOSEBR ,
+    EQUAL ,
+    BOOLNOTEQUAL ,
+    BOOLEQUAL ,
+    EXCLAMATION ,
+    INDEXBROPEN ,
+    INDEXBRCLOSE ,
+    MORE ,
+    ARROW ,
+    LESS ,
+    MOREEQUAL ,
+    LESSEQUAL ,
+    BOOLOR ,
+    BOOLAND ,
+    LOGICALAND ,
+    LOGICALOR ,
+    XOR ,
+    PLUS ,
+    MINUS ,
+    DIV ,
+    MUL ,
+    SEMI ,
+    NL ,
+    END_OF_FILE ,
+    BAD ,
+    NOTOKEN ,
 } token_type;
 
 typedef struct
 {
-    uint32_t col, row;
+    uint32_t col , row;
     token_type type;
     size_t len;
     char* text;
@@ -86,8 +88,10 @@ typedef struct
         "DIV", \
         "MUL", \
         "SEMI", \
+        "NL", \
         "END_OF_FILE",  \
-        "BAD" \
+        "BAD", \
+        "NOTOKEN", \
         })[type])
 
 typedef struct
@@ -102,8 +106,8 @@ typedef struct
     ++Lexer->column
 
 
-token lex(lexer*);
+token lex( lexer* );
 
-char* read_file(char* path);
+char* read_file( char* path );
 
 #endif

@@ -1,4 +1,5 @@
-native("");
-i32 main()
+extern("printf");
+void main()  
 {
+    printf("Hello, world!\n");
 }
