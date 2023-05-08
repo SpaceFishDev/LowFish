@@ -1,7 +1,7 @@
 #include"parser.h"
 
 #define node_type_to_string(x) \
-    (((char*[]){"PROGRAM", "FUNCTION", "TYPE", "TOKEN_NODE","BLOCK", "NORMALBLOCK", "ARROWBLOCK"})[x])
+    (((char*[]){"PROGRAM", "FUNCTION", "TYPE", "TOKEN_NODE","BLOCK", "NORMALBLOCK", "ARROWBLOCK", "EXTERN", "ASM", "BASICEXPRESSION", "EXPRESSION"})[x])
 
 node* append_child_to_x( node* x , node* y )
 {
@@ -149,8 +149,8 @@ node* parse_block( parser* Parser )
             Parser->tokens [ Parser->pos ] ,
             b
         );
-        append_child( b , n );
         append_child( Parser->current_parent , b );
+        append_child( b , n );
         Parser->current_parent = n;
         ++Parser->pos;
         return parse( Parser );
@@ -168,6 +168,127 @@ node* parse_block( parser* Parser )
     return parse( Parser );
 }
 
+node* parse_nl( parser* Parser )
+{
+    if ( Parser->current_parent->type == ARROW_BLOCK )
+    {
+        if ( Parser->tokens [ Parser->pos - 1 ].type != SEMI )
+        {
+            put_error( "Missing semi colon ';'." , 0 , Parser->tokens [ Parser->pos ] );
+        }
+    }
+    if ( Parser->current_parent->type != NORMALBLOCK && Parser->current_parent->type != FUNCTION )
+    {
+        if
+            (
+                Parser->tokens [ Parser->pos - 1 ].type != SEMI
+                && Parser->tokens [ Parser->pos - 1 ].type != OPENBR
+                && Parser->tokens [ Parser->pos - 1 ].type != CLOSEBR
+                && Parser->tokens [ Parser->pos - 1 ].type != BEGINOFBLOCK
+                && Parser->tokens [ Parser->pos - 1 ].type != ENDOFBLOCK
+            )
+        {
+            put_error( "Missing semi colon ';'." , 0 , Parser->tokens [ Parser->pos ] );
+        }
+    }
+    ++Parser->pos;
+    return parse( Parser );
+}
+#define expect_err(x) \
+    expect(x, Parser, true); \
+    ++Parser->pos
+
+node* parse_extern( parser* Parser )
+{
+    node* extern_node = create_arbitrary_node( EXTERN , Parser->current_parent );
+    expect_err( OPENBR );
+    node* obr_node = create_node( TOKENNODE , Parser->tokens [ Parser->pos ] , extern_node );
+    expect_err( STRING );
+    node* str_node = create_node( TOKENNODE , Parser->tokens [ Parser->pos ] , extern_node );
+    expect_err( CLOSEBR );
+    node* cbr_node = create_node( TOKENNODE , Parser->tokens [ Parser->pos ] , extern_node );
+    append_child( extern_node , obr_node );
+    append_child( extern_node , str_node );
+    append_child( extern_node , cbr_node );
+    append_child( Parser->current_parent , extern_node );
+    return parse( Parser );
+}
+
+node* parse_asm( parser* Parser )
+{
+    node* asm_node = create_arbitrary_node( ASM , Parser->current_parent );
+    expect_err( OPENBR );
+    node* obr_node = create_node( TOKENNODE , Parser->tokens [ Parser->pos ] , asm_node );
+    expect_err( STRING );
+    node* str_node = create_node( TOKENNODE , Parser->tokens [ Parser->pos ] , asm_node );
+    expect_err( CLOSEBR );
+    node* cbr_node = create_node( TOKENNODE , Parser->tokens [ Parser->pos ] , asm_node );
+    append_child( asm_node , obr_node );
+    append_child( asm_node , str_node );
+    append_child( asm_node , cbr_node );
+    append_child( Parser->current_parent , asm_node );
+    return parse( Parser );
+}
+
+node* parse_basic_expression( parser* Parser , node* parent )
+{
+    node* n = create_arbitrary_node( BASICEXPRESSION , parent );
+    node* n1 = create_node( TOKENNODE , Parser->tokens [ Parser->pos ] , n );
+    append_child( n , n1 );
+    if ( parent )
+    {
+        append_child( parent , n );
+    }
+    return n;
+}
+
+node* parse_factor( parser* Parser )
+{
+    node* left = parse_basic_expression( Parser , 0 );
+    while ( expect( DIV , Parser , false ) || expect( MUL , Parser , false ) )
+    {
+        node* operator = create_node( TOKENNODE , Parser->tokens [ Parser->pos ] , 0 );
+        ++Parser->pos;
+        ++Parser->pos;
+        node* right = parse_basic_expression( Parser , operator );
+        append_child( operator, left );
+        append_child( operator, right );
+        left->parent = operator;
+        left = operator;
+    }
+    return left;
+}
+
+node* parse_primary( parser* Parser )
+{
+    node* left = parse_factor( Parser );
+    bool is_complex = false;
+    while ( expect( PLUS , Parser , false ) || expect( MINUS , Parser , false ) )
+    {
+        node* operator = create_node( TOKENNODE , Parser->tokens [ Parser->pos ] , 0 );
+        ++Parser->pos;
+        node* right = parse_factor( Parser );
+        append_child( operator, left );
+        append_child( operator, right );
+        left->parent = operator;
+        left = operator;
+        is_complex = true;
+    }
+    if ( !is_complex )
+    {
+        ++Parser->pos;
+        left->parent = Parser->current_parent;
+        append_child( Parser->current_parent , left );
+        return parse( Parser );
+    }
+    ++Parser->pos;
+    node* n = create_arbitrary_node( EXPRESSION , Parser->current_parent );
+    left->parent = n;
+    append_child( n , left );
+    append_child( Parser->current_parent , n );
+    return parse( Parser );
+}
+
 
 node* parse( parser* Parser )
 {
@@ -175,7 +296,6 @@ node* parse( parser* Parser )
     {
         if ( parse_type( Parser->tokens [ Parser->pos ] , 0 , Parser ) )
         {
-            // [type] [name] '(' * ')'
 #pragma region function
             if
                 (
@@ -201,6 +321,7 @@ node* parse( parser* Parser )
             return parse( Parser );
         }
 #pragma endregion
+#pragma region semi colon
         else if ( is_type( SEMI ) )
         {
             if ( Parser->current_parent->type == ARROW_BLOCK )
@@ -211,31 +332,46 @@ node* parse( parser* Parser )
             }
             ++Parser->pos;
         }
+#pragma endregion
+#pragma region new line
         else if ( is_type( NL ) )
         {
-            if ( Parser->current_parent->type == ARROW_BLOCK )
+            return parse_nl( Parser );
+        }
+#pragma endregion
+        else if ( is_type( NUMBER ) )
+        {
+            return parse_primary( Parser );
+        }
+        else if ( is_type( STRING ) )
+        {
+            return parse_primary( Parser );
+        }
+#pragma region identifier
+        else if ( is_type( ID ) )
+        {
+            if ( !strcmp( "extern" , Parser->tokens [ Parser->pos ].text ) )
             {
-                if ( Parser->tokens [ Parser->pos - 1 ].type != SEMI )
-                {
-                    put_error( "Missing semi colon ';'." , 0 , Parser->tokens [ Parser->pos ] );
-                }
+                return parse_extern( Parser );
             }
-            if ( Parser->current_parent->type != NORMALBLOCK && Parser->current_parent->type != FUNCTION )
+            else if ( !strcmp( "asm" , Parser->tokens [ Parser->pos ].text ) )
             {
-                if
-                    (
-                        Parser->tokens [ Parser->pos - 1 ].type != SEMI
-                        && Parser->tokens [ Parser->pos - 1 ].type != OPENBR
-                        && Parser->tokens [ Parser->pos - 1 ].type != CLOSEBR
-                        && Parser->tokens [ Parser->pos - 1 ].type != BEGINOFBLOCK
-                        && Parser->tokens [ Parser->pos - 1 ].type != ENDOFBLOCK
-                    )
+                return parse_asm( Parser );
+            }
+            else
+            {
+                if ( expect( OPENBR , Parser , false ) )
                 {
-                    put_error( "Missing semi colon ';'." , 0 , Parser->tokens [ Parser->pos ] );
+                    ++Parser->pos;
+                    return parse( Parser );
                 }
+
+                return parse_primary( Parser );
             }
             ++Parser->pos;
+            return parse( Parser );
         }
+#pragma endregion
         else
         {
             ++Parser->pos;
@@ -244,7 +380,6 @@ node* parse( parser* Parser )
     }
     return Parser->root;
 }
-
 void print_tree( node* n , int indent )
 {
     print_n_times( "    " , indent );

@@ -1,5 +1,1 @@
-extern("printf");
-void main()  
-{
-    printf("Hello, world!\n");
-}
+1 + 1

@@ -18,6 +18,10 @@ typedef enum
     BLOCK ,
     NORMALBLOCK ,
     ARROW_BLOCK ,
+    EXTERN ,
+    ASM ,
+    BASICEXPRESSION ,
+    EXPRESSION ,
 } node_type;
 
 

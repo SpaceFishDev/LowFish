@@ -17,8 +17,8 @@ end: ENDOFBLOCK;
 line: ((expression SEMI) | (conditional) | (booleanexpression SEMI) | (vardecl SEMI) | (native SEMI) ) ('\n')?;
 extern:
 	'extern' OPENBR STRING CLOSEBR;
-native:
-	'native' OPENBR STRING CLOSEBR;
+asm:
+	'asm' OPENBR STRING CLOSEBR;
 basic_expression:
 	'true' |
 	'false'|
@@ -26,7 +26,9 @@ basic_expression:
 	NUMBER |
 	ID;
 functioncall:
-	ID OPENBR (expression)? ((COMMA expression)*)? CLOSEBR;
+	ID args;
+args:
+	OPENBR (expression)? ((COMMA expression)*)? CLOSEBR;
 math:
 	basic_expression PLUS basic_expression |
 	basic_expression MINUS basic_expression |
@@ -100,7 +102,7 @@ conditional:
 	if |
 	while |
 	repeat |
-	fOR |
+	for |
 	unless |
 	else;
 if:
