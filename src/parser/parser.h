@@ -22,6 +22,7 @@ typedef enum
     ASM ,
     BASICEXPRESSION ,
     EXPRESSION ,
+    MATH ,
 } node_type;
 
 

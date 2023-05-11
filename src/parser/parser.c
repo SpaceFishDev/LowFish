@@ -1,7 +1,7 @@
 #include"parser.h"
 
 #define node_type_to_string(x) \
-    (((char*[]){"PROGRAM", "FUNCTION", "TYPE", "TOKEN_NODE","BLOCK", "NORMALBLOCK", "ARROWBLOCK", "EXTERN", "ASM", "BASICEXPRESSION", "EXPRESSION"})[x])
+    (((char*[]){"PROGRAM", "FUNCTION", "TYPE", "TOKEN_NODE","BLOCK", "NORMALBLOCK", "ARROWBLOCK", "EXTERN", "ASM", "BASICEXPRESSION", "EXPRESSION", "MATH"})[x])
 
 node* append_child_to_x( node* x , node* y )
 {
@@ -83,8 +83,50 @@ parser* create_parser( token* tokens , size_t n_token )
 #define expect_no_err(x) \
     expect(x, Parser, false)
 
+node* parse_primary( parser* Parser );
+
+#define type_token(x) \
+    ((!strcmp(x.text, "i32") || !strcmp(x.text, "i16") || !strcmp(x.text, "i8")) || (!strcmp(x.text, "u32") || !strcmp(x.text, "u16") || !strcmp(x.text, "u8")))
+
+node* parse_id( parser* Parser )
+{
+    if ( !expect_no_err( OPENBR ) && !type_token( Parser->tokens [ Parser->pos ] ) )
+    {
+        node* arb_expr = create_arbitrary_node( EXPRESSION , Parser->current_parent );
+        node* expr = parse_primary( Parser );
+        expr->parent = arb_expr;
+        append_child( arb_expr , expr );
+        append_child( Parser->current_parent , arb_expr );
+        return arb_expr;
+    }
+    else if ( type_token( Parser->tokens [ Parser->pos ] ) )
+    {
+        node* type_node = create_node( TYPE , Parser->tokens [ Parser->pos ] , 0 );
+        ++Parser->pos;
+        if ( expect_no_err( OPENBR ) )
+        {
+            node* n = create_node( FUNCTION , Parser->tokens [ Parser->pos ] , Parser->current_parent );
+            type_node->parent = n;
+            append_child( n , type_node );
+            ++Parser->pos;
+
+        }
+    }
+}
+
 node* parse_basic_expression( parser* Parser )
 {
+    if ( is_type( ID ) )
+    {
+        if ( !expect_no_err( OPENBR ) )
+        {
+            node* arb_expr = create_arbitrary_node( BASICEXPRESSION , 0 );
+            node* expr = create_node( TOKENNODE , Parser->tokens [ Parser->pos ] , arb_expr );
+            append_child( arb_expr , expr );
+            return arb_expr;
+        }
+        return parse_id( Parser );
+    }
     node* arb_expr = create_arbitrary_node( BASICEXPRESSION , 0 );
     node* expr = create_node( TOKENNODE , Parser->tokens [ Parser->pos ] , arb_expr );
     append_child( arb_expr , expr );
@@ -124,18 +166,34 @@ node* parse_primary( parser* Parser )
         left = operator;
 
     }
-    return left;
+    node* math_node = create_arbitrary_node( MATH , 0 );
+    left->parent = math_node;
+    append_child( math_node , left );
+    return math_node;
 }
 
 node* parse_expression( parser* Parser )
 {
-    node* arb_expr = create_arbitrary_node( EXPRESSION , Parser->current_parent );
-    node* expr = parse_primary( Parser );
-    expr->parent = arb_expr;
-    append_child( arb_expr , expr );
-    append_child( Parser->current_parent , arb_expr );
-    return arb_expr;
+    switch ( Parser->tokens [ Parser->pos ].type )
+    {
+        case ID:
+            {
+
+            }
+        case NUMBER:
+            {
+                node* arb_expr = create_arbitrary_node( EXPRESSION , Parser->current_parent );
+                node* expr = parse_primary( Parser );
+                expr->parent = arb_expr;
+                append_child( arb_expr , expr );
+                append_child( Parser->current_parent , arb_expr );
+                return arb_expr;
+            }
+    }
 }
+
+node* parse_function( )
+{ }
 
 node* parse( parser* Parser )
 {
@@ -143,29 +201,13 @@ node* parse( parser* Parser )
     {
         return Parser->root;
     }
-    if ( is_type( ID ) )
-    {
-        if ( !expect_no_err( OPENBR ) )
-        {
-            node* expr = parse_expression( Parser );
-            ++Parser->pos;
-            return parse( Parser );
-        }
-    }
-    if ( is_type( NUMBER ) )
-    {
-        node* expr = parse_expression( Parser );
-        ++Parser->pos;
-        return parse( Parser );
-    }
-    ++Parser->pos;
-    return parse( Parser );
+    return parse_expression( Parser );
 }
 
 void print_tree( node* n , int indent )
 {
     print_n_times( "    " , indent );
-    printf( "<NODE( '%s', %s)>\n" , n->node_token.text , node_type_to_string( n->type ) );
+    printf( "<NODE( '%s', %s )>\n" , n->node_token.text , node_type_to_string( n->type ) );
     if ( n->n_child > 0 )
     {
         print_n_times( "    " , indent );
