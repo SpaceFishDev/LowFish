@@ -143,6 +143,15 @@ node* parse( parser* Parser )
     {
         return Parser->root;
     }
+    if ( is_type( ID ) )
+    {
+        if ( !expect_no_err( OPENBR ) )
+        {
+            node* expr = parse_expression( Parser );
+            ++Parser->pos;
+            return parse( Parser );
+        }
+    }
     if ( is_type( NUMBER ) )
     {
         node* expr = parse_expression( Parser );
