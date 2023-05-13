@@ -1,7 +1,7 @@
 #include"parser.h"
 
 #define node_type_to_string(x) \
-    (((char*[]){"PROGRAM", "FUNCTION", "TYPE", "TOKEN_NODE","BLOCK", "NORMALBLOCK", "ARROWBLOCK", "EXTERN", "ASM", "BASICEXPRESSION", "EXPRESSION", "MATH"})[x])
+    (((char*[]){"PROGRAM", "FUNCTION", "TYPE", "TOKEN_NODE","BLOCK", "NORMALBLOCK", "ARROWBLOCK", "EXTERN", "ASM", "BASICEXPRESSION", "EXPRESSION", "MATH", "FUNCTION_CALL"})[x])
 
 node* append_child_to_x( node* x , node* y )
 {
@@ -88,15 +88,14 @@ node* parse_primary( parser* Parser );
 #define type_token(x) \
     ((!strcmp(x.text, "i32") || !strcmp(x.text, "i16") || !strcmp(x.text, "i8")) || (!strcmp(x.text, "u32") || !strcmp(x.text, "u16") || !strcmp(x.text, "u8")))
 
+node* parse_expression(parser* Parser);
 node* parse_id( parser* Parser )
 {
     if ( !expect_no_err( OPENBR ) && !type_token( Parser->tokens [ Parser->pos ] ) )
     {
-        node* arb_expr = create_arbitrary_node( EXPRESSION , Parser->current_parent );
-        node* expr = parse_primary( Parser );
-        expr->parent = arb_expr;
-        append_child( arb_expr , expr );
-        append_child( Parser->current_parent , arb_expr );
+        node* arb_expr = create_arbitrary_node( BASICEXPRESSION , 0 );
+        node* e = create_node( TOKENNODE , Parser->tokens [ Parser->pos ] , e );
+        append_child( arb_expr , e );
         return arb_expr;
     }
     else if ( type_token( Parser->tokens [ Parser->pos ] ) )
@@ -109,22 +108,23 @@ node* parse_id( parser* Parser )
             type_node->parent = n;
             append_child( n , type_node );
             ++Parser->pos;
-
         }
     }
+    else if ( expect_no_err( OPENBR ) )
+    {
+		node* arb_expr = create_arbitrary_node(FUNCTION_CALL, 0);	
+		node* id_node = create_node(TOKENNODE, Parser->tokens[Parser->pos], arb_expr);
+		append_child(arb_expr, id_node);
+		++Parser->pos;
+		++Parser->pos;
+		return arb_expr;
+	}	
 }
 
 node* parse_basic_expression( parser* Parser )
 {
     if ( is_type( ID ) )
     {
-        if ( !expect_no_err( OPENBR ) )
-        {
-            node* arb_expr = create_arbitrary_node( BASICEXPRESSION , 0 );
-            node* expr = create_node( TOKENNODE , Parser->tokens [ Parser->pos ] , arb_expr );
-            append_child( arb_expr , expr );
-            return arb_expr;
-        }
         return parse_id( Parser );
     }
     node* arb_expr = create_arbitrary_node( BASICEXPRESSION , 0 );
@@ -178,7 +178,7 @@ node* parse_expression( parser* Parser )
     {
         case ID:
             {
-
+                return parse_id( Parser );
             }
         case NUMBER:
             {
