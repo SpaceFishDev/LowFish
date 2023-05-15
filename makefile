@@ -7,4 +7,4 @@ all: $(src)
 	./$(out)
 debug: $(src)
 	gcc $(src) $(cflags) -o $(out) -g
-	gdb $(out)
+	gdb ./$(out)

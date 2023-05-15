@@ -82,6 +82,11 @@ token lex( lexer* Lexer )
                 next;
                 return create_token( Lexer->column , Lexer->line , "!" , EXCLAMATION );
             }
+        case ',':
+            {
+                next;
+                return create_token(Lexer->column, Lexer->line, ",", COMMA);      
+            }
         case '[':
             {
                 next;

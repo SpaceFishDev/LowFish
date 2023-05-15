@@ -41,6 +41,7 @@ typedef enum
     MUL ,
     SEMI ,
     NL ,
+    COMMA,
     END_OF_FILE ,
     BAD ,
     NOTOKEN ,
@@ -53,6 +54,9 @@ typedef struct
     size_t len;
     char* text;
 } token;
+
+#define string_version(x) \
+    (#x)
 
 #define create_token(col, row, text, type) \
 ((token){col,row,type,strlen(text),text})
@@ -89,6 +93,7 @@ typedef struct
         "MUL", \
         "SEMI", \
         "NL", \
+        "COMMA", \
         "END_OF_FILE",  \
         "BAD", \
         "NOTOKEN", \
