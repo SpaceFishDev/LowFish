@@ -14,7 +14,7 @@
 int main( void )
 {
     char* input_file = read_file( "test.lf" );
-    printf( "Hello, world!\n \n ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n%s\n" , input_file );
+    printf( "\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\nHello, world!\n \n ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n%s\n" , input_file );
     lexer Lexer = ( lexer ) { input_file, 0,0,0 };
     token* Tokens = malloc( sizeof( token ) );
     size_t n_token = 1;

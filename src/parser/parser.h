@@ -24,7 +24,9 @@ typedef enum
     BASICEXPRESSION ,
     EXPRESSION ,
     MATH ,
-	FUNCTION_CALL,
+    FUNCTION_CALL ,
+    VARDECL ,
+    ASSIGNMENT ,
 } node_type;
 
 

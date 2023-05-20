@@ -1,7 +1,7 @@
 #include"parser.h"
 
 #define node_type_to_string(x) \
-    (((char*[]){"PROGRAM", "FUNCTION", "TYPE", "TOKEN_NODE","BLOCK", "NORMALBLOCK", "ARROWBLOCK", "EXTERN", "ASM", "BASICEXPRESSION", "EXPRESSION", "MATH", "FUNCTION_CALL"})[x])
+    (((char*[]){"PROGRAM", "FUNCTION", "TYPE", "TOKEN_NODE","BLOCK", "NORMALBLOCK", "ARROWBLOCK", "EXTERN", "ASM", "BASICEXPRESSION", "EXPRESSION", "MATH", "FUNCTION_CALL", "VARDECL", "ASSIGNMENT"})[x])
 
 node* append_child_to_x( node* x , node* y )
 {
@@ -106,26 +106,65 @@ node* parse_primary( parser* Parser );
     ((!strcmp(x.text, "i32") || !strcmp(x.text, "i16") || !strcmp(x.text, "i8")) || (!strcmp(x.text, "u32") || !strcmp(x.text, "u16") || !strcmp(x.text, "u8")))
 
 node* parse_expression( parser* Parser );
+node* parse_assignment( parser* Parser , node* parent )
+{
+    node* id = create_node( TOKENNODE , Parser->tokens [ Parser->pos ] , parent );
+    if ( !expect_no_err( EQUAL ) )
+    {
+        return id;
+    }
+
+    // safe to assume its an actual assignment 
+    expect_err( EQUAL );
+    ++Parser->pos;
+    node* next = parse_primary( Parser );
+    node* assign = create_arbitrary_node( ASSIGNMENT , parent );
+    append_child( assign , id );
+    append_child( assign , next );
+    return assign;
+
+}
 node* parse_id( parser* Parser )
 {
     if ( !expect_no_err( OPENBR ) && !type_token( Parser->tokens [ Parser->pos ] ) )
     {
+        node* id = create_node( TOKENNODE , Parser->tokens [ Parser->pos ] , 0 );
+        node* assign = parse_assignment( Parser , 0 );
         node* arb_expr = create_arbitrary_node( BASICEXPRESSION , 0 );
-        node* e = create_node( TOKENNODE , Parser->tokens [ Parser->pos ] , e );
-        append_child( arb_expr , e );
+        if ( assign->type != TOKENNODE )
+        {
+            assign->parent = arb_expr;
+            append_child( arb_expr , assign );
+            return arb_expr;
+
+        }
+        append_child( arb_expr , id );
         return arb_expr;
     }
     else if ( type_token( Parser->tokens [ Parser->pos ] ) )
     {
         node* type_node = create_node( TYPE , Parser->tokens [ Parser->pos ] , 0 );
-        ++Parser->pos;
-        if ( expect_no_err( OPENBR ) )
+        expect_err( ID );
+        if ( !expect_no_err( OPENBR ) )
         {
-            node* n = create_node( FUNCTION , Parser->tokens [ Parser->pos ] , Parser->current_parent );
-            type_node->parent = n;
-            append_child( n , type_node );
-            ++Parser->pos;
+            node* var_decl = create_arbitrary_node( VARDECL , Parser->current_parent );
+            node* id = create_node( TOKENNODE , Parser->tokens [ Parser->pos ] , var_decl );
+            type_node->parent = var_decl;
+            node* assignment = parse_assignment( Parser , var_decl );
+            if ( assignment->type == TOKENNODE )
+            {
+                // its not an assignment
+                append_child( var_decl , type_node );
+                append_child( var_decl , id );
+                return var_decl;
+            }
+            // safely assume its an assignment
+            append_child( var_decl , type_node );
+            append_child( var_decl , assignment );
+            return var_decl;
         }
+
+        //safe to assume its a function declaration.
     }
     else if ( expect_no_err( OPENBR ) )
     {
@@ -137,46 +176,33 @@ node* parse_id( parser* Parser )
             node* tok = create_node( TOKENNODE , Parser->tokens [ Parser->pos ] , arb );
             append_child( arb , tok );
             expect_err( CLOSEBR );
-            ++Parser->pos;
             return arb;
         }
-        node* arb = create_arbitrary_node( BASICEXPRESSION , 0 );
-        node* id_node = create_node( FUNCTION_CALL , Parser->tokens [ Parser->pos ] , Parser->current_parent );
-        ++Parser->pos;
-        if ( !expect_no_err( CLOSEBR ) )
+        if ( !strcmp( "asm" , Parser->tokens [ Parser->pos ].text ) )
         {
-            ++Parser->pos;
-            do
+            expect_err( OPENBR );
+            expect_err( STRING );
+            node* arb = create_arbitrary_node( ASM , 0 );
+            node* tok = create_node( TOKENNODE , Parser->tokens [ Parser->pos ] , arb );
+            append_child( arb , tok );
+            expect_err( CLOSEBR );
+            return arb;
+        }
+        node* id_node = create_node( FUNCTION_CALL , Parser->tokens [ Parser->pos ] , Parser->current_parent );
+        expect_err( OPENBR );
+
+        ++Parser->pos;
+        if ( !is_type( CLOSEBR ) )
+        {
+            while ( !is_type( CLOSEBR ) )
             {
                 if ( is_type( COMMA ) )
-                {
                     ++Parser->pos;
-                }
-                else
-                {
-                    if ( Parser->tokens [ Parser->pos - 1 ].type != OPENBR )
-                    {
-                        --Parser->pos;
-                        expect_err( COMMA );
-                    }
-                }
-                node* next = parse_expression( Parser );
-                next->parent = id_node;
+                node* next = parse_primary( Parser );
                 append_child( id_node , next );
-                ++Parser->pos;
-                if ( is_type( CLOSEBR ) )
-                {
-                    --Parser->pos;
-                    break;
-                }
             }
-            while ( !expect_no_err( CLOSEBR ) );
-            expect_err( CLOSEBR );
-            append_child( arb , id_node );
-            return arb;
         }
-        append_child( arb , id_node );
-        return arb;
+        return id_node;
     }
 }
 
@@ -184,7 +210,8 @@ node* parse_basic_expression( parser* Parser )
 {
     if ( is_type( ID ) )
     {
-        return parse_id( Parser );
+        node* expr = parse_id( Parser );
+        return expr;
     }
     node* arb_expr = create_arbitrary_node( BASICEXPRESSION , 0 );
     node* expr = create_node( TOKENNODE , Parser->tokens [ Parser->pos ] , arb_expr );
@@ -194,7 +221,9 @@ node* parse_basic_expression( parser* Parser )
 
 node* parse_factor( parser* Parser )
 {
+
     node* left = parse_basic_expression( Parser );
+
     while ( expect_no_err( DIV ) || expect_no_err( MUL ) )
     {
         ++Parser->pos;
@@ -207,6 +236,7 @@ node* parse_factor( parser* Parser )
         right->parent = operator;
         left = operator;
     }
+
     return left;
 }
 node* parse_primary( parser* Parser )
@@ -223,12 +253,19 @@ node* parse_primary( parser* Parser )
         append_child( operator, left );
         append_child( operator, right );
         left = operator;
-
     }
-    node* math_node = create_arbitrary_node( MATH , 0 );
-    left->parent = math_node;
-    append_child( math_node , left );
-    return math_node;
+
+    // expect_err( SEMI );
+    if ( left->n_child != 0 && ( left->type == TOKENNODE ) )
+    {
+        node* math_node = create_arbitrary_node( MATH , 0 );
+        left->parent = math_node;
+        append_child( math_node , left );
+        ++Parser->pos;
+        return math_node;
+    }
+    ++Parser->pos;
+    return left;
 }
 
 node* parse_expression( parser* Parser )
@@ -242,7 +279,7 @@ node* parse_expression( parser* Parser )
                 expr->parent = arb_expr;
                 append_child( arb_expr , expr );
                 append_child( Parser->current_parent , arb_expr );
-                return arb_expr;
+                return parse( Parser );
             }
         case NUMBER:
             {
@@ -250,13 +287,34 @@ node* parse_expression( parser* Parser )
                 expr->parent = arb_expr;
                 append_child( arb_expr , expr );
                 append_child( Parser->current_parent , arb_expr );
-                return arb_expr;
+                return parse( Parser );
             }
         case NL:
             {
-                printf( "%s\n" , Parser->tokens [ Parser->pos - 1 ].text );
                 ++Parser->pos;
-                return parse_expression( Parser );
+                return parse( Parser );
+            }
+        case SEMI:
+            {
+                ++Parser->pos;
+                return parse( Parser );
+            }
+        case COMMA:
+            {
+                ++Parser->pos;
+                return parse( Parser );
+            }
+        case END_OF_FILE:
+            {
+                return Parser->root;
+            }
+        default:
+            {
+                char* msg = "Unexpected token '%s'.";
+                char* buffer = malloc( 1024 );
+                sprintf( buffer , msg , Parser->tokens [ Parser->pos ].text );
+                put_error( buffer , 0 , Parser->tokens [ Parser->pos + 1 ] );
+
             }
     }
 }
