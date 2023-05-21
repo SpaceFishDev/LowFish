@@ -85,7 +85,7 @@ token lex( lexer* Lexer )
         case ',':
             {
                 next;
-                return create_token(Lexer->column, Lexer->line, ",", COMMA);      
+                return create_token( Lexer->column , Lexer->line , "," , COMMA );
             }
         case '[':
             {
@@ -167,7 +167,7 @@ token lex( lexer* Lexer )
                 ++Lexer->line;
                 ++Lexer->pos;
                 Lexer->column = 0;
-                return create_token( c , l , "nl" , NL );
+                return lex( Lexer );
             }
         case ' ':
         case '\t':

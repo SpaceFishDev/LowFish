@@ -36,6 +36,7 @@ bool expect( token_type type , parser* Parser , bool error )
         char* buffer = malloc( 1024 );
         sprintf( buffer , msg , token_type_to_string( type ) , token_type_to_string( Parser->tokens [ Parser->pos + 1 ].type ) );
         put_error( buffer , 0 , Parser->tokens [ Parser->pos + 1 ] );
+        // exits the program so no need to free.
     }
     return false;
 }
@@ -116,11 +117,12 @@ node* parse_assignment( parser* Parser , node* parent )
 
     // safe to assume its an actual assignment 
     expect_err( EQUAL );
-    ++Parser->pos;
+    ++Parser->pos;// skip the equal
     node* next = parse_primary( Parser );
     node* assign = create_arbitrary_node( ASSIGNMENT , parent );
     append_child( assign , id );
     append_child( assign , next );
+    --Parser->pos; // go back or weird errors happen??
     return assign;
 
 }
@@ -165,6 +167,7 @@ node* parse_id( parser* Parser )
         }
 
         //safe to assume its a function declaration.
+
     }
     else if ( expect_no_err( OPENBR ) )
     {
@@ -242,6 +245,10 @@ node* parse_factor( parser* Parser )
 node* parse_primary( parser* Parser )
 {
     node* left = parse_factor( Parser );
+    if ( left->type == BLOCK )
+    {
+        Parser->current_parent = left;
+    }
     while ( expect_no_err( PLUS ) || expect_no_err( MINUS ) )
     {
         ++Parser->pos;
@@ -254,8 +261,10 @@ node* parse_primary( parser* Parser )
         append_child( operator, right );
         left = operator;
     }
-
-    // expect_err( SEMI );
+    if ( expect_no_err( SEMI ) )
+    {
+        ++Parser->pos;
+    }
     if ( left->n_child != 0 && ( left->type == TOKENNODE ) )
     {
         node* math_node = create_arbitrary_node( MATH , 0 );
@@ -275,6 +284,36 @@ node* parse_expression( parser* Parser )
     {
         case ID:
             {
+                if ( type_token( Parser->tokens [ Parser->pos ] ) )
+                {
+                    expect_err( ID );
+                    // make sure its not a var decl
+                    if ( !expect_no_err( OPENBR ) )
+                    {
+                        --Parser->pos;
+                        node* expr = parse_primary( Parser );
+                        expr->parent = arb_expr;
+                        append_child( arb_expr , expr );
+                        append_child( Parser->current_parent , arb_expr );
+                        return parse( Parser );
+                    }
+                    node* type_node = create_node( TYPE , Parser->tokens [ Parser->pos ] , 0 );
+                    expect_err( OPENBR );
+                    node* func = create_arbitrary_node( FUNCTION , 0 );
+                    while ( !expect_no_err( CLOSEBR ) ) // eg i32 b( something ) instead of i32 b()
+                    {
+                        if ( is_type( COMMA ) )
+                            ++Parser->pos;
+                        node* next = parse_primary( Parser );
+                        append_child( func , next );
+                    }
+                    expect_err( CLOSEBR );
+                    ++Parser->pos;
+                    append_child( Parser->current_parent , func );
+                    Parser->current_parent = func;
+                    return parse( Parser );
+
+                }
                 node* expr = parse_primary( Parser );
                 expr->parent = arb_expr;
                 append_child( arb_expr , expr );
@@ -289,14 +328,28 @@ node* parse_expression( parser* Parser )
                 append_child( Parser->current_parent , arb_expr );
                 return parse( Parser );
             }
-        case NL:
+        case SEMI:
             {
                 ++Parser->pos;
                 return parse( Parser );
             }
-        case SEMI:
+        case BEGINOFBLOCK:
             {
                 ++Parser->pos;
+                node* block = create_arbitrary_node( BLOCK , Parser->current_parent );
+                append_child( Parser->current_parent , block );
+                Parser->current_parent = block;
+                return parse( Parser );
+            }
+        case ENDOFBLOCK:
+            {
+                ++Parser->pos;
+                node* p = Parser->current_parent->parent;
+
+                while ( p->parent && p->type != PROGRAM && p->type != BLOCK )
+                {
+                    p = p->parent;
+                }
                 return parse( Parser );
             }
         case COMMA:
