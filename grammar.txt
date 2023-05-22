@@ -29,7 +29,7 @@ functioncall:
 	ID args;
 args:
 	OPENBR (expression)? ((COMMA expression)*)? CLOSEBR;
-math:
+binexpr:
 	basic_expression PLUS basic_expression |
 	basic_expression MINUS basic_expression |
 	basic_expression DIV basic_expression |
@@ -38,14 +38,14 @@ math:
 	basic_expression LOGICALOR basic_expression |
 	basic_expression XOR basic_expression |
 	basic_expression LOGICALAND basic_expression |
-	math PLUS math |
-	math MINUS math |
-	math DIV math |
-	math MUL math |
-	math MOD math |
-	math LOGICALOR math |
-	math XOR math |
-	math LOGICALAND math;
+	binexpr PLUS binexpr |
+	binexpr MINUS binexpr |
+	binexpr DIV binexpr |
+	binexpr MUL binexpr |
+	binexpr MOD binexpr |
+	binexpr LOGICALOR binexpr |
+	binexpr XOR binexpr |
+	binexpr LOGICALAND binexpr;
 PLUS:
 	'+';
 MINUS:
@@ -67,7 +67,7 @@ expression:
 	ID index |
 	expression index |
 	OPENBR type CLOSEBR expression |
-	math |
+	binexpr |
 	assignment |
 	'return' basic_expression
 	| functioncall;

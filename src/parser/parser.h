@@ -23,10 +23,12 @@ typedef enum
     ASM ,
     BASICEXPRESSION ,
     EXPRESSION ,
-    MATH ,
+    BINEXPR ,
     FUNCTION_CALL ,
     VARDECL ,
     ASSIGNMENT ,
+    CONDITIONAL ,
+    IF ,
 } node_type;
 
 

@@ -62,14 +62,34 @@ token lex( lexer* Lexer )
                 return create_token( Lexer->column , Lexer->line , ")" , CLOSEBR );
             }
 
+        case '&':
+            {
+                next;
+                if ( Lexer->src [ Lexer->pos ] == '&' )
+                {
+                    next;
+                    return create_token( Lexer->column , Lexer->line , "&&" , BOOLAND );
+                }
+                return create_token( Lexer->column , Lexer->line , "&" , LOGICALAND );
+            }
+        case '|':
+            {
+                next;
+                if ( Lexer->src [ Lexer->pos ] == '|' )
+                {
+                    next;
+                    return create_token( Lexer->column , Lexer->line , "||" , BOOLOR );
+                }
+                return create_token( Lexer->column , Lexer->line , "|" , LOGICALOR );
+            }
         case '=':
             {
                 next;
                 if ( Lexer->src [ Lexer->pos ] == '=' )
                 {
+                    next;
                     return create_token( Lexer->column , Lexer->line , "==" , BOOLEQUAL );
                 }
-                next;
                 return create_token( Lexer->column , Lexer->line , "=" , EQUAL );
             }
         case '!':
@@ -77,9 +97,9 @@ token lex( lexer* Lexer )
                 next;
                 if ( Lexer->src [ Lexer->pos ] == '=' )
                 {
+                    next;
                     return create_token( Lexer->column , Lexer->line , "!=" , BOOLNOTEQUAL );
                 }
-                next;
                 return create_token( Lexer->column , Lexer->line , "!" , EXCLAMATION );
             }
         case ',':

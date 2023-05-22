@@ -1,7 +1,7 @@
 #include"parser.h"
 
 #define node_type_to_string(x) \
-    (((char*[]){"PROGRAM", "FUNCTION", "TYPE", "TOKEN_NODE","BLOCK", "NORMALBLOCK", "ARROWBLOCK", "EXTERN", "ASM", "BASICEXPRESSION", "EXPRESSION", "MATH", "FUNCTION_CALL", "VARDECL", "ASSIGNMENT"})[x])
+    (((char*[]){"PROGRAM", "FUNCTION", "TYPE", "TOKEN_NODE","BLOCK", "NORMALBLOCK", "ARROWBLOCK", "EXTERN", "ASM", "BASICEXPRESSION", "EXPRESSION", "BINEXPR", "FUNCTION_CALL", "VARDECL", "ASSIGNMENT", "CONDITIONAL", "IF"})[x])
 
 node* append_child_to_x( node* x , node* y )
 {
@@ -83,6 +83,10 @@ parser* create_parser( token* tokens , size_t n_token )
 #define expect_no_err(x) \
     expect(x, Parser, false)
 
+#define conditional_token(x) \
+    !strcmp("if", x.text) || !strcmp("else", x.text) || !strcmp("while", x.text) || !strcmp("for", x.text)
+
+
 bool f_is_type( int type , parser* Parser , bool err )
 {
     if ( Parser->tokens [ Parser->pos ].type == type )
@@ -104,7 +108,7 @@ bool f_is_type( int type , parser* Parser , bool err )
 node* parse_primary( parser* Parser );
 
 #define type_token(x) \
-    ((!strcmp(x.text, "i32") || !strcmp(x.text, "i16") || !strcmp(x.text, "i8")) || (!strcmp(x.text, "u32") || !strcmp(x.text, "u16") || !strcmp(x.text, "u8")))
+    (( !strcmp(x.text, "struct") || !strcmp(x.text, "i32") || !strcmp(x.text, "i16") || !strcmp(x.text, "i8")) || (!strcmp(x.text, "u32") || !strcmp(x.text, "u16") || !strcmp(x.text, "u8"))) 
 
 node* parse_expression( parser* Parser );
 node* parse_assignment( parser* Parser , node* parent )
@@ -126,6 +130,44 @@ node* parse_assignment( parser* Parser , node* parent )
     return assign;
 
 }
+node* parse_function_call( parser* Parser )
+{
+    if ( !strcmp( "extern" , Parser->tokens [ Parser->pos ].text ) )
+    {
+        expect_err( OPENBR );
+        expect_err( STRING );
+        node* arb = create_arbitrary_node( EXTERN , 0 );
+        node* tok = create_node( TOKENNODE , Parser->tokens [ Parser->pos ] , arb );
+        append_child( arb , tok );
+        expect_err( CLOSEBR );
+        return arb;
+    }
+    if ( !strcmp( "asm" , Parser->tokens [ Parser->pos ].text ) )
+    {
+        expect_err( OPENBR );
+        expect_err( STRING );
+        node* arb = create_arbitrary_node( ASM , 0 );
+        node* tok = create_node( TOKENNODE , Parser->tokens [ Parser->pos ] , arb );
+        append_child( arb , tok );
+        expect_err( CLOSEBR );
+        return arb;
+    }
+    node* id_node = create_node( FUNCTION_CALL , Parser->tokens [ Parser->pos ] , Parser->current_parent );
+    expect_err( OPENBR );
+
+    ++Parser->pos;
+    if ( !is_type( CLOSEBR ) )
+    {
+        while ( !is_type( CLOSEBR ) )
+        {
+            if ( is_type( COMMA ) )
+                ++Parser->pos;
+            node* next = parse_primary( Parser );
+            append_child( id_node , next );
+        }
+    }
+    return id_node;
+}
 node* parse_id( parser* Parser )
 {
     if ( !expect_no_err( OPENBR ) && !type_token( Parser->tokens [ Parser->pos ] ) )
@@ -145,8 +187,15 @@ node* parse_id( parser* Parser )
     }
     else if ( type_token( Parser->tokens [ Parser->pos ] ) )
     {
+
         node* type_node = create_node( TYPE , Parser->tokens [ Parser->pos ] , 0 );
         expect_err( ID );
+        if ( !strcmp( Parser->tokens [ Parser->pos - 1 ].text , "struct" ) )
+        {
+            // hopefully not a struct definition. (while we're still building out the parser)
+            type_node = create_node( TYPE , Parser->tokens [ Parser->pos + 1 ] , 0 ); // we just assume it isnt just for testing purposes.
+            expect_err( ID );
+        }
         if ( !expect_no_err( OPENBR ) )
         {
             node* var_decl = create_arbitrary_node( VARDECL , Parser->current_parent );
@@ -167,45 +216,12 @@ node* parse_id( parser* Parser )
         }
 
         //safe to assume its a function declaration.
+        // which is a problem becuase that should've been handled :((((
 
     }
     else if ( expect_no_err( OPENBR ) )
     {
-        if ( !strcmp( "extern" , Parser->tokens [ Parser->pos ].text ) )
-        {
-            expect_err( OPENBR );
-            expect_err( STRING );
-            node* arb = create_arbitrary_node( EXTERN , 0 );
-            node* tok = create_node( TOKENNODE , Parser->tokens [ Parser->pos ] , arb );
-            append_child( arb , tok );
-            expect_err( CLOSEBR );
-            return arb;
-        }
-        if ( !strcmp( "asm" , Parser->tokens [ Parser->pos ].text ) )
-        {
-            expect_err( OPENBR );
-            expect_err( STRING );
-            node* arb = create_arbitrary_node( ASM , 0 );
-            node* tok = create_node( TOKENNODE , Parser->tokens [ Parser->pos ] , arb );
-            append_child( arb , tok );
-            expect_err( CLOSEBR );
-            return arb;
-        }
-        node* id_node = create_node( FUNCTION_CALL , Parser->tokens [ Parser->pos ] , Parser->current_parent );
-        expect_err( OPENBR );
-
-        ++Parser->pos;
-        if ( !is_type( CLOSEBR ) )
-        {
-            while ( !is_type( CLOSEBR ) )
-            {
-                if ( is_type( COMMA ) )
-                    ++Parser->pos;
-                node* next = parse_primary( Parser );
-                append_child( id_node , next );
-            }
-        }
-        return id_node;
+        return parse_function_call( Parser );
     }
 }
 
@@ -227,7 +243,17 @@ node* parse_factor( parser* Parser )
 
     node* left = parse_basic_expression( Parser );
 
-    while ( expect_no_err( DIV ) || expect_no_err( MUL ) )
+    while
+        (
+             expect_no_err( DIV )
+             || expect_no_err( MUL )
+             || expect_no_err( BOOLEQUAL )
+             || expect_no_err( BOOLNOTEQUAL )
+             || expect_no_err( LESS )
+             || expect_no_err( MORE )
+             || expect_no_err( MOREEQUAL )
+             || expect_no_err( LESSEQUAL )
+        )
     {
         ++Parser->pos;
         node* operator = create_node( TOKENNODE , Parser->tokens [ Parser->pos ] , left );
@@ -249,7 +275,7 @@ node* parse_primary( parser* Parser )
     {
         Parser->current_parent = left;
     }
-    while ( expect_no_err( PLUS ) || expect_no_err( MINUS ) )
+    while ( expect_no_err( PLUS ) || expect_no_err( MINUS ) || expect_no_err( BOOLAND ) || expect_no_err( BOOLOR ) )
     {
         ++Parser->pos;
         node* operator = create_node( TOKENNODE , Parser->tokens [ Parser->pos ] , left );
@@ -267,16 +293,89 @@ node* parse_primary( parser* Parser )
     }
     if ( left->n_child != 0 && ( left->type == TOKENNODE ) )
     {
-        node* math_node = create_arbitrary_node( MATH , 0 );
-        left->parent = math_node;
-        append_child( math_node , left );
+        node* binexpr_node = create_arbitrary_node( BINEXPR , 0 );
+        left->parent = binexpr_node;
+        append_child( binexpr_node , left );
         ++Parser->pos;
-        return math_node;
+        return binexpr_node;
     }
     ++Parser->pos;
     return left;
 }
 
+node* parse_conditional( parser* Parser )
+{
+    node* cond = create_arbitrary_node( CONDITIONAL , Parser->current_parent );
+    append_child( Parser->current_parent , cond );
+    Parser->current_parent = cond;
+    if ( !strcmp( "if" , Parser->tokens [ Parser->pos ].text ) )
+    {
+        node* arb_if = create_arbitrary_node( IF , cond );
+        expect_err( OPENBR );
+        ++Parser->pos;
+        node* expr = parse_primary( Parser );
+        ++Parser->pos;
+        // expect_err( CLOSEBR );
+        expr->parent = arb_if;
+        append_child( cond , arb_if );
+        append_child( arb_if , expr );
+        Parser->current_parent = arb_if;
+
+        return parse( Parser );
+    }
+    // I'll do something when I'm not lazy, for now just a seg fault
+}
+node* parse_func( parser* Parser )
+{
+    node* type_node = create_node( TYPE , Parser->tokens [ Parser->pos - 1 ] , 0 );
+    expect_err( OPENBR );
+    node* func = create_arbitrary_node( FUNCTION , 0 );
+    node* id = create_node( TOKENNODE , Parser->tokens [ Parser->pos - 1 ] , func );
+    append_child( func , type_node );
+    append_child( func , id );
+    ++Parser->pos;
+    while ( !is_type( CLOSEBR ) ) // eg i32 b( something ) instead of i32 b()
+    {
+        if ( is_type( COMMA ) )
+            ++Parser->pos;
+        node* next = parse_primary( Parser );
+        append_child( func , next );
+    }
+    --Parser->pos;
+    expect_err( CLOSEBR );
+    ++Parser->pos;
+    append_child( Parser->current_parent , func );
+    Parser->current_parent = func;
+    return parse( Parser );
+}
+node* parse_full_id( parser* Parser )
+{
+    node* arb_expr = create_arbitrary_node( EXPRESSION , Parser->current_parent );
+    if ( conditional_token( Parser->tokens [ Parser->pos ] ) )
+    {
+        return parse_conditional( Parser );
+    }
+    if ( type_token( Parser->tokens [ Parser->pos ] ) )
+    {
+        expect_err( ID );
+        // make sure its not a var decl
+        if ( !expect_no_err( OPENBR ) )
+        {
+            --Parser->pos;
+            node* expr = parse_primary( Parser );
+            expr->parent = arb_expr;
+            append_child( arb_expr , expr );
+            append_child( Parser->current_parent , arb_expr );
+            return parse( Parser );
+        }
+        return parse_func( Parser );
+    }
+    node* expr = parse_primary( Parser );
+    expr->parent = arb_expr;
+    append_child( arb_expr , expr );
+    append_child( Parser->current_parent , arb_expr );
+    return parse( Parser );
+}
 node* parse_expression( parser* Parser )
 {
     node* arb_expr = create_arbitrary_node( EXPRESSION , Parser->current_parent );
@@ -284,41 +383,7 @@ node* parse_expression( parser* Parser )
     {
         case ID:
             {
-                if ( type_token( Parser->tokens [ Parser->pos ] ) )
-                {
-                    expect_err( ID );
-                    // make sure its not a var decl
-                    if ( !expect_no_err( OPENBR ) )
-                    {
-                        --Parser->pos;
-                        node* expr = parse_primary( Parser );
-                        expr->parent = arb_expr;
-                        append_child( arb_expr , expr );
-                        append_child( Parser->current_parent , arb_expr );
-                        return parse( Parser );
-                    }
-                    node* type_node = create_node( TYPE , Parser->tokens [ Parser->pos ] , 0 );
-                    expect_err( OPENBR );
-                    node* func = create_arbitrary_node( FUNCTION , 0 );
-                    while ( !expect_no_err( CLOSEBR ) ) // eg i32 b( something ) instead of i32 b()
-                    {
-                        if ( is_type( COMMA ) )
-                            ++Parser->pos;
-                        node* next = parse_primary( Parser );
-                        append_child( func , next );
-                    }
-                    expect_err( CLOSEBR );
-                    ++Parser->pos;
-                    append_child( Parser->current_parent , func );
-                    Parser->current_parent = func;
-                    return parse( Parser );
-
-                }
-                node* expr = parse_primary( Parser );
-                expr->parent = arb_expr;
-                append_child( arb_expr , expr );
-                append_child( Parser->current_parent , arb_expr );
-                return parse( Parser );
+                return parse_full_id( Parser );
             }
         case NUMBER:
             {
@@ -345,11 +410,11 @@ node* parse_expression( parser* Parser )
             {
                 ++Parser->pos;
                 node* p = Parser->current_parent->parent;
-
-                while ( p->parent && p->type != PROGRAM && p->type != BLOCK )
+                while ( p && p->type != PROGRAM && p->type != BLOCK )
                 {
                     p = p->parent;
                 }
+                Parser->current_parent = p;
                 return parse( Parser );
             }
         case COMMA:
@@ -371,9 +436,6 @@ node* parse_expression( parser* Parser )
             }
     }
 }
-
-node* parse_function( )
-{ }
 
 node* parse( parser* Parser )
 {
