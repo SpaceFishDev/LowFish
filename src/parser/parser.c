@@ -1,7 +1,7 @@
 #include"parser.h"
 
 #define node_type_to_string(x) \
-    (((char*[]){"PROGRAM", "FUNCTION", "TYPE", "TOKEN_NODE","BLOCK", "NORMALBLOCK", "ARROWBLOCK", "EXTERN", "ASM", "BASICEXPRESSION", "EXPRESSION", "BINEXPR", "FUNCTION_CALL", "VARDECL", "ASSIGNMENT", "CONDITIONAL", "IF"})[x])
+    (((char*[]){"PROGRAM", "FUNCTION", "TYPE", "TOKEN_NODE","BLOCK", "NORMALBLOCK", "ARROWBLOCK", "EXTERN", "ASM", "BASICEXPRESSION", "EXPRESSION", "BINEXPR", "FUNCTION_CALL", "VARDECL", "ASSIGNMENT", "CONDITIONAL", "IF", "WHILE"})[x])
 
 node* append_child_to_x( node* x , node* y )
 {
@@ -320,6 +320,21 @@ node* parse_conditional( parser* Parser )
         append_child( cond , arb_if );
         append_child( arb_if , expr );
         Parser->current_parent = arb_if;
+
+        return parse( Parser );
+    }
+    if ( !strcmp( "while" , Parser->tokens [ Parser->pos ].text ) )
+    {
+        node* arb_while = create_arbitrary_node( WHILE , cond );
+        expect_err( OPENBR );
+        ++Parser->pos;
+        node* expr = parse_primary( Parser );
+        ++Parser->pos;
+        // expect_err( CLOSEBR );
+        expr->parent = arb_while;
+        append_child( cond , arb_while );
+        append_child( arb_while , expr );
+        Parser->current_parent = arb_while;
 
         return parse( Parser );
     }

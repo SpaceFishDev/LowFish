@@ -1,6 +1,6 @@
 src := $(wildcard src/*.c) $(wildcard src/lexer/*.c) $(wildcard src/parser/*.c)
 out := lowfish
-cflags := -Isrc/
+cflags := -Isrc/ -std=c99
 
 all: $(src)
 	gcc $(src) $(cflags) -o $(out)

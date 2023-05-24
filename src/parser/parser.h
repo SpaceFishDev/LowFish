@@ -29,6 +29,7 @@ typedef enum
     ASSIGNMENT ,
     CONDITIONAL ,
     IF ,
+    WHILE ,
 } node_type;
 
 

@@ -1,4 +1,4 @@
-i32 main(i32 argc, u8 argv )
+i32 main()
 {
-    printf("Hello, world");
+    printf("Hello, world!");
 }
