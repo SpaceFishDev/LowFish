@@ -30,6 +30,7 @@ typedef enum
     CONDITIONAL ,
     IF ,
     WHILE ,
+    ELSE ,
 } node_type;
 
 

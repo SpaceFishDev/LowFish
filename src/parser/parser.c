@@ -1,7 +1,27 @@
 #include"parser.h"
 
 #define node_type_to_string(x) \
-    (((char*[]){"PROGRAM", "FUNCTION", "TYPE", "TOKEN_NODE","BLOCK", "NORMALBLOCK", "ARROWBLOCK", "EXTERN", "ASM", "BASICEXPRESSION", "EXPRESSION", "BINEXPR", "FUNCTION_CALL", "VARDECL", "ASSIGNMENT", "CONDITIONAL", "IF", "WHILE"})[x])
+    (((char*[]){ \
+"PROGRAM" , \
+"FUNCTION" , \
+"TYPE" , \
+"TOKEN_NODE" , \
+"BLOCK" , \
+"NORMALBLOCK" , \
+"ARROWBLOCK" , \
+"EXTERN" , \
+"ASM" , \
+"BASICEXPRESSION" , \
+"EXPRESSION" , \
+"BINEXPR" , \
+"FUNCTION_CALL" , \
+"VARDECL" , \
+"ASSIGNMENT" , \
+"CONDITIONAL" , \
+"IF" , \
+"WHILE" , \
+"ELSE" , \
+        } ) [ x ] )
 
 node* append_child_to_x( node* x , node* y )
 {
@@ -306,10 +326,10 @@ node* parse_primary( parser* Parser )
 node* parse_conditional( parser* Parser )
 {
     node* cond = create_arbitrary_node( CONDITIONAL , Parser->current_parent );
-    append_child( Parser->current_parent , cond );
-    Parser->current_parent = cond;
+    // Parser->current_parent = cond;
     if ( !strcmp( "if" , Parser->tokens [ Parser->pos ].text ) )
     {
+        append_child( Parser->current_parent , cond );
         node* arb_if = create_arbitrary_node( IF , cond );
         expect_err( OPENBR );
         ++Parser->pos;
@@ -325,6 +345,7 @@ node* parse_conditional( parser* Parser )
     }
     if ( !strcmp( "while" , Parser->tokens [ Parser->pos ].text ) )
     {
+        append_child( Parser->current_parent , cond );
         node* arb_while = create_arbitrary_node( WHILE , cond );
         expect_err( OPENBR );
         ++Parser->pos;
@@ -337,6 +358,23 @@ node* parse_conditional( parser* Parser )
         Parser->current_parent = arb_while;
 
         return parse( Parser );
+    }
+    if ( !strcmp( "else" , Parser->tokens [ Parser->pos ].text ) )
+    {
+        if ( expect_no_err( BEGINOFBLOCK ) )
+        {
+            // normal else
+            if ( Parser->current_parent->n_child && Parser->current_parent->children [ Parser->current_parent->n_child - 1 ]->type == CONDITIONAL )
+            {
+                node* arb_else = create_arbitrary_node( ELSE , cond );
+                ++Parser->pos;
+                append_child( Parser->current_parent->children [ Parser->current_parent->n_child - 1 ] , arb_else );
+                Parser->current_parent = arb_else;
+                return parse( Parser );
+            }
+            put_error( "Floating else statement." , 0 , Parser->tokens [ Parser->pos ] );
+        }
+        // the comment under this explains the current state.
     }
     // I'll do something when I'm not lazy, for now just a seg fault
 }

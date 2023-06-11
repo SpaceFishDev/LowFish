@@ -1,4 +1,14 @@
-i32 main()
-{
-    printf("Hello, world!");
-}
+i32 main()           
+{           
+    printf("Hello, world!");           
+    if(a)           
+    {           
+        do(b);           
+    }           
+    else{ 
+        if(b)          
+        {           
+            do(c);           
+        }    
+    }     
+} 
