@@ -1,14 +1,5 @@
-i32 main()           
-{           
-    printf("Hello, world!");           
-    if(a)           
-    {           
-        do(b);           
-    }           
-    else{ 
-        if(b)          
-        {           
-            do(c);           
-        }    
-    }     
-} 
+extern("printf");
+i32 main() 
+{
+    printf("Hello, World!");
+}      
