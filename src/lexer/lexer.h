@@ -41,7 +41,7 @@ typedef enum
     MUL ,
     SEMI ,
     NL ,
-    COMMA,
+    COMMA ,
     END_OF_FILE ,
     BAD ,
     NOTOKEN ,

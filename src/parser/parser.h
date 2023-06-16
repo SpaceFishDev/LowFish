@@ -59,5 +59,6 @@ parser* create_parser( token* tokens , size_t n_token );
 node* parse( parser* Parser );
 node* create_node( node_type type , token node_token , node* parent );
 void print_tree( node* n , int indent );
+void put_error( char* msg , node* Node , token t );
 
 #endif

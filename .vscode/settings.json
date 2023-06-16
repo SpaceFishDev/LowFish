@@ -1,5 +1,6 @@
 {
     "files.associations": {
-        "typechecker.h": "c"
+        "typechecker.h": "c",
+        "parser.h": "c"
     }
 }

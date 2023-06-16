@@ -10,6 +10,7 @@
 #include<lexer/lexer.h>
 #include<util.h>
 #include<parser/parser.h>
+#include<typechecker/typechecker.h>
 
 int main( void )
 {
@@ -33,5 +34,6 @@ int main( void )
     parser* Parser = create_parser( Tokens , n_token - 1 );
     node* root = parse( Parser );
     print_tree( root , 0 );
+    type_check_tree( root , calloc( sizeof( typechecker ) , 1 ) );
     return 0;
 }

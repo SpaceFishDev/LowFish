@@ -25,6 +25,17 @@
 
 node* append_child_to_x( node* x , node* y )
 {
+    if ( !x )
+    {
+        x = calloc( sizeof( node ) , 1 );
+    }
+    if ( !x->children )
+    {
+        x->children = malloc( sizeof( node* ) );
+        x->children [ 0 ] = y;
+        x->n_child = 1;
+        return x;
+    }
     x->children = realloc( x->children , sizeof( node* ) * ( x->n_child + 1 ) );
     x->children [ x->n_child ] = y;
     ++x->n_child;
@@ -128,7 +139,7 @@ bool f_is_type( int type , parser* Parser , bool err )
 node* parse_primary( parser* Parser );
 
 #define type_token(x) \
-    (( !strcmp(x.text, "struct") || !strcmp(x.text, "i32") || !strcmp(x.text, "i16") || !strcmp(x.text, "i8")) || (!strcmp(x.text, "u32") || !strcmp(x.text, "u16") || !strcmp(x.text, "u8"))) 
+    (( !strcmp(x.text, "ptr8") || !strcmp(x.text, "ptr16") || !strcmp(x.text, "ptr32") || !strcmp(x.text, "struct") || !strcmp(x.text, "i32") || !strcmp(x.text, "i16") || !strcmp(x.text, "i8")) || (!strcmp(x.text, "u32") || !strcmp(x.text, "u16") || !strcmp(x.text, "u8")) )
 
 node* parse_expression( parser* Parser );
 node* parse_assignment( parser* Parser , node* parent )
@@ -294,6 +305,11 @@ node* parse_primary( parser* Parser )
     if ( left->type == BLOCK )
     {
         Parser->current_parent = left;
+        if ( expect_no_err( ENDOFBLOCK ) )
+        {
+            printf( "here\n" );
+            return left;
+        }
     }
     while ( expect_no_err( PLUS ) || expect_no_err( MINUS ) || expect_no_err( BOOLAND ) || expect_no_err( BOOLOR ) )
     {
@@ -380,6 +396,7 @@ node* parse_conditional( parser* Parser )
 }
 node* parse_func( parser* Parser )
 {
+
     node* type_node = create_node( TYPE , Parser->tokens [ Parser->pos - 1 ] , 0 );
     expect_err( OPENBR );
     node* func = create_arbitrary_node( FUNCTION , 0 );
@@ -397,7 +414,7 @@ node* parse_func( parser* Parser )
     --Parser->pos;
     expect_err( CLOSEBR );
     ++Parser->pos;
-    append_child( Parser->current_parent , func );
+    append_child( Parser->root , func );
     Parser->current_parent = func;
     return parse( Parser );
 }
@@ -462,8 +479,8 @@ node* parse_expression( parser* Parser )
         case ENDOFBLOCK:
             {
                 ++Parser->pos;
-                node* p = Parser->current_parent->parent;
-                while ( p && p->type != PROGRAM && p->type != BLOCK )
+                node* p = Parser->current_parent;
+                while ( p && p->parent && p->type != BLOCK && p->type != PROGRAM )//( p && p->parent && p->type != PROGRAM && !( p->type == BLOCK && p->type != Parser->current_parent ) )
                 {
                     p = p->parent;
                 }

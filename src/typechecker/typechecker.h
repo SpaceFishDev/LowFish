@@ -7,12 +7,25 @@ typedef struct
 {
     char* title;
     char* type;
+    size_t n_args; // -1 means unknown, like for a C function.
 } function;
 
+typedef struct
+{
+    char* title;
+    char* type;
+    size_t scope;
+    function func;
+} variable;
 
 typedef struct
-{ } typechecker;
+{
+    size_t n_func;
+    function* functions;
+    size_t n_var;
+    variable* variables;
+} typechecker;
 
-bool type_check_tree( node* tree );
+bool type_check_tree( node* tree , typechecker* type_checker );
 
 #endif
