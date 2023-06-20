@@ -1,27 +1,6 @@
 #include"parser.h"
 
-#define node_type_to_string(x) \
-    (((char*[]){ \
-"PROGRAM" , \
-"FUNCTION" , \
-"TYPE" , \
-"TOKEN_NODE" , \
-"BLOCK" , \
-"NORMALBLOCK" , \
-"ARROWBLOCK" , \
-"EXTERN" , \
-"ASM" , \
-"BASICEXPRESSION" , \
-"EXPRESSION" , \
-"BINEXPR" , \
-"FUNCTION_CALL" , \
-"VARDECL" , \
-"ASSIGNMENT" , \
-"CONDITIONAL" , \
-"IF" , \
-"WHILE" , \
-"ELSE" , \
-        } ) [ x ] )
+
 
 node* append_child_to_x( node* x , node* y )
 {
@@ -47,11 +26,12 @@ node* append_child_to_x( node* x , node* y )
 
 void put_error( char* msg , node* Node , token t )
 {
+
     if ( Node )
         printf( "%s LN: %d COL: %d\n" , msg , Node->node_token.row , Node->node_token.col );
     else
         printf( "%s LN: %d COL: %d\n" , msg , t.row , t.col );
-
+    free( msg );
     exit( -1 );
 }
 
@@ -535,4 +515,13 @@ void print_tree( node* n , int indent )
         print_n_times( "    " , indent - 1 );
         printf( "}\n" );
     }
+}
+
+void free_tree( node* n )
+{
+    for ( size_t i = 0; i < n->n_child; ++i )
+    {
+        free_tree( n->children [ i ] );
+    }
+    free( n );
 }

@@ -15,7 +15,7 @@ typedef struct
     char* title;
     char* type;
     size_t scope;
-    function func;
+    function* func;
 } variable;
 
 typedef struct
@@ -24,8 +24,10 @@ typedef struct
     function* functions;
     size_t n_var;
     variable* variables;
+    size_t scope;
 } typechecker;
 
 bool type_check_tree( node* tree , typechecker* type_checker );
+void restructure_parents( node* tree );
 
 #endif

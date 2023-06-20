@@ -1,7 +1,6 @@
-extern("printf");
+extern ("printf");
 
-i32 printf(ptr8 string){}
 i32 main(i32 argc, ptr8 argv) 
 {
-    i32 printed = printf("Hello, World!");
+    i32 printed = printf("Hello, world");
 }      

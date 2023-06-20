@@ -1,25 +1,10 @@
 #include<lexer/lexer.h>
 
-typedef enum
-{
-    DIGIT ,
-} fragment;
 
 
-/// @brief 
-/// @param Fragment The fragment type to compare c to.
-/// @param c The character you are using.
-/// @return Returns whether the given character corresponds to the fragment. As a boolean.
-bool isFragment( fragment Fragment , char c )
+bool is_digit( char c )
 {
-    switch ( Fragment )
-    {
-        case DIGIT:
-            {
-                return c >= '0' && c <= '9';
-            } break;
-    }
-    return false;
+    return c >= '0' && c <= '9';
 }
 
 
@@ -204,34 +189,42 @@ token lex( lexer* Lexer )
                 size_t start = Lexer->pos;
                 size_t column = Lexer->column;
                 size_t line = Lexer->line;
-                char* begin;
+                char* value_of_string;
                 while ( Lexer->src [ Lexer->pos ] != '"' )
                 {
                     next;
                 }
                 size_t len = Lexer->pos - start;
 
-                begin = malloc( len + 1 );
-                begin [ len ] = 0;
+                value_of_string = malloc( len + 1 );
+                memset( value_of_string , 0 , len + 1 );
                 Lexer->pos = start;
                 while ( Lexer->src [ Lexer->pos ] != '"' )
                 {
-                    begin [ Lexer->pos - start ] = Lexer->src [ Lexer->pos ];
+                    value_of_string [ Lexer->pos - start ] = Lexer->src [ Lexer->pos ];
                     next;
                 }
                 next;
-                return create_token( column , line , begin , STRING );
+                return create_token( column , line , value_of_string , STRING );
             }
 #pragma endregion
     }
 #pragma region ID
 
-    if ( ( Lexer->src [ Lexer->pos ] >= 'A' && Lexer->src [ Lexer->pos ] <= 'Z' ) || ( Lexer->src [ Lexer->pos ] >= 'a' && Lexer->src [ Lexer->pos ] <= 'z' ) || ( Lexer->src [ Lexer->pos ] == '_' ) )
+    if (
+        ( Lexer->src [ Lexer->pos ] >= 'A' && Lexer->src [ Lexer->pos ] <= 'Z' )
+        || ( Lexer->src [ Lexer->pos ] >= 'a' && Lexer->src [ Lexer->pos ] <= 'z' )
+        || ( Lexer->src [ Lexer->pos ] == '_' )
+    )
     {
         size_t start = Lexer->pos;
         size_t column = Lexer->column;
         size_t line = Lexer->line;
-        while ( Lexer->src [ Lexer->pos ] >= 'A' && Lexer->src [ Lexer->pos ] <= 'Z' || Lexer->src [ Lexer->pos ] >= 'a' && Lexer->src [ Lexer->pos ] <= 'z' || Lexer->src [ Lexer->pos ] == '_' || isFragment( DIGIT , Lexer->src [ Lexer->pos ] ) )
+        while (
+            Lexer->src [ Lexer->pos ] >= 'A' && Lexer->src [ Lexer->pos ] <= 'Z'
+            || Lexer->src [ Lexer->pos ] >= 'a' && Lexer->src [ Lexer->pos ] <= 'z'
+            || Lexer->src [ Lexer->pos ] == '_' || is_digit( Lexer->src [ Lexer->pos ] )
+        )
         {
             next;
         }
@@ -239,7 +232,12 @@ token lex( lexer* Lexer )
         char* result = malloc( len + 1 );
         result [ len ] = 0;
         Lexer->pos = start;
-        while ( Lexer->src [ Lexer->pos ] >= 'A' && Lexer->src [ Lexer->pos ] <= 'Z' || Lexer->src [ Lexer->pos ] >= 'a' && Lexer->src [ Lexer->pos ] <= 'z' || Lexer->src [ Lexer->pos ] == '_' || isFragment( DIGIT , Lexer->src [ Lexer->pos ] ) )
+        while (
+            Lexer->src [ Lexer->pos ] >= 'A' && Lexer->src [ Lexer->pos ] <= 'Z'
+            || Lexer->src [ Lexer->pos ] >= 'a' && Lexer->src [ Lexer->pos ] <= 'z'
+            || Lexer->src [ Lexer->pos ] == '_'
+            || is_digit( Lexer->src [ Lexer->pos ] )
+        )
         {
             result [ Lexer->pos - start ] = Lexer->src [ Lexer->pos ];
             next;
@@ -248,14 +246,14 @@ token lex( lexer* Lexer )
     }
 #pragma endregion
 #pragma region NUMBER
-    if ( isFragment( DIGIT , Lexer->src [ Lexer->pos ] ) )
+    if ( is_digit( Lexer->src [ Lexer->pos ] ) )
     {
         char* result;
         size_t start = Lexer->pos;
         size_t column = Lexer->column;
         size_t line = Lexer->line;
 
-        while ( isFragment( DIGIT , Lexer->src [ Lexer->pos ] ) )
+        while ( is_digit( Lexer->src [ Lexer->pos ] ) )
         {
             next;
         }
@@ -263,7 +261,7 @@ token lex( lexer* Lexer )
         {
             next;
         }
-        while ( isFragment( DIGIT , Lexer->src [ Lexer->pos ] ) )
+        while ( is_digit( Lexer->src [ Lexer->pos ] ) )
         {
             next;
         }
@@ -271,7 +269,7 @@ token lex( lexer* Lexer )
         result = malloc( len );
         result [ len ] = 0;
         Lexer->pos = start;
-        while ( isFragment( DIGIT , Lexer->src [ Lexer->pos ] ) )
+        while ( is_digit( Lexer->src [ Lexer->pos ] ) )
         {
             result [ Lexer->pos - start ] = Lexer->src [ Lexer->pos ];
             next;
@@ -281,7 +279,7 @@ token lex( lexer* Lexer )
             result [ Lexer->pos - start ] = '.';
             next;
         }
-        while ( isFragment( DIGIT , Lexer->src [ Lexer->pos ] ) )
+        while ( is_digit( Lexer->src [ Lexer->pos ] ) )
         {
             result [ Lexer->pos - start ] = Lexer->src [ Lexer->pos ];
             next;
@@ -291,4 +289,3 @@ token lex( lexer* Lexer )
 #pragma endregion
     return create_token( Lexer->column , Lexer->line , "BAD" , BAD );
 }
-
