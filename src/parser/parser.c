@@ -28,9 +28,9 @@ void put_error( char* msg , node* Node , token t )
 {
 
     if ( Node )
-        printf( "%s LN: %d COL: %d\n" , msg , Node->node_token.row , Node->node_token.col );
+        printf( "ERROR: %s LN: %d COL: %d\n" , msg , Node->node_token.row , Node->node_token.col );
     else
-        printf( "%s LN: %d COL: %d\n" , msg , t.row , t.col );
+        printf( "ERROR: %s LN: %d COL: %d\n" , msg , t.row , t.col );
     free( msg );
     exit( -1 );
 }

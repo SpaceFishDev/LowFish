@@ -9,5 +9,8 @@ Lowfish is a low level compiled programming language.
 ### Hello world.
 ```c
 extern("printf")
-i32 main() -> printf("Hello, world");
+i32 main()
+{
+	printf("Hello, World");
+}
 ```

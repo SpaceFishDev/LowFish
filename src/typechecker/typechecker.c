@@ -1,7 +1,9 @@
 #include<typechecker/typechecker.h>
+#include<assert.h>
 
 bool is_node( node* t , node_type type )
 {
+    assert((t && "T should exist in this situation."));
     return t->type == type;
 }
 
@@ -89,8 +91,6 @@ variable* get_var( typechecker* type_checker , char* title , size_t scope , func
     }
     return 0;
 }
-
-
 bool type_check_tree( node* current , typechecker* type_checker )
 {
     if ( !current )
@@ -115,9 +115,10 @@ bool type_check_tree( node* current , typechecker* type_checker )
                     }
                 }
 					printf(
-							"WARNING: UNSAFE FUNCTION DEFINITION FOR '%s': The type checker is unable to check functions used from extern make sure that you match the argument count and type.\n", 
-							current->children[0]->node_token.text
-					);
+							"WARNING: UNSAFE FUNCTION DEFINITION FOR '%s': %s",
+							current->children[0]->node_token.text,
+							": The type checker is unable to check functions used from extern make sure that you match the argument count and type.\n" 
+					); // Extern is sort of a black box for the compiler, we have no idea what is actually going on, since this links to any non-lowfish function.
                     type_checker->functions = realloc( type_checker->functions , ( ++type_checker->n_func ) * sizeof( function ) );
                     type_checker->functions [ type_checker->n_func - 1 ] = ( function ) { current->children [ 0 ]->node_token.text, "unk", -1 };
             } break;
@@ -241,11 +242,30 @@ bool type_check_tree( node* current , typechecker* type_checker )
                         variable* var_get = get_var( type_checker , basic_expr->node_token.text , type_checker->scope , func );
                         if ( !var_get )
                         {
+							// no need to free because put_error exits the program.
                             char* buffer = malloc( 1024 );
-                            sprintf( buffer , "The variable you are trying to use '%s' does not exist." , basic_expr->node_token.text );
+                            sprintf( buffer , 
+									"The variable you are trying to use '%s' does not exist." 
+									, basic_expr->node_token.text );
                             put_error( buffer , 0 , basic_expr->node_token );
                         }
+						if(strcmp(var->type, var_get->type))
+						{
+							char* buffer = malloc(1024);
+							sprintf(buffer, "Incompatible types are used in an assignment, type '%s' is assigned to a variable of type '%s'.", var->type, var_get->type);
+							put_error(buffer, 0, basic_expr->node_token);
+						}
                     }
+					else if(basic_expr->node_token.type == STRING)
+					{
+						node* title = get_child_recursive(current, TOKENNODE);
+						node* node_func = get_parent(current, FUNCTION)->children[1];
+						function* func = get_function(type_checker, node_func->node_token.text);
+						variable* var = get_var(type_checker, title->node_token.text, type_checker->scope, func);
+						if(strlen(basic_expr->node_token.text) == 1)
+						{
+						}
+					}
                 }
             } break;
     }
@@ -254,5 +274,5 @@ end:
     {
         type_check_tree( current->children [ i ] , type_checker );
     }
-    return true;
-=
+	return true;
+}

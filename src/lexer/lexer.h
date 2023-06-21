@@ -61,7 +61,7 @@ typedef struct
 #define create_token(col, row, text, type) \
 ((token){col,row,type,strlen(text),text})
 
-#define token_type_to_string(type) \
+#define token_type_to_string(__type) \
     (((char*[]) \
     { \
         "STRING",  \
@@ -97,7 +97,7 @@ typedef struct
         "END_OF_FILE",  \
         "BAD", \
         "NOTOKEN", \
-        })[type])
+        })[__type])
 
 typedef struct
 {

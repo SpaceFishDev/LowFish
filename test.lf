@@ -1,6 +1,6 @@
 extern ("printf");
-
 i32 main(i32 argc, ptr8 argv) 
 {
-    i32 printed = printf("Hello, world");
+	i32 y = printf("Hello, World");
 }      
+
