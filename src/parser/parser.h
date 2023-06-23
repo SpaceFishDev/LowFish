@@ -2,12 +2,12 @@
 
 #define PARSER_H
 
-#include <lexer/lexer.h>
+#include "../lexer/lexer.h"
 #include <stdlib.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <stdio.h>
-#include <util.h>
+#include "../util.h"
 #define node_type_to_string(x) \
     (((char *[]){              \
         "PROGRAM",             \
@@ -29,6 +29,7 @@
         "IF",                  \
         "WHILE",               \
         "ELSE",                \
+        "REFERENCE",           \
     })[x])
 #undef next
 typedef enum
@@ -52,6 +53,7 @@ typedef enum
     IF,
     WHILE,
     ELSE,
+    REFERENCE
 } node_type;
 
 typedef struct node

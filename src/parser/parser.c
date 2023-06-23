@@ -116,7 +116,7 @@ bool f_is_type(int type, parser *Parser, bool err)
 node *parse_primary(parser *Parser);
 
 #define type_token(x) \
-    ((!strcmp(x.text, "ptr8") || !strcmp(x.text, "ptr16") || !strcmp(x.text, "ptr32") || !strcmp(x.text, "struct") || !strcmp(x.text, "i32") || !strcmp(x.text, "i16") || !strcmp(x.text, "i8")) || (!strcmp(x.text, "u32") || !strcmp(x.text, "u16") || !strcmp(x.text, "u8")))
+    ((!strcmp(x.text, "ptr8") || !strcmp(x.text, "ptr") || !strcmp(x.text, "ptr16") || !strcmp(x.text, "ptr32") || !strcmp(x.text, "struct") || !strcmp(x.text, "i32") || !strcmp(x.text, "i16") || !strcmp(x.text, "i8")) || (!strcmp(x.text, "u32") || !strcmp(x.text, "u16") || !strcmp(x.text, "u8")))
 
 node *parse_expression(parser *Parser);
 node *parse_assignment(parser *Parser, node *parent)
@@ -272,7 +272,6 @@ node *parse_primary(parser *Parser)
         Parser->current_parent = left;
         if (expect_no_err(ENDOFBLOCK))
         {
-            printf("here\n");
             return left;
         }
     }
@@ -416,6 +415,26 @@ node *parse_expression(parser *Parser)
     node *arb_expr = create_arbitrary_node(EXPRESSION, Parser->current_parent);
     switch (Parser->tokens[Parser->pos].type)
     {
+	case DEREF:
+	{
+		node* parent = Parser->current_parent;
+		node *id = create_node(TOKENNODE, Parser->tokens[Parser->pos], parent);
+		if (!expect_no_err(EQUAL))
+		{
+			return id;
+		}
+		// safe to assume its an actual assignment
+		expect_err(EQUAL);
+		++Parser->pos; // skip the equal
+		node *next = parse_primary(Parser);
+		node *assign = create_arbitrary_node(ASSIGNMENT, parent);
+		append_child(assign, id);
+		append_child(assign, next);
+		--Parser->pos; // go back or weird errors happen??
+		append_child(Parser->current_parent, assign);
+
+		return parse(Parser);
+	} 
     case ID:
     {
         return parse_full_id(Parser);

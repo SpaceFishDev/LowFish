@@ -5,8 +5,8 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stddef.h>
+#include <stdbool.h>
 
-typedef uint8_t bool;
 #define true 1
 #define false 0
 

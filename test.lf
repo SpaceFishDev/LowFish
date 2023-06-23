@@ -1,7 +1,7 @@
-extern ("printf");
+extern("printf");
 i32 main()
 {
-  i32 return_value = printf("Hello, world!");
-  i32 x = return_value;
-  return x;
+	i32 y = 3;
+	ptr32 x = &y;
+	*x = 32;
 }

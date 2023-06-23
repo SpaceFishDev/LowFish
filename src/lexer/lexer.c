@@ -1,4 +1,4 @@
-#include <lexer/lexer.h>
+#include "lexer.h" 
 
 bool is_digit(char c)
 {
@@ -44,6 +44,30 @@ token lex(lexer *Lexer)
     case '&':
     {
         next;
+        if (Lexer->src[Lexer->pos] >= 'a' && Lexer->src[Lexer->pos] <= 'z' || Lexer->src[Lexer->pos] >= 'A' && Lexer->src[Lexer->pos] <= 'Z' || Lexer->src[Lexer->pos] == '_')
+        {
+            size_t start = Lexer->pos;
+            size_t column = Lexer->column;
+            size_t line = Lexer->line;
+            while (
+                Lexer->src[Lexer->pos] >= 'A'
+				&& Lexer->src[Lexer->pos] <= 'Z' || Lexer->src[Lexer->pos] >= 'a' && Lexer->src[Lexer->pos] <= 'z' || Lexer->src[Lexer->pos] == '_' || is_digit(Lexer->src[Lexer->pos]))
+            {
+                next;
+            }
+            size_t len = Lexer->pos - start;
+            char *result = malloc(len + 1);
+            result[len] = 0;
+            Lexer->pos = start;
+            while (
+                Lexer->src[Lexer->pos] >= 'A' 
+				&& Lexer->src[Lexer->pos] <= 'Z' || Lexer->src[Lexer->pos] >= 'a' && Lexer->src[Lexer->pos] <= 'z' || Lexer->src[Lexer->pos] == '_' || is_digit(Lexer->src[Lexer->pos]))
+            {
+                result[Lexer->pos - start] = Lexer->src[Lexer->pos];
+                next;
+            }
+            return create_token(column, line, result, REF);
+        }
         if (Lexer->src[Lexer->pos] == '&')
         {
             next;
@@ -124,6 +148,30 @@ token lex(lexer *Lexer)
     case '*':
     {
         next;
+        if (Lexer->src[Lexer->pos] >= 'a' && Lexer->src[Lexer->pos] <= 'z' || Lexer->src[Lexer->pos] >= 'A' && Lexer->src[Lexer->pos] <= 'Z' || Lexer->src[Lexer->pos] == '_')
+        {
+            size_t start = Lexer->pos;
+            size_t column = Lexer->column;
+            size_t line = Lexer->line;
+            while (
+                Lexer->src[Lexer->pos] >= 'A'
+				&& Lexer->src[Lexer->pos] <= 'Z' || Lexer->src[Lexer->pos] >= 'a' && Lexer->src[Lexer->pos] <= 'z' || Lexer->src[Lexer->pos] == '_' || is_digit(Lexer->src[Lexer->pos]))
+            {
+                next;
+            }
+            size_t len = Lexer->pos - start;
+            char *result = malloc(len + 1);
+            result[len] = 0;
+            Lexer->pos = start;
+            while (
+                Lexer->src[Lexer->pos] >= 'A' 
+				&& Lexer->src[Lexer->pos] <= 'Z' || Lexer->src[Lexer->pos] >= 'a' && Lexer->src[Lexer->pos] <= 'z' || Lexer->src[Lexer->pos] == '_' || is_digit(Lexer->src[Lexer->pos]))
+            {
+                result[Lexer->pos - start] = Lexer->src[Lexer->pos];
+                next;
+            }
+            return create_token(column, line, result, DEREF);
+        }
         return create_token(Lexer->column, Lexer->line, "*", MUL);
     }
     case '>':

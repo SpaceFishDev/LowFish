@@ -6,7 +6,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <util.h>
+#include "../util.h"
 
 typedef enum
 {
@@ -43,6 +43,8 @@ typedef enum
     END_OF_FILE,
     BAD,
     NOTOKEN,
+    REF,
+	DEREF,
 } token_type;
 
 typedef struct
@@ -60,7 +62,7 @@ typedef struct
     ((token){col, row, type, strlen(text), text})
 
 #define token_type_to_string(__type) \
-    (((char *[]){                    \
+    (((char *[]){    \
         "STRING",                    \
         "NUMBER",                    \
         "ID",                        \
@@ -94,7 +96,9 @@ typedef struct
         "END_OF_FILE",               \
         "BAD",                       \
         "NOTOKEN",                   \
-    })[__type])
+        "REF",                       \
+		"DEREF"                      \
+	})[__type])
 
 typedef struct
 {
