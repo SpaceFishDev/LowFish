@@ -3,15 +3,13 @@
 #define TYPE_CHECKER_H
 #include "../parser/parser.h"
 
-typedef struct
-{
+typedef struct {
     char *title;
     char *type;
-    size_t n_args; // -1 means unknown, like for a C function.
+    size_t n_args;  // -1 means unknown, like for a C function.
 } function;
 
-typedef struct var
-{
+typedef struct var {
     char *title;
     char *type;
     size_t scope;
@@ -19,12 +17,13 @@ typedef struct var
     struct var *pointing_to;
 } variable;
 
-typedef struct
-{
+typedef struct {
     size_t n_func;
     function *functions;
     size_t n_var;
     variable *variables;
+    size_t n_label;
+    char **labels;
     size_t scope;
 } typechecker;
 

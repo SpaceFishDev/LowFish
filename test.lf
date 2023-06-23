@@ -1,7 +1,8 @@
 extern("printf");
 i32 main()
 {
-	i32 y = 3;
-	ptr32 x = &y;
-	*x = 32;
+	i32 x = 5 / 2;
+	i32 y = 5 * 5;
+	i32 z = x + y;
 }
+
