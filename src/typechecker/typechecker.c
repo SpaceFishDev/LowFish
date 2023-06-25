@@ -158,6 +158,13 @@ node *eval(node *x, node *parent);
 
 char *get_type_recursive(typechecker *type_checker, node *expr)
 {
+	if (expr->type == BINEXPR)
+	{
+		if (expr->children[0]->node_token.text[0] == '=')
+		{
+			return mkstr("bool");
+		}
+	}
 	if (expr->type == BASICEXPRESSION)
 	{
 		if (expr->children[0]->node_token.type == ID)
@@ -205,7 +212,15 @@ char *get_type_recursive(typechecker *type_checker, node *expr)
 		}
 		if (expr->children[0]->node_token.type == NUMBER)
 		{
-			return mkstr("i32");
+			return mkstr("i32?");  // question mark denotes literal
+		}
+		if (expr->children[0]->node_token.type == STRING)
+		{
+			if (strlen(expr->children[0]->node_token.text) == 1)
+			{
+				return mkstr("u8?");
+			}
+			return mkstr("ptr8");
 		}
 	}
 }
@@ -344,8 +359,50 @@ node *eval(node *x, node *parent)
 						"*", token_type_to_string(left->node_token.type),
 						token_type_to_string(right->node_token.type), right);
 				}
+				case '=':
+				{
+					if (left->node_token.type == STRING &&
+						right->node_token.type == STRING)
+					{
+						char *buf = malloc(32);
+						sprintf(buf, "%d",
+								!strcmp(left->node_token.text,
+										right->node_token.text));
+						node *x =
+							create_arbitrary_node(BASICEXPRESSION, parent);
+						node *n = create_node(
+							TOKENNODE,
+							create_token(left->node_token.col,
+										 left->node_token.row, buf, NUMBER),
+							x);
+						append_child(x, n);
+						return x;
+					}
+					if (left->node_token.type == NUMBER &&
+						right->node_token.type == NUMBER)
+					{
+						int value = atoi(left->node_token.text) ==
+									atoi(right->node_token.text);
+						char *buf = malloc(32);
+						sprintf(buf, "%d", value);
+						node *x =
+							create_arbitrary_node(BASICEXPRESSION, parent);
+						node *n = create_node(
+							TOKENNODE,
+							create_token(left->node_token.col,
+										 left->node_token.row, buf, NUMBER),
+							x);
+						append_child(x, n);
+						return x;
+					}
+					put_error_incompatible_operation(
+						"==", token_type_to_string(left->node_token.type),
+						token_type_to_string(right->node_token.type), right);
+				}
 			}
 		}
+		default:
+			return 0;
 	}
 }
 
@@ -358,6 +415,32 @@ start:
 	}
 	switch (current->type)
 	{
+		case RETURN:
+		{
+			node *func_parent = get_parent(current, FUNCTION)->children[1];
+			variable *v = get_var(
+				type_checker, current->node_token.text, type_checker->scope,
+				get_function(type_checker, func_parent->node_token.text));
+			if (!v)
+			{
+				char *buffer = malloc(1024);
+				sprintf(buffer, "Variable '%s' does not exist.\n",
+						current->node_token.text);
+			}
+			if (strcmp(v->type,
+					   get_function(type_checker, func_parent->node_token.text)
+						   ->type))
+			{
+				char *buffer = malloc(1024);
+				sprintf(buffer,
+						"Function '%s' expects a return type of '%s' but was "
+						"given a '%s'.",
+						func_parent->node_token.text,
+						get_function(type_checker, func_parent->node_token.text)
+							->type,
+						v->type);
+			}
+		}
 		case LABEL_NODE:
 		{
 			bool found = false;
@@ -409,6 +492,23 @@ start:
 				goto end;
 			}
 			goto start;
+		}
+		break;
+		case WHILE:
+		{
+			char *type = get_type_recursive(type_checker, current->children[0]);
+			if (!type || (strcmp(type, "i32") &&
+						  (!starts_with(type, "i") && !starts_with(type, "u") &&
+						   type[strlen(type)] == '?')))
+			{
+				char *buffer = malloc(1024);
+				sprintf(buffer,
+						"While loops can only be used using enumerable "
+						"conditions. You gave a type '%s' but a while loop "
+						"requires an integer type.",
+						type);
+				put_error(buffer, 0, current->children[0]->node_token);
+			}
 		}
 		break;
 		case EXTERN:

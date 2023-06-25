@@ -1,8 +1,11 @@
 extern("printf");
+
+
 i32 main()
 {
-	i32 x = 5 / 2;
-	i32 y = 5 * 5;
-	i32 z = x + y;
+	while(1 ==  2)
+	{
+		printf("BOB");	
+	}
 }
 
