@@ -1,0 +1,29 @@
+<NODE( 'PROGRAM', PROGRAM )>
+{
+    <NODE( 'EXPRESSION', EXPRESSION )>
+    {
+        <NODE( 'EXTERN', EXTERN )>
+        {
+            <NODE( 'printf', TOKEN_NODE )>
+        }
+    }
+    <NODE( 'FUNCTION', FUNCTION )>
+    {
+        <NODE( 'i32', TYPE )>
+        <NODE( 'main', TOKEN_NODE )>
+        <NODE( 'BLOCK', BLOCK )>
+        {
+            <NODE( 'EXPRESSION', EXPRESSION )>
+            {
+                <NODE( 'printf', FUNCTION_CALL )>
+                {
+                    <NODE( 'BASICEXPRESSION', BASICEXPRESSION )>
+                    {
+                        <NODE( 'Hello, World!', TOKEN_NODE )>
+                    }
+                }
+            }
+        }
+    }
+}
+WARNING: UNSAFE FUNCTION DEFINITION FOR 'printf':  The type checker is unable to check functions used from extern make sure that you match the argument count and type.

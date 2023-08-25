@@ -1,0 +1,19 @@
+<NODE( 'PROGRAM', PROGRAM )>
+{
+    <NODE( 'FUNCTION', FUNCTION )>
+    {
+        <NODE( 'i32', TYPE )>
+        <NODE( 'main', TOKEN_NODE )>
+        <NODE( 'VARDECL', VARDECL )>
+        {
+            <NODE( 'i32', TYPE )>
+            <NODE( 'argc', TOKEN_NODE )>
+        }
+        <NODE( 'VARDECL', VARDECL )>
+        {
+            <NODE( 'ptr', TYPE )>
+            <NODE( 'argv', TOKEN_NODE )>
+        }
+        <NODE( 'BLOCK', BLOCK )>
+    }
+}

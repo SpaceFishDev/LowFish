@@ -1,4 +1,4 @@
-src := $(wildcard src/*.c) $(wildcard src/lexer/*.c) $(wildcard src/parser/*.c) $(wildcard src/typechecker/*.c) $(wildcard src/ir/*.c)
+src := $(wildcard src/*.c) $(wildcard src/lexer/*.c) $(wildcard src/parser/*.c) $(wildcard src/typechecker/*.c) $(wildcard src/il/*.c)
 out := lowfish
 cflags := -Isrc/ 
 

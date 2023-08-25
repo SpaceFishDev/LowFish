@@ -146,13 +146,6 @@ void put_error_incompatible_operation(char *operation, char *a, char *b,
 	put_error(buffer, 0, n->node_token);
 }
 // put error frees the string so it gotta be on the heap :(
-char *mkstr(char *str)
-{
-	char *n = (char *)malloc(strlen(str) + 1);
-	memset(n, 0, strlen(str) + 1);
-	strcat(n, str);
-	return n;
-}
 
 node *eval(node *x, node *parent);
 

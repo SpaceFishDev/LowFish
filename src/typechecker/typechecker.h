@@ -36,4 +36,5 @@ function *get_function(typechecker *type_checker, char *title);
 
 variable *get_var(typechecker *type_checker, char *title, size_t scope,
 				  function *func);
+char *get_type_recursive(typechecker *type_checker, node *expr);
 #endif

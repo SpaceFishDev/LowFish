@@ -1,0 +1,43 @@
+<NODE( 'PROGRAM', PROGRAM )>
+{
+    <NODE( 'FUNCTION', FUNCTION )>
+    {
+        <NODE( 'i32', TYPE )>
+        <NODE( 'a', TOKEN_NODE )>
+        <NODE( 'BLOCK', BLOCK )>
+        {
+            <NODE( 'EXPRESSION', EXPRESSION )>
+            {
+                <NODE( 'VARDECL', VARDECL )>
+                {
+                    <NODE( 'i32', TYPE )>
+                    <NODE( 'ASSIGNMENT', ASSIGNMENT )>
+                    {
+                        <NODE( 'x', TOKEN_NODE )>
+                        <NODE( 'BASICEXPRESSION', BASICEXPRESSION )>
+                        {
+                            <NODE( '0', TOKEN_NODE )>
+                        }
+                    }
+                }
+            }
+            <NODE( 'EXPRESSION', EXPRESSION )>
+            {
+                <NODE( 'x', RETURN )>
+            }
+        }
+    }
+    <NODE( 'FUNCTION', FUNCTION )>
+    {
+        <NODE( 'i32', TYPE )>
+        <NODE( 'b', TOKEN_NODE )>
+        <NODE( 'BLOCK', BLOCK )>
+        {
+            <NODE( 'EXPRESSION', EXPRESSION )>
+            {
+                <NODE( 'a', FUNCTION_CALL )>
+            }
+        }
+    }
+}
+

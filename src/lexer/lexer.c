@@ -1,18 +1,28 @@
 #include "lexer.h"
 
+char *mkstr(char *str)
+{
+	char *new = malloc(strlen(str) + 1);
+	memset(new, 0, strlen(str) + 1);
+	strcpy(new, str);
+	return new;
+}
+
 bool is_digit(char c) { return c >= '0' && c <= '9'; }
 
 token lex(lexer *Lexer)
 {
 	if (Lexer->pos > strlen(Lexer->src))
 	{
-		return create_token(Lexer->column, Lexer->line, "\0", END_OF_FILE);
+		return create_token(Lexer->column, Lexer->line, mkstr("\0"),
+							END_OF_FILE);
 	}
 	switch (Lexer->src[Lexer->pos])
 	{
 		case '\0':
 		{
-			return create_token(Lexer->column, Lexer->line, "\0", END_OF_FILE);
+			return create_token(Lexer->column, Lexer->line, mkstr("\0"),
+								END_OF_FILE);
 		}
 		break;
 #pragma region SYMBOLS
@@ -20,22 +30,25 @@ token lex(lexer *Lexer)
 		case '{':
 		{
 			next;
-			return create_token(Lexer->column, Lexer->line, "{", BEGINOFBLOCK);
+			return create_token(Lexer->column, Lexer->line, mkstr("{"),
+								BEGINOFBLOCK);
 		}
 		case '}':
 		{
 			next;
-			return create_token(Lexer->column, Lexer->line, "}", ENDOFBLOCK);
+			return create_token(Lexer->column, Lexer->line, mkstr("}"),
+								ENDOFBLOCK);
 		}
 		case '(':
 		{
 			next;
-			return create_token(Lexer->column, Lexer->line, "(", OPENBR);
+			return create_token(Lexer->column, Lexer->line, mkstr("("), OPENBR);
 		}
 		case ')':
 		{
 			next;
-			return create_token(Lexer->column, Lexer->line, ")", CLOSEBR);
+			return create_token(Lexer->column, Lexer->line, mkstr(")"),
+								CLOSEBR);
 		}
 
 		case '&':
@@ -78,9 +91,11 @@ token lex(lexer *Lexer)
 			if (Lexer->src[Lexer->pos] == '&')
 			{
 				next;
-				return create_token(Lexer->column, Lexer->line, "&&", BOOLAND);
+				return create_token(Lexer->column, Lexer->line, mkstr("&&"),
+									BOOLAND);
 			}
-			return create_token(Lexer->column, Lexer->line, "&", LOGICALAND);
+			return create_token(Lexer->column, Lexer->line, mkstr("&"),
+								LOGICALAND);
 		}
 		case '|':
 		{
@@ -88,9 +103,11 @@ token lex(lexer *Lexer)
 			if (Lexer->src[Lexer->pos] == '|')
 			{
 				next;
-				return create_token(Lexer->column, Lexer->line, "||", BOOLOR);
+				return create_token(Lexer->column, Lexer->line, mkstr("||"),
+									BOOLOR);
 			}
-			return create_token(Lexer->column, Lexer->line, "|", LOGICALOR);
+			return create_token(Lexer->column, Lexer->line, mkstr("|"),
+								LOGICALOR);
 		}
 		case '=':
 		{
@@ -98,10 +115,10 @@ token lex(lexer *Lexer)
 			if (Lexer->src[Lexer->pos] == '=')
 			{
 				next;
-				return create_token(Lexer->column, Lexer->line,
-									"==", BOOLEQUAL);
+				return create_token(Lexer->column, Lexer->line, mkstr("=="),
+									BOOLEQUAL);
 			}
-			return create_token(Lexer->column, Lexer->line, "=", EQUAL);
+			return create_token(Lexer->column, Lexer->line, mkstr("="), EQUAL);
 		}
 		case '!':
 		{
@@ -109,30 +126,33 @@ token lex(lexer *Lexer)
 			if (Lexer->src[Lexer->pos] == '=')
 			{
 				next;
-				return create_token(Lexer->column, Lexer->line,
-									"!=", BOOLNOTEQUAL);
+				return create_token(Lexer->column, Lexer->line, mkstr("!="),
+									BOOLNOTEQUAL);
 			}
-			return create_token(Lexer->column, Lexer->line, "!", EXCLAMATION);
+			return create_token(Lexer->column, Lexer->line, mkstr("!"),
+								EXCLAMATION);
 		}
 		case ',':
 		{
 			next;
-			return create_token(Lexer->column, Lexer->line, ",", COMMA);
+			return create_token(Lexer->column, Lexer->line, mkstr(","), COMMA);
 		}
 		case '[':
 		{
 			next;
-			return create_token(Lexer->column, Lexer->line, "[", INDEXBROPEN);
+			return create_token(Lexer->column, Lexer->line, mkstr("["),
+								INDEXBROPEN);
 		}
 		case ']':
 		{
 			next;
-			return create_token(Lexer->column, Lexer->line, "[", INDEXBROPEN);
+			return create_token(Lexer->column, Lexer->line, mkstr("]"),
+								INDEXBROPEN);
 		}
 		case ';':
 		{
 			next;
-			return create_token(Lexer->column, Lexer->line, ";", SEMI);
+			return create_token(Lexer->column, Lexer->line, mkstr(";"), SEMI);
 		}
 		case '-':
 		{
@@ -184,19 +204,20 @@ token lex(lexer *Lexer)
 			if (Lexer->src[Lexer->pos] == '>')
 			{
 				next;
-				return create_token(Lexer->column, Lexer->line, "->", ARROW);
+				return create_token(Lexer->column, Lexer->line, mkstr("->"),
+									ARROW);
 			}
-			return create_token(Lexer->column, Lexer->line, "-", MINUS);
+			return create_token(Lexer->column, Lexer->line, mkstr("-"), MINUS);
 		}
 		case '+':
 		{
 			next;
-			return create_token(Lexer->column, Lexer->line, "+", PLUS);
+			return create_token(Lexer->column, Lexer->line, mkstr("+"), PLUS);
 		}
 		case '/':
 		{
 			next;
-			return create_token(Lexer->column, Lexer->line, "/", DIV);
+			return create_token(Lexer->column, Lexer->line, mkstr("/"), DIV);
 		}
 		case '*':
 		{
@@ -235,7 +256,7 @@ token lex(lexer *Lexer)
 				}
 				return create_token(column, line, result, DEREF);
 			}
-			return create_token(Lexer->column, Lexer->line, "*", MUL);
+			return create_token(Lexer->column, Lexer->line, mkstr("*"), MUL);
 		}
 		case '>':
 		{
@@ -243,10 +264,10 @@ token lex(lexer *Lexer)
 			if (Lexer->src[Lexer->pos] == '=')
 			{
 				next;
-				return create_token(Lexer->column, Lexer->line,
-									">=", MOREEQUAL);
+				return create_token(Lexer->column, Lexer->line, mkstr(">="),
+									MOREEQUAL);
 			}
-			return create_token(Lexer->column, Lexer->line, ">", MORE);
+			return create_token(Lexer->column, Lexer->line, mkstr(">"), MORE);
 		}
 		case '<':
 		{
@@ -254,10 +275,10 @@ token lex(lexer *Lexer)
 			if (Lexer->src[Lexer->pos] == '=')
 			{
 				next;
-				return create_token(Lexer->column, Lexer->line,
-									"<=", MOREEQUAL);
+				return create_token(Lexer->column, Lexer->line, mkstr("<="),
+									MOREEQUAL);
 			}
-			return create_token(Lexer->column, Lexer->line, "<", MORE);
+			return create_token(Lexer->column, Lexer->line, mkstr("<"), MORE);
 		}
 #pragma endregion
 #pragma region COMMENT
@@ -396,5 +417,5 @@ token lex(lexer *Lexer)
 		return create_token(column, line, result, NUMBER);
 	}
 #pragma endregion
-	return create_token(Lexer->column, Lexer->line, "BAD", BAD);
+	return create_token(Lexer->column, Lexer->line, mkstr("BAD"), BAD);
 }

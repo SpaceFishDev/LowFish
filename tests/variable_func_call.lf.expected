@@ -1,0 +1,62 @@
+<NODE( 'PROGRAM', PROGRAM )>
+{
+    <NODE( 'FUNCTION', FUNCTION )>
+    {
+        <NODE( 'i32', TYPE )>
+        <NODE( 'x', TOKEN_NODE )>
+        <NODE( 'VARDECL', VARDECL )>
+        {
+            <NODE( 'i32', TYPE )>
+            <NODE( 'a', TOKEN_NODE )>
+        }
+        <NODE( 'BLOCK', BLOCK )>
+        {
+            <NODE( 'EXPRESSION', EXPRESSION )>
+            {
+                <NODE( 'a', RETURN )>
+            }
+        }
+    }
+    <NODE( 'FUNCTION', FUNCTION )>
+    {
+        <NODE( 'i32', TYPE )>
+        <NODE( 'main', TOKEN_NODE )>
+        <NODE( 'BLOCK', BLOCK )>
+        {
+            <NODE( 'EXPRESSION', EXPRESSION )>
+            {
+                <NODE( 'VARDECL', VARDECL )>
+                {
+                    <NODE( 'i32', TYPE )>
+                    <NODE( 'ASSIGNMENT', ASSIGNMENT )>
+                    {
+                        <NODE( 'b', TOKEN_NODE )>
+                        <NODE( 'BASICEXPRESSION', BASICEXPRESSION )>
+                        {
+                            <NODE( '5', TOKEN_NODE )>
+                        }
+                    }
+                }
+            }
+            <NODE( 'EXPRESSION', EXPRESSION )>
+            {
+                <NODE( 'VARDECL', VARDECL )>
+                {
+                    <NODE( 'i32', TYPE )>
+                    <NODE( 'ASSIGNMENT', ASSIGNMENT )>
+                    {
+                        <NODE( 'n', TOKEN_NODE )>
+                        <NODE( 'x', FUNCTION_CALL )>
+                        {
+                            <NODE( 'BASICEXPRESSION', BASICEXPRESSION )>
+                            {
+                                <NODE( 'a', TOKEN_NODE )>
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+

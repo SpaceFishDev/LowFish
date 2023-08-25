@@ -52,7 +52,9 @@ bool expect(token_type type, parser *Parser, bool error)
 
 node *create_arbitrary_node(node_type type, node *parent)
 {
-	token node_token = create_token(0, 0, node_type_to_string(type), NOTOKEN);
+	token node_token =
+		create_token(0, 0, mkstr(node_type_to_string(type)), NOTOKEN);
+	node_token.on_stack = true;
 	node *n = malloc(sizeof(node));
 	n->type = type;
 	n->node_token = node_token;
@@ -75,8 +77,10 @@ node *create_node(node_type type, token node_token, node *parent)
 parser *create_parser(token *tokens, size_t n_token)
 {
 	parser *Parser = malloc(sizeof(parser));
-	Parser->root =
-		create_node(PROGRAM, create_token(0, 0, "PROGRAM", END_OF_FILE), 0);
+	token t = create_token(0, 0, mkstr("PROGRAM"), NOTOKEN);
+
+	t.on_stack = 1;
+	Parser->root = create_node(PROGRAM, t, 0);
 	Parser->current_parent = Parser->root;
 	Parser->pos = 0;
 	Parser->tokens = tokens;

@@ -1,7 +1,7 @@
 #include <setjmp.h>
 #include <signal.h>
 
-#include "ir/ir.h"
+#include "il/il.h"
 #include "lexer/lexer.h"
 #include "parser/parser.h"
 #include "typechecker/typechecker.h"
@@ -48,7 +48,7 @@ enum states
 	PARSING,
 	RESTRUCTURING,
 	TYPECHECKING,
-	IR_CREATION,
+	IL_CREATION,
 };
 
 void panic_handler(int s)
@@ -58,7 +58,7 @@ void panic_handler(int s)
 		printf("ERROR: An unkown error occurred.\n");
 		printf("The error occured at during the '%s' stage.\n",
 			   ((char *[]){"lexing", "parsing", "tree restructuring",
-						   "typechecking", "ir creation"})[state]);
+						   "typechecking", "il creation"})[state]);
 		printf(
 			"This error could not be resolved in any way and so the compiler "
 			"will "
@@ -79,9 +79,9 @@ int main(int argc, char **argv)
 	for (;;)
 	{
 		token T = lex(&Lexer);
-		printf("TOKEN(%s,%s, %d)\n", T.text,
-			   (T.type <= DEREF) ? (token_type_to_string(T.type)) : "UNK",
-			   T.type);
+		//		printf("TOKEN(%s,%s, %d)\n", T.text,
+		//			   (T.type <= DEREF) ? (token_type_to_string(T.type)) :
+		//"UNK", 			   T.type);
 		Tokens = realloc(Tokens, n_token * sizeof(token));
 		Tokens[n_token - 1] = T;
 		++n_token;
@@ -92,13 +92,13 @@ int main(int argc, char **argv)
 	}
 	++state;
 
+	free(input_file);
 	parser *Parser = create_parser(Tokens, n_token - 1);
 	node *root = parse(Parser);
 	++state;
 
 	restructure_parents(root);
 	++state;
-
 	free(Tokens);
 
 	print_tree(root, 0);
@@ -106,10 +106,8 @@ int main(int argc, char **argv)
 	typechecker *Typechecker = calloc(sizeof(typechecker), 1);
 	type_check_tree(root, Typechecker);
 	++state;
-
-	stmt_gatherer *gatherer = create_gatherer(root);
-	gather_statements(gatherer, Typechecker);
-
+	char *il = generate_il(root, Typechecker);
+	printf("--IL--\n\n%s\n", il);
 	free_tree(root);
 	free(Typechecker->functions);
 	free(Typechecker->variables);
