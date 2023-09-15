@@ -7,7 +7,7 @@ typedef struct
 {
 	char *title;
 	char *type;
-	size_t n_args;	// -1 means unknown, like for a C function.
+	size_t n_args; // -1 means unknown, like for a C function.
 } function;
 
 typedef struct var
@@ -37,4 +37,5 @@ function *get_function(typechecker *type_checker, char *title);
 variable *get_var(typechecker *type_checker, char *title, size_t scope,
 				  function *func);
 char *get_type_recursive(typechecker *type_checker, node *expr);
+node *eval(node *x, node *parent);
 #endif

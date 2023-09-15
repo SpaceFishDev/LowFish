@@ -1,13 +1,4 @@
-extern("printf");
-extern("exit");
 i32 main()
 {
-	i32 x = 32;
-	i8 y = 4;
-	i32 x2 = 32;
-	if(x2 == x){
-		printf("Hello, World!\n");
-	}
-	exit(0);
+	i32 x = 1+1;
 }
-
