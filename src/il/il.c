@@ -34,11 +34,47 @@ void visit_node(il_generator *il_gen, node *curr)
 	{
 		char *type = curr->children[0]->node_token.text;
 		char *title = curr->children[1]->children[0]->node_token.text;
+
 		char *value = eval(curr->children[1]->children[1], curr->children[1]->children[1]->parent)->children[0]->node_token.text;
-		char *buffer = malloc(2024);
-		sprintf(buffer, "var %s %s %s", type, title, value);
-		append_src(buffer);
-		free(buffer);
+		if (eval(curr->children[1]->children[1], curr->children[1]->children[1]->parent)->type == BINEXPR)
+		{
+			node *n = eval(curr->children[1]->children[1], curr->children[1]->children[1]->parent);
+			if (n->children[0]->node_token.text[0] == '+')
+			{
+				char *buffer = malloc(1024);
+				sprintf(buffer, "add %s %s\nvar %s %s %s", n->children[0]->children[0]->children[0]->node_token.text, n->children[0]->children[1]->children[0]->node_token.text, type, title, "\%rax");
+				append_src(buffer);
+				free(buffer);
+			}
+			else if (n->children[0]->node_token.text[0] == '-')
+			{
+				char *buffer = malloc(1024);
+				sprintf(buffer, "sub %s %s\nvar %s %s %s", n->children[0]->children[0]->children[0]->node_token.text, n->children[0]->children[1]->children[0]->node_token.text, type, title, "\%rax");
+				append_src(buffer);
+				free(buffer);
+			}
+			else if (n->children[0]->node_token.text[0] == '/')
+			{
+				char *buffer = malloc(1024);
+				sprintf(buffer, "div %s %s\nvar %s %s %s", n->children[0]->children[0]->children[0]->node_token.text, n->children[0]->children[1]->children[0]->node_token.text, type, title, "\%rax");
+				append_src(buffer);
+				free(buffer);
+			}
+			else if (n->children[0]->node_token.text[0] == '*')
+			{
+				char *buffer = malloc(1024);
+				sprintf(buffer, "mul %s %s\nvar %s %s %s", n->children[0]->children[0]->children[0]->node_token.text, n->children[0]->children[1]->children[0]->node_token.text, type, title, "\%rax");
+				append_src(buffer);
+				free(buffer);
+			}
+		}
+		else
+		{
+			char *buffer = malloc(1024);
+			sprintf(buffer, "var %s %s %s", type, title, value);
+			append_src(buffer);
+			free(buffer);
+		}
 	}
 	break;
 	case BASICEXPRESSION:
