@@ -17,6 +17,56 @@ void visit_node(il_generator *il_gen, node *curr)
 		free(buffer);
 	}
 	break;
+	case ASSIGNMENT:
+	{
+		if (curr->parent->type == BASICEXPRESSION)
+		{
+			char *var = curr->children[0]->node_token.text;
+			node *n = eval(curr->children[1], curr);
+			if (n->type == BASICEXPRESSION)
+			{
+				n = n->children[0];
+				char *value = n->node_token.text;
+				char *type = get_type_recursive(il_gen->type_checker, n);
+				char *buffer = malloc(1 + strlen(var) + strlen(value) + 50);
+				sprintf(buffer, "set %s %s", var, value);
+				append_src(buffer);
+				free(buffer);
+			}
+			else
+			{
+				if (n->children[0]->node_token.text[0] == '+')
+				{
+					char *buffer = malloc(1024);
+					sprintf(buffer, "add %s %s\nset %s %s ", n->children[0]->children[0]->children[0]->node_token.text, n->children[0]->children[1]->children[0]->node_token.text, var, "%rax");
+					append_src(buffer);
+					free(buffer);
+				}
+				else if (n->children[0]->node_token.text[0] == '-')
+				{
+					char *buffer = malloc(1024);
+					sprintf(buffer, "sub %s %s\nset %s %s ", n->children[0]->children[0]->children[0]->node_token.text, n->children[0]->children[1]->children[0]->node_token.text, var, "%rax");
+					append_src(buffer);
+					free(buffer);
+				}
+				else if (n->children[0]->node_token.text[0] == '*')
+				{
+					char *buffer = malloc(1024);
+					sprintf(buffer, "mul %s %s\nset %s %s ", n->children[0]->children[0]->children[0]->node_token.text, n->children[0]->children[1]->children[0]->node_token.text, var, "%rax");
+					append_src(buffer);
+					free(buffer);
+				}
+				else if (n->children[0]->node_token.text[0] == '/')
+				{
+					char *buffer = malloc(1024);
+					sprintf(buffer, "div %s %s\nset %s %s ", n->children[0]->children[0]->children[0]->node_token.text, n->children[0]->children[1]->children[0]->node_token.text, var, "%rax");
+					append_src(buffer);
+					free(buffer);
+				}
+			}
+		}
+	}
+	break;
 	case FUNCTION:
 	{
 		char *type = get_function(il_gen->type_checker,

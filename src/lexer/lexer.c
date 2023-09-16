@@ -334,8 +334,10 @@ token lex(lexer *Lexer)
 			value_of_string[Lexer->pos - start] = Lexer->src[Lexer->pos];
 			next;
 		}
+		char *val = malloc(len + 3);
+		sprintf(val, "'%s'", value_of_string);
 		next;
-		return create_token(column, line, value_of_string, STRING);
+		return create_token(column, line, val, STRING);
 	}
 #pragma endregion
 	}
