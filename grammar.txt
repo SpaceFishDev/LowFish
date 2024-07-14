@@ -106,7 +106,8 @@ conditional:
 	unless |
 	else;
 if:
-	'if' booleanexpression block;
+	'if' booleanexpression blo
+	ck;
 while:
 	'while' booleanexpression block;
 repeat:
