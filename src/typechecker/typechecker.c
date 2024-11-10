@@ -530,6 +530,9 @@ start:
 		type_checker->functions =
 			realloc(type_checker->functions,
 					(++type_checker->n_func) * sizeof(function));
+		current->children[0]->node_token.text = current->children[0]->node_token.text + 1;
+		current->children[0]->node_token.text[strlen(current->children[0]->node_token.text) - 1] = 0;
+
 		type_checker->functions[type_checker->n_func - 1] =
 			(function){current->children[0]->node_token.text, "unk", -1};
 	}
@@ -563,6 +566,7 @@ start:
 		size_t index = 0;
 		for (size_t i = 0; i < type_checker->n_func; ++i)
 		{
+			printf("%s\n", type_checker->functions[i].title);
 			if (!strcmp(type_checker->functions[i].title,
 						current->node_token.text))
 			{

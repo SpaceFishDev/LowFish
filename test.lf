@@ -1,6 +1,5 @@
+extern("printf")
 i32 main()
 {
-	i32 x = 42;
-	i32 y = 10;
-	x = 1+x;
+	printf("Hello, World");
 }
