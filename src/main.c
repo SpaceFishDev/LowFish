@@ -79,9 +79,8 @@ int main(int argc, char **argv)
 	for (;;)
 	{
 		token T = lex(&Lexer);
-		//		printf("TOKEN(%s,%s, %d)\n", T.text,
-		//			   (T.type <= DEREF) ? (token_type_to_string(T.type)) :
-		//"UNK", 			   T.type);
+		printf("TOKEN(%s,%s, %d)\n", T.text,
+			   (T.type <= DEREF) ? (token_type_to_string(T.type)) : "UNK", T.type);
 		Tokens = realloc(Tokens, n_token * sizeof(token));
 		Tokens[n_token - 1] = T;
 		++n_token;

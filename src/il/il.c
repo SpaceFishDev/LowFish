@@ -29,12 +29,45 @@ node **get_mul(node **list, int *len, node *p)
 	}
 	return list;
 }
-
+bool continuing = false;
 char *visit_node(il_generator *il_gen, node *curr)
 {
 	if (!curr)
 	{
 		return "";
+	}
+	if (curr->parent && curr->parent->type == PROGRAM)
+	{
+		if (!continuing)
+		{
+			continuing = true;
+			char *res = visit_node(il_gen, curr);
+			int c = 0;
+			for (int i = 0; i < curr->parent->n_child; ++i)
+			{
+				if (curr->parent->children[i] == curr)
+				{
+					c = i;
+					break;
+				}
+			}
+			c += 1;
+			if (c >= curr->parent->n_child)
+			{
+				return res;
+			}
+			char *o = visit_node(il_gen, curr->parent->children[c]);
+			char *buf = malloc(strlen(res) + strlen(o) + 2);
+			buf[strlen(res) + strlen(o) + 1] = 0;
+			strcpy(buf, res);
+			strcat(buf, "\n");
+			strcat(buf, o);
+			return buf;
+		}
+		if (continuing)
+		{
+			continuing = false;
+		}
 	}
 	switch (curr->type)
 	{
@@ -54,9 +87,21 @@ char *visit_node(il_generator *il_gen, node *curr)
 			strcat(out, "\n");
 			free(str);
 		}
-		printf(out);
 
 		return out;
+	}
+	case FUNCTION_CALL:
+	{
+		if (curr->n_child > 0)
+		{
+			if (curr->children[0]->type == BASICEXPRESSION)
+			{
+				char *fmt = "call %s %s";
+				char *buff = malloc(400);
+				sprintf(buff, fmt, curr->node_token.text, curr->children[0]->children[0]->node_token.text);
+				return buff;
+			}
+		}
 	}
 	case TOKENNODE:
 	{
@@ -74,74 +119,88 @@ char *visit_node(il_generator *il_gen, node *curr)
 			return out;
 		}
 	}
+	case EXTERN:
+	{
+		if (curr->children[0]->type == TOKENNODE)
+		{
+			char *fmt = "extern %s";
+			char *out = malloc(100);
+			sprintf(out, fmt, curr->children[0]->node_token.text);
+			return out;
+		}
+	}
+	break;
 	case BINEXPR:
 	{
-		if (curr->children[0]->node_token.type == MUL)
+		if (curr->n_child > 0)
 		{
-			char *left;
-			char *right;
-			left = visit_node(il_gen, curr->children[0]->children[0]);
-			right = visit_node(il_gen, curr->children[0]->children[1]);
-			char *fmt = "%s mul %s";
-			char *out = malloc(100);
-			sprintf(out, fmt, left, right);
-			free(left);
-			free(right);
-			return out;
-		}
-		if (curr->children[0]->node_token.type == DIV)
-		{
-			char *left;
-			char *right;
-			left = visit_node(il_gen, curr->children[0]->children[0]);
-			right = visit_node(il_gen, curr->children[0]->children[1]);
-			char *fmt = "%s div %s";
-			char *out = malloc(100);
-			sprintf(out, fmt, left, right);
-			free(left);
-			free(right);
-			return out;
-		}
-		int len = 0;
-		node **multiplications = get_mul(malloc(sizeof(node *)), &len, curr);
-		if (len == 0)
-		{
-			if (curr->children[0]->node_token.type == PLUS)
+			if (curr->children[0]->node_token.type == MUL)
 			{
 				char *left;
 				char *right;
 				left = visit_node(il_gen, curr->children[0]->children[0]);
 				right = visit_node(il_gen, curr->children[0]->children[1]);
-				char *fmt = "%s add %s";
+				char *fmt = "%s mul %s";
 				char *out = malloc(100);
 				sprintf(out, fmt, left, right);
 				free(left);
 				free(right);
 				return out;
 			}
-			char *left;
-			char *right;
-			left = visit_node(il_gen, curr->children[0]->children[0]);
-			right = visit_node(il_gen, curr->children[0]->children[1]);
-			char *fmt = "%s sub %s";
-			char *out = malloc(100);
-			sprintf(out, fmt, left, right);
-			free(left);
-			free(right);
+			if (curr->children[0]->node_token.type == DIV)
+			{
+				char *left;
+				char *right;
+				left = visit_node(il_gen, curr->children[0]->children[0]);
+				right = visit_node(il_gen, curr->children[0]->children[1]);
+				char *fmt = "%s div %s";
+				char *out = malloc(100);
+				sprintf(out, fmt, left, right);
+				free(left);
+				free(right);
+				return out;
+			}
+			int len = 0;
+			node **multiplications = get_mul(malloc(sizeof(node *)), &len, curr);
+			if (len == 0)
+			{
+				if (curr->children[0]->node_token.type == PLUS)
+				{
+					char *left;
+					char *right;
+					left = visit_node(il_gen, curr->children[0]->children[0]);
+					right = visit_node(il_gen, curr->children[0]->children[1]);
+					char *fmt = "%s add %s";
+					char *out = malloc(100);
+					sprintf(out, fmt, left, right);
+					free(left);
+					free(right);
+					return out;
+				}
+				char *left;
+				char *right;
+				left = visit_node(il_gen, curr->children[0]->children[0]);
+				right = visit_node(il_gen, curr->children[0]->children[1]);
+				char *fmt = "%s sub %s";
+				char *out = malloc(100);
+				sprintf(out, fmt, left, right);
+				free(left);
+				free(right);
+				return out;
+			}
+			char *out = malloc(1000);
+			for (int i = 0; i < len; ++i)
+			{
+				char *x = visit_node(il_gen, multiplications[i]);
+				strcat(out, x);
+			}
+			char *str = malloc(100);
+			char *fmt = " add %s";
+			sprintf(str, fmt, visit_node(il_gen, curr->children[0]->children[0]));
+			strcat(out, str);
+			free(str);
 			return out;
 		}
-		char *out = malloc(1000);
-		for (int i = 0; i < len; ++i)
-		{
-			char *x = visit_node(il_gen, multiplications[i]);
-			strcat(out, x);
-		}
-		char *str = malloc(100);
-		char *fmt = " add %s";
-		sprintf(str, fmt, visit_node(il_gen, curr->children[0]->children[0]));
-		strcat(out, str);
-		free(str);
-		return out;
 	}
 	break;
 	case BASICEXPRESSION:
@@ -168,6 +227,6 @@ char *generate_il(node *root, typechecker *type_checker)
 	il_generator generator =
 		(il_generator){root, root, 0, malloc(1), type_checker};
 	char *src = visit_node(&generator, root);
-
+	generator.src = src;
 	return generator.src;
 }

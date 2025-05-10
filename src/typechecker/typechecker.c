@@ -530,8 +530,18 @@ start:
 		type_checker->functions =
 			realloc(type_checker->functions,
 					(++type_checker->n_func) * sizeof(function));
+		char *buff = calloc(1, strlen(current->children[0]->node_token.text) + 1);
+		int i = 0;
+		int n = 0;
+		for (i = 1; i < strlen(current->children[0]->node_token.text) - 1; ++i)
+		{
+			printf("%c\n", current->children[0]->node_token.text[i]);
+			buff[n] = current->children[0]->node_token.text[i];
+			++n;
+		}
+		printf("thing:%d\n", buff);
 		type_checker->functions[type_checker->n_func - 1] =
-			(function){current->children[0]->node_token.text, "unk", -1};
+			(function){buff, "unk", -1};
 	}
 	break;
 	case FUNCTION:
@@ -829,7 +839,6 @@ start:
 				}
 				if (!var_get)
 				{
-					// no need to free because put_error exits the program.
 					char *buffer = malloc(1024);
 					sprintf(buffer,
 							"The variable you are trying to use '%s' does "

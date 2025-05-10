@@ -7,6 +7,7 @@ typedef struct
 	size_t length_of_src;
 	char *src; // generated source code NOT the input source code!
 	typechecker *type_checker;
+	int parent_idx;
 } il_generator;
 #define append_src(_src)                                                \
 	il_gen->src =                                                       \
